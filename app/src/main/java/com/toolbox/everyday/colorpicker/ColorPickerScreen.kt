@@ -1,0 +1,231 @@
+package com.toolbox.everyday.colorpicker
+
+import android.graphics.Bitmap
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.toolbox.core.camera.CameraPreview
+import com.toolbox.core.permission.PermissionGate
+
+@Composable
+fun ColorPickerScreen() {
+    PermissionGate(
+        permission = android.Manifest.permission.CAMERA,
+        rationale = "The color picker needs camera access to detect colors.",
+    ) {
+        ColorPickerContent()
+    }
+}
+
+@Composable
+private fun ColorPickerContent() {
+    var centerColor by remember { mutableIntStateOf(0xFFFFFFFF.toInt()) }
+    val colorHistory = remember { mutableStateListOf<Int>() }
+
+    val analyzer = remember {
+        CenterColorAnalyzer { color ->
+            centerColor = color
+        }
+    }
+
+    val r = (centerColor shr 16) and 0xFF
+    val g = (centerColor shr 8) and 0xFF
+    val b = centerColor and 0xFF
+    val hex = "#%02X%02X%02X".format(r, g, b)
+    val composeColor = Color(r / 255f, g / 255f, b / 255f)
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+    ) {
+        // Camera preview with crosshair
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(3f / 4f)
+                .clip(RoundedCornerShape(16.dp)),
+        ) {
+            CameraPreview(
+                modifier = Modifier.fillMaxSize(),
+                imageAnalyzer = analyzer,
+            )
+
+            // Crosshair overlay
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val cx = size.width / 2
+                val cy = size.height / 2
+                val crosshairSize = 30f
+                val ringRadius = 24f
+
+                // Outer ring with picked color
+                drawCircle(
+                    color = composeColor,
+                    radius = ringRadius,
+                    center = Offset(cx, cy),
+                    style = Stroke(width = 4f),
+                )
+
+                // Crosshair lines
+                drawLine(Color.White, Offset(cx - crosshairSize, cy), Offset(cx - 8, cy), strokeWidth = 2f)
+                drawLine(Color.White, Offset(cx + 8, cy), Offset(cx + crosshairSize, cy), strokeWidth = 2f)
+                drawLine(Color.White, Offset(cx, cy - crosshairSize), Offset(cx, cy - 8), strokeWidth = 2f)
+                drawLine(Color.White, Offset(cx, cy + 8), Offset(cx, cy + crosshairSize), strokeWidth = 2f)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Color info card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Color swatch
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(composeColor)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = hex,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                    Text(
+                        text = "RGB($r, $g, $b)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Color history
+        if (colorHistory.isNotEmpty()) {
+            Text(
+                text = "RECENT COLORS",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(colorHistory.reversed()) { color ->
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color(color))
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private class CenterColorAnalyzer(
+    private val onColorDetected: (Int) -> Unit,
+) : ImageAnalysis.Analyzer {
+    private var frameCount = 0
+
+    override fun analyze(image: ImageProxy) {
+        // Only process every 5th frame to reduce load
+        frameCount++
+        if (frameCount % 5 != 0) {
+            image.close()
+            return
+        }
+
+        try {
+            val bitmap = image.toBitmap()
+            val cx = bitmap.width / 2
+            val cy = bitmap.height / 2
+
+            // Average a small area around center for stability
+            var rSum = 0L
+            var gSum = 0L
+            var bSum = 0L
+            var count = 0
+            val sampleSize = 5
+
+            for (dx in -sampleSize..sampleSize) {
+                for (dy in -sampleSize..sampleSize) {
+                    val x = (cx + dx).coerceIn(0, bitmap.width - 1)
+                    val y = (cy + dy).coerceIn(0, bitmap.height - 1)
+                    val pixel = bitmap.getPixel(x, y)
+                    rSum += (pixel shr 16) and 0xFF
+                    gSum += (pixel shr 8) and 0xFF
+                    bSum += pixel and 0xFF
+                    count++
+                }
+            }
+
+            val r = (rSum / count).toInt()
+            val g = (gSum / count).toInt()
+            val b = (bSum / count).toInt()
+            val color = (0xFF shl 24) or (r shl 16) or (g shl 8) or b
+            onColorDetected(color)
+        } catch (_: Exception) {
+            // Frame conversion failed
+        } finally {
+            image.close()
+        }
+    }
+}

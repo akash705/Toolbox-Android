@@ -45,7 +45,11 @@ import com.toolbox.core.persistence.ThemeMode
 import com.toolbox.core.ui.components.ToolScaffold
 import com.toolbox.core.ui.theme.ToolboxTheme
 import com.toolbox.dashboard.DashboardScreen
+import com.toolbox.everyday.colorpicker.ColorPickerScreen
 import com.toolbox.everyday.counter.CounterScreen
+import com.toolbox.everyday.magnifier.MagnifierScreen
+import com.toolbox.everyday.qrscanner.QrScannerScreen
+import com.toolbox.lighting.FlashlightScreen
 import com.toolbox.everyday.random.RandomScreen
 import com.toolbox.everyday.stopwatch.StopwatchTimerScreen
 import com.toolbox.measurement.compass.CompassScreen
@@ -160,13 +164,13 @@ fun ToolboxApp(themeMode: ThemeMode) {
                     composable<PercentageCalculator> { ToolScreen("Percentage", navController) { PercentageScreen() } }
                     composable<TipCalculator> { ToolScreen("Tip Calculator", navController) { TipCalculatorScreen() } }
                     composable<NumberBase> { ToolScreen("Number Base", navController) { NumberBaseScreen() } }
-                    composable<Flashlight> { PlaceholderToolScreen("Flashlight") { navController.popBackStack() } }
-                    composable<QrScanner> { PlaceholderToolScreen("QR Scanner") { navController.popBackStack() } }
+                    composable<Flashlight> { ToolScreen("Flashlight", navController) { FlashlightScreen() } }
+                    composable<QrScanner> { ToolScreen("QR Scanner", navController) { QrScannerScreen() } }
                     composable<Counter> { ToolScreen("Counter", navController) { CounterScreen() } }
                     composable<StopwatchTimer> { ToolScreen("Stopwatch & Timer", navController) { StopwatchTimerScreen() } }
                     composable<RandomGenerator> { ToolScreen("Random Generator", navController) { RandomScreen() } }
-                    composable<ColorPicker> { PlaceholderToolScreen("Color Picker") { navController.popBackStack() } }
-                    composable<Magnifier> { PlaceholderToolScreen("Magnifier") { navController.popBackStack() } }
+                    composable<ColorPicker> { ToolScreen("Color Picker", navController) { ColorPickerScreen() } }
+                    composable<Magnifier> { ToolScreen("Magnifier", navController) { MagnifierScreen() } }
                 }
             }
         }
@@ -196,23 +200,6 @@ private fun PlaceholderTab(message: String) {
     }
 }
 
-@Composable
-private fun PlaceholderToolScreen(title: String, onBack: () -> Unit) {
-    ToolScaffold(title = title, onBack = onBack) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "Coming soon",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
 
 private fun toolDestination(toolId: String): Any? = when (toolId) {
     "level" -> Level

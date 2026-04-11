@@ -859,6 +859,210 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - App passes Play Store pre-launch report. All 16 tools tested on 2+ physical devices.
 
+### Phase 6: New Tools & Enhancements (Post-MVP)
+
+- [ ] **Unit 21: Unit Converter — Comprehensive expansion**
+
+  **Goal:** Expand from 10 categories to 17+ categories, add missing units within existing categories.
+
+  **Requirements:** Full unit coverage across all common measurement domains
+
+  **Dependencies:** Unit 5
+
+  **Files:**
+  - Modify: `app/src/main/java/com/toolbox/conversion/unitconverter/UnitCategory.kt`
+
+  **Approach:**
+  - Add new categories: Power (W, kW, HP, BTU/hr), Force (N, lbf, dyne, kgf), Torque (N·m, ft·lb, in·lb), Density (kg/m³, g/cm³, lb/ft³, lb/gal), Fuel Economy (mpg, km/L, L/100km — inverse formula-based), Angle (degrees, radians, gradians, arcminutes, arcseconds), Frequency (Hz, kHz, MHz, GHz, RPM)
+  - Add missing units within existing categories: Volume → Imperial Gallon, Imperial Pint, Cubic Meter, Cubic Foot, Cubic Inch; Weight → Stone, US Ton (short ton), Imperial Ton (long ton), Carat; Length → Nautical Mile, Micrometer; Speed → ft/s, cm/s
+  - Fuel Economy uses inverse relationship (L/100km ↔ mpg) — needs formula-based conversion like Temperature
+
+  **Test scenarios:**
+  - Happy path: All new categories appear in category selector
+  - Happy path: Fuel Economy handles inverse conversion (L/100km)
+  - Happy path: Force, Torque, Density convert correctly
+
+  **Verification:**
+  - 17+ categories all converting correctly. All existing conversions unchanged.
+
+- [ ] **Unit 22: Vibrometer (Surface Vibration Analyzer)**
+
+  **Goal:** Use accelerometer at high sample rate to detect and visualize surface vibrations.
+
+  **Requirements:** Extend sensor capabilities for diagnostics use case
+
+  **Dependencies:** Unit 11 (sensor hooks)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/measurement/vibrometer/VibrometerScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt` (add tool entry)
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt` (add route)
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt` (wire nav)
+
+  **Approach:**
+  - Register accelerometer with `SENSOR_DELAY_FASTEST` for higher sample rate
+  - Display live waveform (rolling Canvas line chart) showing vibration magnitude over time
+  - Compute dominant frequency via simple zero-crossing detection
+  - Show magnitude (peak, RMS) and approximate frequency
+  - "Record Baseline" button to capture a reference, then "Compare" mode highlights deviations
+  - No new permissions needed — accelerometer is zero-permission
+
+  **Test scenarios:**
+  - Happy path: Live waveform responds to phone vibration/tapping
+  - Happy path: Baseline recording and comparison works
+  - Edge case: Stationary phone shows near-zero readings
+
+  **Verification:**
+  - Waveform renders smoothly. Frequency estimate is reasonable on vibrating surface.
+
+- [ ] **Unit 23: Mirror (True Mirror)**
+
+  **Goal:** Full-screen front camera feed as a mirror with standard/true mirror toggle.
+
+  **Requirements:** Simple utility leveraging existing CameraX infrastructure
+
+  **Dependencies:** Unit 15 (shared CameraX composable)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/everyday/mirror/MirrorScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Use `CameraPreview` with `CameraSelector.DEFAULT_FRONT_CAMERA`
+  - Default: standard mirror (Android default — flipped horizontally)
+  - "True Mirror" toggle: apply `Modifier.graphicsLayer { scaleX = -1f }` to flip the preview to show how others see you
+  - Brightness/contrast boost slider (adjust PreviewView overlay brightness)
+  - Freeze-frame button to capture current view
+  - Full-screen mode hiding top bar for maximum mirror area
+
+  **Test scenarios:**
+  - Happy path: Front camera displays as mirror
+  - Happy path: True mirror toggle flips the image
+  - Happy path: Freeze frame captures current view
+  - Edge case: Device without front camera shows error state
+
+  **Verification:**
+  - Mirror displays correctly. True mirror flip is visually correct.
+
+- [ ] **Unit 24: Ambient Light Meter (Lux Logger)**
+
+  **Goal:** Display and log ambient light sensor readings with rolling chart and threshold alerts.
+
+  **Requirements:** Zero-permission tool using ambient light sensor
+
+  **Dependencies:** Unit 3
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/core/sensor/LightSensorHook.kt`
+  - Create: `app/src/main/java/com/toolbox/measurement/lightmeter/LightMeterScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - New sensor hook: `rememberLightSensorData()` using `Sensor.TYPE_LIGHT`, same DisposableEffect + LifecycleEventObserver pattern as accelerometer
+  - Display current lux value prominently with descriptive label (Dark < 10, Dim < 50, Indoor 50-500, Bright 500-10000, Sunlight > 10000)
+  - Rolling line chart (Canvas) showing lux over last 5 minutes
+  - Named presets with threshold references: Reading (300+ lux), Office (500+ lux), Grow Light (2000+ lux)
+  - Min/Avg/Max stats with reset
+  - Zero permissions required — ambient light sensor is not a dangerous permission
+
+  **Test scenarios:**
+  - Happy path: Current lux displayed and updates with ambient light changes
+  - Happy path: Rolling chart shows historical readings
+  - Edge case: Device without light sensor shows error state
+
+  **Verification:**
+  - Lux readings respond to covering/uncovering the sensor. Chart scrolls.
+
+- [ ] **Unit 25: Magnetic Field Detector**
+
+  **Goal:** 3-axis magnetic field strength display with metal detection mode.
+
+  **Requirements:** From Phase 2 backlog — Metal Detector
+
+  **Dependencies:** Unit 11 (magnetometer hook)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/measurement/metaldetector/MetalDetectorScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Use existing `rememberMagnetometerData()` hook for 3-axis field strength (µT)
+  - Display total field magnitude (√(x²+y²+z²)) as primary reading
+  - Arc gauge similar to Sound Meter design — green (normal ~25-65µT) → orange → red (anomaly)
+  - Audio pitch feedback: tone frequency proportional to field magnitude using `AudioTrack` or `ToneGenerator`
+  - "Calibrate" button to set current reading as baseline; subsequent readings show deviation from baseline
+  - Individual X/Y/Z axis bars for directional analysis
+  - No new permissions — magnetometer is zero-permission
+
+  **Test scenarios:**
+  - Happy path: Magnitude increases near metal objects
+  - Happy path: Audio pitch rises near ferrous material
+  - Happy path: Calibration sets baseline correctly
+  - Edge case: Device without magnetometer shows error state
+
+  **Verification:**
+  - Detects metal objects (keys, screws) at close range. Audio feedback follows magnitude.
+
+- [ ] **Unit 26: Shareable Measurement Cards**
+
+  **Goal:** Export any tool reading as a branded visual card (PNG) for sharing.
+
+  **Requirements:** Cross-tool engagement feature
+
+  **Dependencies:** Units 1-25
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/core/sharing/MeasurementCard.kt`
+  - Modify: Various tool screens to add share button
+
+  **Approach:**
+  - Composable that renders a card with: tool icon, reading value, unit, timestamp, optional label, subtle "Toolbox" branding
+  - Use `Canvas` or `Picture` to render card to `Bitmap`, save as PNG to cache dir
+  - Share via `FileProvider` + `Intent.ACTION_SEND` with image/png type
+  - Add a share icon button to ToolScaffold that tools can opt into by providing current reading data
+  - Card design: Material 3 card with tool-specific accent color, clean typography
+
+  **Test scenarios:**
+  - Happy path: Share button generates card PNG and opens share sheet
+  - Happy path: Card shows correct reading, tool name, timestamp
+  - Edge case: Card renders correctly in both light and dark theme
+
+  **Verification:**
+  - Shared card image is visually clean and contains accurate data.
+
+- [ ] **Unit 27: Quick Settings Tiles**
+
+  **Goal:** Register Android Quick Settings tiles for top tools (Flashlight, Sound Meter, Level, Timer).
+
+  **Requirements:** Zero-friction access to frequently-used tools
+
+  **Dependencies:** Units 12, 13, 14, 19
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/tiles/FlashlightTileService.kt`
+  - Create: `app/src/main/java/com/toolbox/tiles/ToolLaunchTileService.kt`
+  - Modify: `app/src/main/AndroidManifest.xml` (register tile services)
+
+  **Approach:**
+  - `FlashlightTileService` extends `TileService`: directly toggles torch via `CameraManager.setTorchMode()` without launching the app. Updates tile icon state (on/off)
+  - `ToolLaunchTileService` (generic): parameterized tile that deep-links to a specific tool via Intent. Register separate service entries for Sound Meter, Level, Timer
+  - Manifest: declare `<service>` entries with `android.service.quicksettings.action.QS_TILE` intent filter and appropriate labels/icons
+  - Users manually add tiles from Quick Settings edit mode
+
+  **Test scenarios:**
+  - Happy path: Flashlight tile toggles torch without opening the app
+  - Happy path: Sound Meter tile launches directly into Sound Meter screen
+  - Edge case: Tiles work from lock screen (Flashlight should, others launch to permission gate)
+
+  **Verification:**
+  - Tiles appear in Quick Settings edit panel. Flashlight toggles instantly. Other tiles deep-link correctly.
+
 ## System-Wide Impact
 
 - **Interaction graph**: Dashboard ↔ Navigation ↔ 16 tool screens. TimerService ↔ StopwatchTimerScreen via bound service + StateFlow. TimerAlarmReceiver as fallback completion trigger. DataStore ↔ Counter, Unit Converter, Theme. CameraX provider shared across QR Scanner, Color Picker, Magnifier (only one camera binding active at a time via lifecycle)

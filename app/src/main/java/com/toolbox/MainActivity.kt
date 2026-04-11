@@ -16,10 +16,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        val launchToolId = intent?.getStringExtra("tool_id")
+
         setContent {
             val themeMode by preferencesRepository.themeMode
                 .collectAsState(initial = ThemeMode.System)
-            ToolboxApp(themeMode = themeMode)
+            ToolboxApp(themeMode = themeMode, launchToolId = launchToolId)
         }
     }
 }

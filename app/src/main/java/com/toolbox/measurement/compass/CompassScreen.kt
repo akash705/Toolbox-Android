@@ -4,7 +4,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +21,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -64,8 +65,6 @@ fun CompassScreen() {
 
     var useMagneticNorth by remember { mutableStateOf(true) }
 
-    // Animate the compass rotation smoothly
-    // Use shortest path rotation to avoid spinning
     val animatedBearing by animateFloatAsState(
         targetValue = -bearing,
         animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow),
@@ -98,25 +97,26 @@ fun CompassScreen() {
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = " ${bearing.toInt()}°",
+                text = "${bearing.toInt()}°",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Light,
                 color = MaterialTheme.colorScheme.primary,
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Compass rose
+        // Compass rose — larger to match Stitch
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(280.dp),
+            modifier = Modifier.size(300.dp),
         ) {
             val cardinalColor = MaterialTheme.colorScheme.onSurface
             val tickColor = MaterialTheme.colorScheme.outlineVariant
-            val northColor = MaterialTheme.colorScheme.primary
+            val northColor = Color(0xFFD32F2F)
             val needleRed = Color(0xFFD32F2F)
             val needleWhite = MaterialTheme.colorScheme.surfaceContainerHighest
+            val degreeTextColor = MaterialTheme.colorScheme.onSurfaceVariant
 
             Canvas(modifier = Modifier.fillMaxSize()) {
                 drawCompassRose(
@@ -126,23 +126,34 @@ fun CompassScreen() {
                     northColor = northColor,
                     needleRed = needleRed,
                     needleWhite = needleWhite,
+                    degreeTextColor = degreeTextColor,
                     textMeasurer = textMeasurer,
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Incline and Level values
+        // Incline and Level values with progress bars
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            ValueCard(label = "INCLINE", value = "%.1f°".format(abs(pitch)))
-            ValueCard(label = "LEVEL", value = "%.1f°".format(abs(roll)))
+            ValueCard(
+                label = "INCLINE",
+                value = "%.1f°".format(abs(pitch)),
+                progress = (abs(pitch) / 90f).coerceIn(0f, 1f),
+                modifier = Modifier.weight(1f),
+            )
+            ValueCard(
+                label = "LEVEL",
+                value = "%.1f°".format(abs(roll)),
+                progress = (abs(roll) / 90f).coerceIn(0f, 1f),
+                modifier = Modifier.weight(1f),
+            )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Magnetic North toggle
         Card(
@@ -179,7 +190,7 @@ fun CompassScreen() {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Coordinates card (placeholder)
+        // Coordinates card
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -217,26 +228,44 @@ fun CompassScreen() {
 }
 
 @Composable
-private fun ValueCard(label: String, value: String) {
+private fun ValueCard(
+    label: String,
+    value: String,
+    progress: Float,
+    modifier: Modifier = Modifier,
+) {
     Card(
+        modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
         shape = RoundedCornerShape(16.dp),
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 32.dp, vertical = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 14.dp),
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.SemiBold,
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .height(4.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                strokeCap = StrokeCap.Round,
             )
         }
     }
@@ -256,6 +285,7 @@ private fun DrawScope.drawCompassRose(
     northColor: Color,
     needleRed: Color,
     needleWhite: Color,
+    degreeTextColor: Color,
     textMeasurer: TextMeasurer,
 ) {
     val center = Offset(size.width / 2, size.height / 2)
@@ -266,7 +296,7 @@ private fun DrawScope.drawCompassRose(
         color = tickColor,
         radius = radius,
         center = center,
-        style = Stroke(width = 2f),
+        style = Stroke(width = 1.5f),
     )
 
     // Rotate the entire compass rose
@@ -297,6 +327,29 @@ private fun DrawScope.drawCompassRose(
                 start = Offset(outerX, outerY),
                 end = Offset(innerX, innerY),
                 strokeWidth = tickWidth,
+            )
+        }
+
+        // Degree labels at 30° intervals (skip cardinals — they get letter labels)
+        val degreeLabels = listOf(30, 60, 120, 150, 210, 240, 300, 330)
+        for (deg in degreeLabels) {
+            val radians = Math.toRadians(deg.toDouble())
+            val textRadius = radius - 34f
+            val x = center.x + textRadius * sin(radians).toFloat()
+            val y = center.y - textRadius * cos(radians).toFloat()
+
+            val style = TextStyle(
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Normal,
+                color = degreeTextColor,
+            )
+            val measured = textMeasurer.measure(deg.toString(), style)
+            drawText(
+                textLayoutResult = measured,
+                topLeft = Offset(
+                    x - measured.size.width / 2,
+                    y - measured.size.height / 2,
+                ),
             )
         }
 

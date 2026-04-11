@@ -15,12 +15,27 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -38,6 +53,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,7 +62,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 private enum class TabMode { Stopwatch, Timer }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun StopwatchTimerScreen(
     stopwatchViewModel: StopwatchViewModel = viewModel(),
@@ -69,7 +85,7 @@ fun StopwatchTimerScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         when (tabIndex) {
             0 -> StopwatchTab(stopwatchViewModel)
@@ -86,46 +102,121 @@ private fun StopwatchTab(viewModel: StopwatchViewModel) {
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // Hero time display
         Text(
             text = formatTime(state.elapsedMs),
-            style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
+            fontSize = 56.sp,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
+            color = if (state.isRunning) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(vertical = 32.dp),
         )
 
+        // Action buttons
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Button(onClick = viewModel::startPause) {
-                Text(if (state.isRunning) "Pause" else if (state.elapsedMs > 0) "Resume" else "Start")
-            }
+            // Secondary button: Lap or Reset
             if (state.isRunning) {
-                OutlinedButton(onClick = viewModel::lap) {
-                    Text("Lap")
+                OutlinedButton(
+                    onClick = viewModel::lap,
+                    modifier = Modifier.size(56.dp),
+                    shape = CircleShape,
+                ) {
+                    Icon(Icons.Default.Timer, contentDescription = "Lap")
+                }
+            } else if (state.elapsedMs > 0) {
+                OutlinedButton(
+                    onClick = viewModel::reset,
+                    modifier = Modifier.size(56.dp),
+                    shape = CircleShape,
+                ) {
+                    Icon(Icons.Default.RestartAlt, contentDescription = "Reset")
                 }
             }
-            if (!state.isRunning && state.elapsedMs > 0) {
-                OutlinedButton(onClick = viewModel::reset) {
-                    Text("Reset")
-                }
+
+            // Primary button: Start/Pause
+            Button(
+                onClick = viewModel::startPause,
+                modifier = Modifier.size(72.dp),
+                shape = CircleShape,
+            ) {
+                Icon(
+                    imageVector = if (state.isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (state.isRunning) "Pause" else "Start",
+                    modifier = Modifier.size(32.dp),
+                )
             }
         }
 
+        // Lap list
         if (state.laps.isNotEmpty()) {
             Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Laps",
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+            )
+
             LazyColumn {
-                itemsIndexed(state.laps.reversed()) { index, lapMs ->
+                itemsIndexed(state.laps.reversed()) { index, lapTotalMs ->
                     val lapNum = state.laps.size - index
-                    Row(
+                    val prevTotalMs = if (lapNum > 1) state.laps[lapNum - 2] else 0L
+                    val lapSplitMs = lapTotalMs - prevTotalMs
+
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        ),
                     ) {
-                        Text("Lap $lapNum", style = MaterialTheme.typography.bodyMedium)
-                        Text(formatTime(lapMs), style = MaterialTheme.typography.bodyMedium)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Lap $lapNum",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "Split",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Text(
+                                        text = formatTime(lapSplitMs),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "Total",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Text(
+                                        text = formatTime(lapTotalMs),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                }
+                            }
+                        }
                     }
-                    HorizontalDivider()
                 }
             }
         }
@@ -137,11 +228,18 @@ private fun StopwatchTab(viewModel: StopwatchViewModel) {
 private fun TimerTab() {
     val context = LocalContext.current
     var timerService by remember { mutableStateOf<TimerService?>(null) }
+    var pendingDurationMs by remember { mutableStateOf<Long?>(null) }
 
     val connection = remember {
         object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
-                timerService = (binder as? TimerService.LocalBinder)?.service
+                val service = (binder as? TimerService.LocalBinder)?.service
+                timerService = service
+                // If a timer start was pending while binding, fire it now
+                pendingDurationMs?.let { duration ->
+                    service?.startTimer(duration)
+                    pendingDurationMs = null
+                }
             }
             override fun onServiceDisconnected(name: ComponentName?) {
                 timerService = null
@@ -153,12 +251,17 @@ private fun TimerTab() {
         val intent = Intent(context, TimerService::class.java)
         context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
         onDispose {
-            context.unbindService(connection)
+            try { context.unbindService(connection) } catch (_: Exception) {}
         }
     }
 
     val remainingMs by timerService?.remainingMs?.collectAsState() ?: remember { mutableStateOf(0L) }
     val isRunning by timerService?.isRunning?.collectAsState() ?: remember { mutableStateOf(false) }
+
+    // Custom time input state
+    var customHours by rememberSaveable { mutableStateOf("") }
+    var customMinutes by rememberSaveable { mutableStateOf("") }
+    var customSeconds by rememberSaveable { mutableStateOf("") }
 
     val presets = listOf(
         "1 min" to 60_000L,
@@ -169,43 +272,149 @@ private fun TimerTab() {
         "30 min" to 1_800_000L,
     )
 
+    fun startTimerWithDuration(durationMs: Long) {
+        val service = timerService
+        if (service != null) {
+            service.startTimer(durationMs)
+        } else {
+            // Service not bound yet — store pending duration and start+bind
+            pendingDurationMs = durationMs
+            val intent = Intent(context, TimerService::class.java)
+            context.startForegroundService(intent)
+            context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // Hero countdown display
         Text(
             text = formatTimerRemaining(remainingMs),
-            style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
+            fontSize = 56.sp,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            color = if (isRunning) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(vertical = 32.dp),
         )
 
         if (!isRunning) {
+            // Preset duration chips
+            Text(
+                text = "Quick start",
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+            )
+
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 presets.forEach { (label, durationMs) ->
                     SuggestionChip(
-                        onClick = {
-                            val intent = Intent(context, TimerService::class.java)
-                            context.startForegroundService(intent)
-                            // Rebind and start after short delay to ensure service is created
-                            timerService?.startTimer(durationMs) ?: run {
-                                context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
-                            }
-                            timerService?.startTimer(durationMs)
-                        },
+                        onClick = { startTimerWithDuration(durationMs) },
                         label = { Text(label) },
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Custom time input
+            Text(
+                text = "Custom time",
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+            )
+
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        OutlinedTextField(
+                            value = customHours,
+                            onValueChange = { customHours = it.filter { c -> c.isDigit() }.take(2) },
+                            label = { Text("Hours") },
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                        )
+                        OutlinedTextField(
+                            value = customMinutes,
+                            onValueChange = { customMinutes = it.filter { c -> c.isDigit() }.take(2) },
+                            label = { Text("Min") },
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                        )
+                        OutlinedTextField(
+                            value = customSeconds,
+                            onValueChange = { customSeconds = it.filter { c -> c.isDigit() }.take(2) },
+                            label = { Text("Sec") },
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val totalCustomMs = ((customHours.toLongOrNull() ?: 0) * 3_600_000L) +
+                            ((customMinutes.toLongOrNull() ?: 0) * 60_000L) +
+                            ((customSeconds.toLongOrNull() ?: 0) * 1_000L)
+
+                    Button(
+                        onClick = {
+                            startTimerWithDuration(totalCustomMs)
+                            customHours = ""
+                            customMinutes = ""
+                            customSeconds = ""
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = totalCustomMs > 0,
+                    ) {
+                        Icon(
+                            Icons.Default.PlayArrow,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Start Timer")
+                    }
+                }
+            }
         } else {
-            Button(onClick = {
-                timerService?.cancelTimer()
-            }) {
-                Text("Cancel Timer")
+            // Cancel button
+            Button(
+                onClick = { timerService?.cancelTimer() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                ),
+                modifier = Modifier.size(72.dp),
+                shape = CircleShape,
+            ) {
+                Icon(
+                    Icons.Default.Stop,
+                    contentDescription = "Cancel Timer",
+                    modifier = Modifier.size(32.dp),
+                )
             }
         }
     }

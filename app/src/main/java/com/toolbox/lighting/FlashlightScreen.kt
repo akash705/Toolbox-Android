@@ -23,18 +23,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FlashlightOff
-import androidx.compose.material.icons.filled.FlashlightOn
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
 private enum class FlashMode(val label: String) {
@@ -59,6 +62,7 @@ fun FlashlightScreen() {
     val context = LocalContext.current
     var isOn by remember { mutableStateOf(false) }
     var mode by remember { mutableStateOf(FlashMode.Steady) }
+    var brightness by remember { mutableFloatStateOf(0.85f) }
 
     val cameraManager = remember { context.getSystemService(Context.CAMERA_SERVICE) as CameraManager }
     val cameraId = remember {
@@ -71,7 +75,6 @@ fun FlashlightScreen() {
     // Control the torch
     DisposableEffect(isOn, mode) {
         onDispose {
-            // Turn off when leaving
             try {
                 if (cameraId != null) {
                     cameraManager.setTorchMode(cameraId, false)
@@ -80,7 +83,7 @@ fun FlashlightScreen() {
         }
     }
 
-    // Steady mode
+    // Torch control with mode patterns
     LaunchedEffect(isOn, mode) {
         if (cameraId == null) return@LaunchedEffect
         if (!isOn) {
@@ -93,7 +96,6 @@ fun FlashlightScreen() {
                 try { cameraManager.setTorchMode(cameraId, true) } catch (_: Exception) {}
             }
             FlashMode.SOS -> {
-                // SOS pattern: ... --- ...
                 val dot = 200L
                 val dash = 600L
                 val gap = 200L
@@ -130,7 +132,7 @@ fun FlashlightScreen() {
     }
 
     val buttonScale by animateFloatAsState(
-        targetValue = if (isOn) 1.1f else 1f,
+        targetValue = if (isOn) 1.05f else 1f,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
         label = "scale",
     )
@@ -139,96 +141,129 @@ fun FlashlightScreen() {
         label = "bg",
     )
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(bgColor)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .background(bgColor),
     ) {
-        Spacer(modifier = Modifier.weight(0.3f))
-
-        // Status text
-        Text(
-            text = if (isOn) "ON" else "OFF",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = if (isOn) Color(0xFFFF9800) else MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Big toggle button
-        Box(
-            contentAlignment = Alignment.Center,
+        Column(
             modifier = Modifier
-                .size(160.dp)
-                .scale(buttonScale)
-                .clip(CircleShape)
-                .background(
-                    if (isOn) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.surfaceContainerHighest,
-                )
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                ) {
-                    isOn = !isOn
-                },
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Icon(
-                if (isOn) Icons.Default.FlashlightOn else Icons.Default.FlashlightOff,
-                contentDescription = if (isOn) "Turn off" else "Turn on",
-                modifier = Modifier.size(64.dp),
-                tint = if (isOn) MaterialTheme.colorScheme.onPrimary
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Power button
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(180.dp)
+                    .scale(buttonScale)
+                    .clip(CircleShape)
+                    .background(
+                        if (isOn) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceContainerHighest,
+                    )
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) {
+                        isOn = !isOn
+                    },
+            ) {
+                Icon(
+                    Icons.Default.PowerSettingsNew,
+                    contentDescription = if (isOn) "Turn off" else "Turn on",
+                    modifier = Modifier.size(72.dp),
+                    tint = if (isOn) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Status text
+            Text(
+                text = if (isOn) "FLASHLIGHT IS ON" else "FLASHLIGHT IS OFF",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.sp,
+                color = if (isOn) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        }
 
-        Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Mode selector
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-            shape = RoundedCornerShape(16.dp),
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
+            // Mode chips — inline, no card wrapper
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(
-                    text = "MODE",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    FlashMode.entries.forEach { flashMode ->
-                        FilterChip(
-                            selected = mode == flashMode,
-                            onClick = { mode = flashMode },
-                            label = { Text(flashMode.label) },
-                        )
-                    }
+                FlashMode.entries.forEach { flashMode ->
+                    FilterChip(
+                        selected = mode == flashMode,
+                        onClick = { mode = flashMode },
+                        label = { Text(flashMode.label) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
+                    )
                 }
             }
-        }
 
-        if (cameraId == null) {
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Brightness slider card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Brightness",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = "${(brightness * 100).toInt()}%",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Slider(
+                        value = brightness,
+                        onValueChange = { brightness = it },
+                        valueRange = 0.1f..1f,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "No flashlight available on this device",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-            )
-        }
 
-        Spacer(modifier = Modifier.weight(0.5f))
+            // Footer text
+            Text(
+                text = if (cameraId == null) "No flashlight available on this device"
+                else "Available on supported devices only",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
     }
 }

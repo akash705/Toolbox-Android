@@ -27,3 +27,23 @@ import kotlinx.serialization.Serializable
 @Serializable object RandomGenerator
 @Serializable object ColorPicker
 @Serializable object Magnifier
+@Serializable object Mirror
+
+// Phase 6 Tools
+@Serializable object Vibrometer
+@Serializable object LightMeter
+@Serializable object MetalDetector
+@Serializable object Barometer
+@Serializable object Humidity
+
+// Phase 8 Tools
+@Serializable object Pedometer
+@Serializable object Gyroscope
+
+// Phase 9 Tools
+@Serializable object HeartRate
+@Serializable object SpectrumAnalyzer
+
+// Phase 10 Tools
+@Serializable object Speedometer
+@Serializable object Altitude

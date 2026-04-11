@@ -52,6 +52,13 @@ class TimerService : Service() {
         createNotificationChannel()
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Immediately promote to foreground so Android doesn't kill us
+        val notification = buildNotification(_remainingMs.value)
+        ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        return START_NOT_STICKY
+    }
+
     fun startTimer(durationMs: Long) {
         endTimeMs = System.currentTimeMillis() + durationMs
         _remainingMs.value = durationMs
@@ -60,7 +67,7 @@ class TimerService : Service() {
         // Schedule AlarmManager as backup for guaranteed completion
         scheduleAlarm(durationMs)
 
-        // Start foreground service
+        // Update foreground notification with actual duration
         val notification = buildNotification(durationMs)
         ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
 
@@ -110,6 +117,7 @@ class TimerService : Service() {
 
     private fun scheduleAlarm(durationMs: Long) {
         val am = getSystemService(AlarmManager::class.java)
+        if (!am.canScheduleExactAlarms()) return
         val intent = Intent(this, TimerAlarmReceiver::class.java)
         val pi = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         am.setExactAndAllowWhileIdle(

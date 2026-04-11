@@ -1,6 +1,6 @@
 package com.toolbox.everyday.magnifier
 
-import androidx.camera.view.PreviewView
+import androidx.camera.core.Camera
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.Card
@@ -27,6 +29,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +51,12 @@ fun MagnifierScreen() {
 @Composable
 private fun MagnifierContent() {
     var zoomLevel by remember { mutableFloatStateOf(1f) }
-    var previewView by remember { mutableStateOf<PreviewView?>(null) }
+    var camera by remember { mutableStateOf<Camera?>(null) }
+    var torchOn by remember { mutableStateOf(false) }
+
+    LaunchedEffect(zoomLevel, camera) {
+        camera?.cameraControl?.setZoomRatio(zoomLevel)
+    }
 
     Column(
         modifier = Modifier
@@ -64,10 +72,25 @@ private fun MagnifierContent() {
         ) {
             CameraPreview(
                 modifier = Modifier.fillMaxSize(),
-                onPreviewView = { pv ->
-                    previewView = pv
-                },
+                onCameraBound = { cam -> camera = cam },
             )
+
+            // Torch toggle
+            IconButton(
+                onClick = {
+                    torchOn = !torchOn
+                    camera?.cameraControl?.enableTorch(torchOn)
+                },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp),
+            ) {
+                Icon(
+                    imageVector = if (torchOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                    contentDescription = if (torchOn) "Flash on" else "Flash off",
+                    tint = androidx.compose.ui.graphics.Color.White,
+                )
+            }
 
             // Zoom level badge
             Card(

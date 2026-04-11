@@ -29,6 +29,7 @@ data class CounterUiState(
     val activeIndex: Int = 0,
     val showResetDialog: Boolean = false,
     val showAddDialog: Boolean = false,
+    val editingIndex: Int = -1,
 ) {
     val activeCounter: CounterData get() = counters[activeIndex]
 }
@@ -87,6 +88,34 @@ class CounterViewModel(private val application: Application) : AndroidViewModel(
 
     fun selectCounter(index: Int) {
         _state.update { it.copy(activeIndex = index.coerceIn(0, it.counters.lastIndex)) }
+    }
+
+    fun showEditDialog(index: Int) {
+        _state.update { it.copy(editingIndex = index) }
+    }
+
+    fun dismissEditDialog() {
+        _state.update { it.copy(editingIndex = -1) }
+    }
+
+    fun renameCounter(index: Int, newName: String) {
+        _state.update { s ->
+            val updated = s.counters.toMutableList()
+            updated[index] = updated[index].copy(name = newName)
+            s.copy(counters = updated, editingIndex = -1)
+        }
+        persist()
+    }
+
+    fun deleteCounter(index: Int) {
+        _state.update { s ->
+            if (s.counters.size <= 1) return@update s
+            val updated = s.counters.toMutableList()
+            updated.removeAt(index)
+            val newActive = if (s.activeIndex >= updated.size) updated.lastIndex else s.activeIndex
+            s.copy(counters = updated, activeIndex = newActive, editingIndex = -1)
+        }
+        persist()
     }
 
     private fun updateActiveCounter(transform: (CounterData) -> CounterData) {

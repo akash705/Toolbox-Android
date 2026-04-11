@@ -4,34 +4,51 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.toolbox.core.sensor.rememberAccelerometerData
@@ -44,16 +61,33 @@ import kotlin.math.sqrt
 @Composable
 fun ProtractorScreen() {
     val accelState = rememberAccelerometerData()
+    val haptic = LocalHapticFeedback.current
     var isLocked by remember { mutableStateOf(false) }
-    var lockedAngle by remember { mutableStateOf(0f) }
+    var lockedAngle by remember { mutableFloatStateOf(0f) }
+    var lockedPitch by remember { mutableFloatStateOf(0f) }
+    var lockedRoll by remember { mutableFloatStateOf(0f) }
+    var zeroOffset by remember { mutableFloatStateOf(0f) }
 
     val accel = accelState.value
-    // Calculate tilt angle from vertical (pitch)
-    val rawAngle = Math.toDegrees(
+    // Pitch: tilt forward/backward
+    val rawPitch = Math.toDegrees(
         atan2(accel[1].toDouble(), sqrt((accel[0] * accel[0] + accel[2] * accel[2]).toDouble()))
     ).toFloat()
+    // Roll: tilt left/right
+    val rawRoll = Math.toDegrees(
+        atan2(accel[0].toDouble(), sqrt((accel[1] * accel[1] + accel[2] * accel[2]).toDouble()))
+    ).toFloat()
+    // Overall tilt angle from vertical
+    val rawAngle = Math.toDegrees(
+        atan2(
+            sqrt((accel[0] * accel[0] + accel[1] * accel[1]).toDouble()),
+            accel[2].toDouble()
+        )
+    ).toFloat() - zeroOffset
 
     val angle = if (isLocked) lockedAngle else rawAngle
+    val pitch = if (isLocked) lockedPitch else rawPitch
+    val roll = if (isLocked) lockedRoll else rawRoll
 
     val animatedAngle by animateFloatAsState(
         targetValue = angle,
@@ -63,184 +97,287 @@ fun ProtractorScreen() {
 
     val textMeasurer = rememberTextMeasurer()
     val primaryColor = MaterialTheme.colorScheme.primary
-    val tickColor = MaterialTheme.colorScheme.outlineVariant
+    val trackColor = MaterialTheme.colorScheme.surfaceVariant
     val onSurface = MaterialTheme.colorScheme.onSurface
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Angle display
-        Text(
-            text = "%.1f°".format(abs(animatedAngle)),
-            style = MaterialTheme.typography.displayLarge,
-            fontWeight = FontWeight.Bold,
-            color = primaryColor,
-        )
-        Text(
-            text = when {
-                abs(angle) < 1f -> "Level"
-                angle > 0 -> "Tilted Forward"
-                else -> "Tilted Backward"
-            },
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Protractor arc
+        // Circular gauge with angle in center
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(300.dp),
+            modifier = Modifier.size(280.dp),
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                drawProtractor(
+                drawCircularGauge(
                     angle = animatedAngle,
                     primaryColor = primaryColor,
-                    tickColor = tickColor,
+                    trackColor = trackColor,
                     textColor = onSurface,
                     textMeasurer = textMeasurer,
                 )
             }
+
+            // Hero angle in center
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "%.1f".format(abs(animatedAngle)),
+                    fontSize = 48.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = primaryColor,
+                )
+                Text(
+                    text = "degrees",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Measurement cards row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MeasurementCard(
+                label = "Active Tilt",
+                value = "%.1f°".format(abs(animatedAngle)),
+                modifier = Modifier.weight(1f),
+                isPrimary = true,
+            )
+            MeasurementCard(
+                label = "Pitch",
+                value = "%.1f°".format(pitch),
+                modifier = Modifier.weight(1f),
+            )
+            MeasurementCard(
+                label = "Roll",
+                value = "%.1f°".format(roll),
+                modifier = Modifier.weight(1f),
+            )
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Lock button
-        Button(
-            onClick = {
-                if (!isLocked) {
-                    lockedAngle = rawAngle
-                }
-                isLocked = !isLocked
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+        // Action buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = if (isLocked) "Unlock Angle" else "Lock Angle",
-                style = MaterialTheme.typography.titleMedium,
-            )
+            Button(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (!isLocked) {
+                        lockedAngle = rawAngle
+                        lockedPitch = rawPitch
+                        lockedRoll = rawRoll
+                    }
+                    isLocked = !isLocked
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+            ) {
+                Icon(
+                    imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(if (isLocked) "Unlock" else "Lock Hold")
+            }
+
+            OutlinedButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    zeroOffset = rawAngle + zeroOffset
+                    isLocked = false
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                colors = ButtonDefaults.outlinedButtonColors(),
+            ) {
+                Icon(
+                    Icons.Default.RestartAlt,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Reset Zero")
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
-private fun DrawScope.drawProtractor(
-    angle: Float,
-    primaryColor: Color,
-    tickColor: Color,
-    textColor: Color,
-    textMeasurer: TextMeasurer,
+@Composable
+private fun MeasurementCard(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    isPrimary: Boolean = false,
 ) {
-    val center = Offset(size.width / 2, size.height * 0.85f)
-    val radius = size.minDimension / 2 - 24f
-
-    // Draw protractor arc (semicircle from 180° to 0°)
-    drawArc(
-        color = tickColor,
-        startAngle = 180f,
-        sweepAngle = 180f,
-        useCenter = false,
-        topLeft = Offset(center.x - radius, center.y - radius),
-        size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2),
-        style = Stroke(width = 2f),
-    )
-
-    // Base line
-    drawLine(
-        color = tickColor,
-        start = Offset(center.x - radius, center.y),
-        end = Offset(center.x + radius, center.y),
-        strokeWidth = 2f,
-    )
-
-    // Tick marks and labels every 10 degrees
-    for (i in 0..180 step 5) {
-        val rad = Math.toRadians(i.toDouble())
-        val isMajor = i % 30 == 0
-        val isMinor = i % 10 == 0
-        val tickLength = when {
-            isMajor -> 20f
-            isMinor -> 14f
-            else -> 8f
-        }
-
-        val outerX = center.x - radius * cos(rad).toFloat()
-        val outerY = center.y - radius * sin(rad).toFloat()
-        val innerX = center.x - (radius - tickLength) * cos(rad).toFloat()
-        val innerY = center.y - (radius - tickLength) * sin(rad).toFloat()
-
-        drawLine(
-            color = tickColor,
-            start = Offset(outerX, outerY),
-            end = Offset(innerX, innerY),
-            strokeWidth = if (isMajor) 2f else 1f,
-        )
-
-        // Label major ticks
-        if (isMajor) {
-            val labelRadius = radius - 32f
-            val lx = center.x - labelRadius * cos(rad).toFloat()
-            val ly = center.y - labelRadius * sin(rad).toFloat()
-            val label = "$i°"
-            val style = TextStyle(fontSize = 11.sp, color = textColor)
-            val measured = textMeasurer.measure(label, style)
-            drawText(
-                textLayoutResult = measured,
-                topLeft = Offset(
-                    lx - measured.size.width / 2,
-                    ly - measured.size.height / 2,
-                ),
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = if (isPrimary) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            },
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (isPrimary) {
+                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                color = if (isPrimary) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
             )
         }
     }
+}
 
-    // Draw angle indicator needle
-    val clampedAngle = angle.coerceIn(-90f, 90f)
-    // Map angle: 0° = vertical (90° in protractor coords), positive = forward tilt
-    val needleAngle = Math.toRadians((90.0 - clampedAngle))
-    val needleLength = radius - 8f
-    val needleEndX = center.x - needleLength * cos(needleAngle).toFloat()
-    val needleEndY = center.y - needleLength * sin(needleAngle).toFloat()
+private fun DrawScope.drawCircularGauge(
+    angle: Float,
+    primaryColor: Color,
+    trackColor: Color,
+    textColor: Color,
+    textMeasurer: TextMeasurer,
+) {
+    val center = Offset(size.width / 2, size.height / 2)
+    val radius = size.minDimension / 2 - 32f
+    val strokeWidth = 12f
 
-    // Needle line
-    drawLine(
-        color = primaryColor,
-        start = center,
-        end = Offset(needleEndX, needleEndY),
-        strokeWidth = 3f,
+    // Track circle (full ring background)
+    drawCircle(
+        color = trackColor,
+        radius = radius,
+        center = center,
+        style = Stroke(width = strokeWidth),
     )
 
-    // Arrow head
-    val arrowSize = 12f
-    val arrowAngle1 = needleAngle + Math.toRadians(150.0)
-    val arrowAngle2 = needleAngle - Math.toRadians(150.0)
-    val arrowPath = Path().apply {
-        moveTo(needleEndX, needleEndY)
-        lineTo(
-            needleEndX - arrowSize * cos(arrowAngle1).toFloat(),
-            needleEndY - arrowSize * sin(arrowAngle1).toFloat(),
-        )
-        moveTo(needleEndX, needleEndY)
-        lineTo(
-            needleEndX - arrowSize * cos(arrowAngle2).toFloat(),
-            needleEndY - arrowSize * sin(arrowAngle2).toFloat(),
+    // Active arc (shows measured angle)
+    val clampedAngle = angle.coerceIn(0f, 360f)
+    if (clampedAngle > 0.5f) {
+        drawArc(
+            color = primaryColor,
+            startAngle = -90f,
+            sweepAngle = clampedAngle,
+            useCenter = false,
+            topLeft = Offset(center.x - radius, center.y - radius),
+            size = Size(radius * 2, radius * 2),
+            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
         )
     }
-    drawPath(arrowPath, primaryColor, style = Stroke(width = 3f))
+
+    // Degree markers and labels
+    val markerAngles = listOf(0, 90, 180, 270)
+    val markerLabels = listOf("0°", "90°", "180°", "270°")
+
+    markerAngles.forEachIndexed { index, deg ->
+        val rad = Math.toRadians(deg.toDouble() - 90.0) // -90 to start from top
+
+        // Tick marks
+        val outerR = radius + 8f
+        val innerR = radius - 8f
+        drawLine(
+            color = textColor.copy(alpha = 0.5f),
+            start = Offset(
+                center.x + outerR * cos(rad).toFloat(),
+                center.y + outerR * sin(rad).toFloat(),
+            ),
+            end = Offset(
+                center.x + innerR * cos(rad).toFloat(),
+                center.y + innerR * sin(rad).toFloat(),
+            ),
+            strokeWidth = 2f,
+        )
+
+        // Labels outside the ring
+        val labelR = radius + 24f
+        val lx = center.x + labelR * cos(rad).toFloat()
+        val ly = center.y + labelR * sin(rad).toFloat()
+        val style = TextStyle(fontSize = 12.sp, color = textColor, fontWeight = FontWeight.Medium)
+        val measured = textMeasurer.measure(markerLabels[index], style)
+        drawText(
+            textLayoutResult = measured,
+            topLeft = Offset(
+                lx - measured.size.width / 2,
+                ly - measured.size.height / 2,
+            ),
+        )
+    }
+
+    // Minor tick marks every 30 degrees
+    for (deg in 0 until 360 step 30) {
+        if (deg % 90 == 0) continue // skip cardinal directions already drawn
+        val rad = Math.toRadians(deg.toDouble() - 90.0)
+        val outerR = radius + 4f
+        val innerR = radius - 4f
+        drawLine(
+            color = textColor.copy(alpha = 0.3f),
+            start = Offset(
+                center.x + outerR * cos(rad).toFloat(),
+                center.y + outerR * sin(rad).toFloat(),
+            ),
+            end = Offset(
+                center.x + innerR * cos(rad).toFloat(),
+                center.y + innerR * sin(rad).toFloat(),
+            ),
+            strokeWidth = 1.5f,
+        )
+    }
+
+    // Needle indicator at the angle position
+    val needleRad = Math.toRadians(angle.toDouble() - 90.0)
+    val needleInner = radius - strokeWidth
+    val needleOuter = radius + strokeWidth
+    drawLine(
+        color = primaryColor,
+        start = Offset(
+            center.x + needleInner * cos(needleRad).toFloat(),
+            center.y + needleInner * sin(needleRad).toFloat(),
+        ),
+        end = Offset(
+            center.x + needleOuter * cos(needleRad).toFloat(),
+            center.y + needleOuter * sin(needleRad).toFloat(),
+        ),
+        strokeWidth = 3f,
+        cap = StrokeCap.Round,
+    )
 
     // Center dot
     drawCircle(
         color = primaryColor,
-        radius = 6f,
+        radius = 4f,
         center = center,
     )
 }

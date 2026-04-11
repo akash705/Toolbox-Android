@@ -78,8 +78,9 @@ Screen designs are available in Stitch project `17370519435532616667`. Use `mcp_
 | Compass | `9fb9858efdb242e583adc0b009305318` | Compass rose with bearing and magnetic/true north toggle |
 | Sound Meter | `e199cbbf851c48e38127fc9fc77d7d85` | Arc gauge with color zones, min/avg/max stats |
 | QR Scanner | `2d205b828d8543868ef2fb853b91e95f` | Camera viewfinder with scan/generate tabs |
+| Ruler | `666ef0eccff4402cb99c7eac51904a45` | Full-width ruler strip, cm/in toggle, calibration via credit card |
 
-Remaining tool screens (Flashlight, Counter, Stopwatch, Protractor, Ruler, Percentage, Tip Calculator, Number Base, Random/Dice, Color Picker, Magnifier) can be generated from Stitch MCP as needed during implementation using `mcp__stitch__generate_screen_from_text` with project ID `17370519435532616667`.
+Remaining tool screens (Flashlight, Counter, Stopwatch, Protractor, Percentage, Tip Calculator, Number Base, Random/Dice, Color Picker, Magnifier) can be generated from Stitch MCP as needed during implementation using `mcp__stitch__generate_screen_from_text` with project ID `17370519435532616667`.
 
 ## Key Technical Decisions
 
@@ -1063,6 +1064,282 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Tiles appear in Quick Settings edit panel. Flashlight toggles instantly. Other tiles deep-link correctly.
 
+### Phase 7: Pressure & Environment Sensors
+
+- [x] **Unit 28: Barometer / Altimeter**
+
+  **Goal:** Display atmospheric pressure and estimate relative altitude changes using the pressure sensor.
+
+  **Requirements:** Zero-permission tool using `TYPE_PRESSURE` sensor
+
+  **Dependencies:** Unit 11 (sensor hooks pattern)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/core/sensor/PressureSensorHook.kt`
+  - Create: `app/src/main/java/com/toolbox/measurement/barometer/BarometerScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - New sensor hook: `rememberPressureData()` using `Sensor.TYPE_PRESSURE`, same lifecycle pattern as existing hooks
+  - Display current pressure in hPa prominently with weather tendency indicator (rising/steady/falling based on trend over last 30 min)
+  - Altitude estimation using barometric formula: `SensorManager.getAltitude(SensorManager.PRESSURE_STANDARD_ATMOSPHERE, currentPressure)` for relative altitude
+  - "Set Reference" button to zero the altitude at current position, then show relative altitude change (useful for hiking, stair counting)
+  - Rolling line chart showing pressure over last 60 minutes
+  - Unit toggle: hPa / mbar / inHg / mmHg
+  - Weather reference labels: Low (<1000 hPa), Normal (1013 hPa), High (>1025 hPa)
+  - Zero permissions required — pressure sensor is not a dangerous permission
+
+  **Test scenarios:**
+  - Happy path: Current pressure displayed and updates
+  - Happy path: Altitude changes when moving between floors
+  - Happy path: Unit toggle switches between hPa/inHg/mmHg
+  - Happy path: Reference point zeroes altitude correctly
+  - Edge case: Device without pressure sensor shows disabled tile on dashboard
+
+  **Verification:**
+  - Pressure readings are reasonable (~950-1050 hPa at sea level). Altitude changes detectably between floors (~3m per floor).
+
+- [x] **Unit 29: Humidity Meter**
+
+  **Goal:** Display relative humidity reading from the humidity sensor (available on select devices).
+
+  **Requirements:** Zero-permission tool using `TYPE_RELATIVE_HUMIDITY` sensor
+
+  **Dependencies:** Unit 11 (sensor hooks pattern)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/core/sensor/HumiditySensorHook.kt`
+  - Create: `app/src/main/java/com/toolbox/measurement/humidity/HumidityScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - New sensor hook: `rememberHumidityData()` using `Sensor.TYPE_RELATIVE_HUMIDITY`
+  - Large percentage display with comfort zone indicator: Dry (<30%), Comfortable (30-60%), Humid (>60%)
+  - Arc gauge similar to Sound Meter — green (comfortable) → yellow (borderline) → red (too dry/too humid)
+  - If both humidity and temperature sensors available, compute dew point using Magnus formula
+  - Prominent "Sensor not available" state since most phones lack this sensor — link to explanation
+  - Zero permissions required
+
+  **Test scenarios:**
+  - Happy path: Humidity percentage displayed on supported devices
+  - Happy path: Comfort zone label updates correctly
+  - Edge case: Device without humidity sensor shows clear unavailable state (most devices)
+
+  **Verification:**
+  - Humidity reading is reasonable on supported devices. Unavailable state is clear and non-confusing on unsupported devices.
+
+### Phase 8: Motion & Activity Tools
+
+- [x] **Unit 30: Pedometer (Step Counter)**
+
+  **Goal:** Count steps using the hardware step counter with distance estimation.
+
+  **Requirements:** Zero-permission tool using `TYPE_STEP_COUNTER` / `TYPE_STEP_DETECTOR` sensors
+
+  **Dependencies:** Unit 11 (sensor hooks pattern)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/core/sensor/StepSensorHook.kt`
+  - Create: `app/src/main/java/com/toolbox/everyday/pedometer/PedometerScreen.kt`
+  - Create: `app/src/main/java/com/toolbox/everyday/pedometer/PedometerViewModel.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Use `TYPE_STEP_COUNTER` (cumulative since boot) — capture initial value on screen open, show delta as session steps
+  - Large step count display with circular progress ring toward daily goal (default 10,000, adjustable)
+  - Estimated distance: steps × stride length (default 0.75m, configurable in settings)
+  - Estimated calories: steps × 0.04 kcal (rough average)
+  - Session stats: steps, distance, duration, pace
+  - "Reset Session" button to start fresh count
+  - DataStore persistence for stride length preference and daily goal
+  - Note: This is a session-only pedometer (active while screen is open), NOT a background step tracker — keeps it zero-permission and simple
+
+  **Test scenarios:**
+  - Happy path: Step count increments while walking
+  - Happy path: Distance and calorie estimates update with steps
+  - Happy path: Reset clears session count
+  - Edge case: Device without step sensor shows unavailable state
+
+  **Verification:**
+  - Steps count accurately during walking. Distance estimate is in reasonable range.
+
+- [x] **Unit 31: Gyroscope Meter**
+
+  **Goal:** Display real-time rotation rate on all 3 axes with visual feedback.
+
+  **Requirements:** Zero-permission tool using `TYPE_GYROSCOPE` sensor
+
+  **Dependencies:** Unit 11 (sensor hooks pattern)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/core/sensor/GyroscopeHook.kt`
+  - Create: `app/src/main/java/com/toolbox/measurement/gyroscope/GyroscopeScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - New sensor hook: `rememberGyroscopeData()` using `Sensor.TYPE_GYROSCOPE` at `SENSOR_DELAY_UI`
+  - Display rotation rate (°/s) for X, Y, Z axes as horizontal bar gauges
+  - Total rotation magnitude prominently displayed
+  - Stability indicator: "Stable" when total rotation < 0.5°/s, "Moving" when moderate, "Spinning" when high
+  - Rolling waveform chart showing rotation rate over time (reuse Canvas pattern from Vibrometer)
+  - Peak rotation rate tracking with reset
+  - Zero permissions required
+
+  **Test scenarios:**
+  - Happy path: Rotation rates update when rotating the phone
+  - Happy path: Stability indicator changes appropriately
+  - Edge case: Stationary phone shows near-zero on all axes
+
+  **Verification:**
+  - Responsive to rotation. Stable phone reads near-zero. Fast spin shows high values.
+
+### Phase 9: Camera & Software-Based Tools
+
+- [x] **Unit 32: Heart Rate Monitor**
+
+  **Goal:** Estimate heart rate by detecting blood pulse through fingertip placed on the camera lens with flash on.
+
+  **Requirements:** Camera permission (already used by other tools)
+
+  **Dependencies:** Unit 15 (shared CameraX composable)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/everyday/heartrate/HeartRateScreen.kt`
+  - Create: `app/src/main/java/com/toolbox/everyday/heartrate/HeartRateAnalyzer.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Use CameraX `ImageAnalysis` with torch enabled — user places fingertip over rear camera + flash
+  - `HeartRateAnalyzer` implements `ImageAnalysis.Analyzer`: extract average red channel intensity from each frame
+  - Detect periodic brightness fluctuations caused by blood pulse (PPG — photoplethysmography)
+  - Peak detection on red channel signal to count beats over a 15-30 second window
+  - Display: BPM reading, live pulse waveform (Canvas), measurement progress bar
+  - States: "Place finger on camera", "Measuring..." (with countdown), "Result: XX BPM"
+  - Disclaimer: "For reference only. Not a medical device."
+  - Uses existing camera permission — no new permissions needed
+
+  **Test scenarios:**
+  - Happy path: Detects heart rate when finger covers camera with flash
+  - Happy path: Waveform shows periodic pulse signal
+  - Edge case: No finger detected — shows instruction state
+  - Edge case: Too much movement — shows "Hold steady" warning
+
+  **Verification:**
+  - BPM reading is in reasonable range (50-120) for resting heart rate. Waveform shows clear periodic signal.
+
+- [x] **Unit 33: Spectrum Analyzer (Audio FFT)**
+
+  **Goal:** Real-time frequency spectrum display of ambient audio using FFT.
+
+  **Requirements:** Microphone permission (already used by Sound Meter)
+
+  **Dependencies:** Unit 14 (Sound Meter audio infrastructure)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/measurement/spectrum/SpectrumScreen.kt`
+  - Create: `app/src/main/java/com/toolbox/measurement/spectrum/FFTProcessor.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Reuse `AudioRecord` setup from Sound Meter (44100 Hz sample rate, mono)
+  - `FFTProcessor`: apply Hann window to audio buffer, compute FFT using a simple radix-2 Cooley-Tukey implementation (no external lib needed for 1024/2048-point FFT)
+  - Display as bar chart spectrum (Canvas): X-axis = frequency bands (20 Hz - 20 kHz, log scale), Y-axis = magnitude (dB)
+  - Color-coded frequency regions: Sub-bass, Bass, Low-mid, Mid, High-mid, Presence, Brilliance
+  - Peak hold: show peak markers that decay slowly
+  - Toggle between bar and waterfall (spectrogram) visualization
+  - Uses existing microphone permission — no new permissions needed
+
+  **Test scenarios:**
+  - Happy path: Spectrum responds to different audio frequencies
+  - Happy path: Peak hold markers visible and decay
+  - Happy path: Bar and waterfall views both render
+  - Edge case: Silence shows flat/minimal spectrum
+
+  **Verification:**
+  - Playing a known tone (e.g., 440 Hz) shows clear peak at correct frequency. Broadband noise shows spread across spectrum.
+
+### Phase 10: Location-Based Tools
+
+- [x] **Unit 34: Speedometer (GPS Speed Meter)**
+
+  **Goal:** Display real-time speed using GPS with max/average tracking.
+
+  **Requirements:** `ACCESS_FINE_LOCATION` permission (new — runtime only)
+
+  **Dependencies:** Unit 4 (PermissionGate)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/measurement/speedometer/SpeedometerScreen.kt`
+  - Create: `app/src/main/java/com/toolbox/measurement/speedometer/SpeedometerViewModel.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+  - Modify: `app/src/main/AndroidManifest.xml` (add `ACCESS_FINE_LOCATION`)
+
+  **Approach:**
+  - Use `LocationManager` or `FusedLocationProviderClient` with high-accuracy request (1-second interval)
+  - Large speedometer gauge (arc Canvas) showing current speed
+  - Unit toggle: km/h / mph / m/s / knots
+  - Stats: current speed, max speed, average speed, distance traveled
+  - Trip mode: start/stop/reset for tracking a journey segment
+  - GPS accuracy indicator so user knows reading quality
+  - PermissionGate wrapping the screen with rationale: "Speed measurement requires location access"
+  - Note: This adds `ACCESS_FINE_LOCATION` as a dangerous permission — only requested when user opens this tool (lazy permission model)
+
+  **Test scenarios:**
+  - Happy path: Speed updates while moving (driving/walking)
+  - Happy path: Unit toggle switches correctly
+  - Happy path: Max and average speed track correctly
+  - Edge case: Indoors with poor GPS shows accuracy warning
+  - Edge case: Permission denied shows PermissionGate rationale
+
+  **Verification:**
+  - Speed reading matches actual speed within reasonable margin. Works in a moving vehicle.
+
+- [x] **Unit 35: GPS Altitude**
+
+  **Goal:** Display current elevation from GPS with trip tracking.
+
+  **Requirements:** `ACCESS_FINE_LOCATION` permission (shared with Speedometer)
+
+  **Dependencies:** Unit 34 (shares location permission)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/measurement/altitude/AltitudeScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Use same location provider as Speedometer — extract `Location.altitude` (meters above WGS84 ellipsoid)
+  - Display current altitude prominently with unit toggle: meters / feet
+  - If barometer is also available, show both GPS altitude and barometric altitude for comparison
+  - Rolling altitude chart over time
+  - Ascent/descent tracking for hiking: total elevation gain and loss
+  - GPS accuracy indicator
+  - PermissionGate with rationale: "Altitude measurement requires location access"
+
+  **Test scenarios:**
+  - Happy path: Altitude displays and changes with elevation
+  - Happy path: Ascent/descent tracking accumulates correctly
+  - Edge case: Indoor GPS gives less accurate altitude — show accuracy warning
+  - Edge case: Combined barometer + GPS reading when both available
+
+  **Verification:**
+  - Altitude reading is reasonable for known location. Elevation gain tracks when climbing stairs/hills.
+
 ## System-Wide Impact
 
 - **Interaction graph**: Dashboard ↔ Navigation ↔ 16 tool screens. TimerService ↔ StopwatchTimerScreen via bound service + StateFlow. TimerAlarmReceiver as fallback completion trigger. DataStore ↔ Counter, Unit Converter, Theme. CameraX provider shared across QR Scanner, Color Picker, Magnifier (only one camera binding active at a time via lifecycle)
@@ -1083,6 +1360,11 @@ CameraX Provider → Preview + ImageAnalysis
 | APK size exceeds 15 MB target | ZXing core (~0.5 MB) chosen over ML Kit (~3-5 MB); monitor with `./gradlew assembleRelease` after each phase |
 | CameraX version incompatibility with camera-compose | Pin CameraX versions together via explicit version catalog; test on 3+ device models |
 | Some devices lack magnetometer or barometer | SensorAvailability check at dashboard load; affected tools shown as disabled |
+| Humidity/Temperature sensors extremely rare | Clear "Sensor not available" UI; these tools may be unusable on most devices — acceptable as bonus features |
+| Heart rate PPG accuracy varies by device | Prominent "Not a medical device" disclaimer; require 15-30s measurement window for stability |
+| GPS altitude is inaccurate indoors | Show GPS accuracy indicator; recommend barometer for indoor altitude (Phase 7) |
+| `ACCESS_FINE_LOCATION` is a sensitive permission | Only requested lazily when Speedometer/Altitude is opened; never at install time; clear rationale in PermissionGate |
+| FFT implementation performance on low-end devices | Use 1024-point FFT (not 4096); profile on budget devices; drop to lower resolution if frame drops |
 
 ## Sources & References
 

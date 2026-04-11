@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="static_flashlight"
+        android:enabled="true"
+        android:icon="@drawable/ic_flashlight_tile"
+        android:shortcutShortLabel="@string/shortcut_flashlight"
+        android:shortcutLongLabel="@string/shortcut_flashlight">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.toolbox"
+            android:targetClass="com.toolbox.MainActivity">
+            <extra android:name="tool_id" android:value="flashlight" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="static_ruler"
+        android:enabled="true"
+        android:icon="@drawable/ic_level_tile"
+        android:shortcutShortLabel="@string/shortcut_level"
+        android:shortcutLongLabel="@string/shortcut_level">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.toolbox"
+            android:targetClass="com.toolbox.MainActivity">
+            <extra android:name="tool_id" android:value="level" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="static_compass"
+        android:enabled="true"
+        android:icon="@drawable/ic_soundmeter_tile"
+        android:shortcutShortLabel="@string/shortcut_sound_meter"
+        android:shortcutLongLabel="@string/shortcut_sound_meter">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.toolbox"
+            android:targetClass="com.toolbox.MainActivity">
+            <extra android:name="tool_id" android:value="sound_meter" />
+        </intent>
+    </shortcut>
+</shortcuts>

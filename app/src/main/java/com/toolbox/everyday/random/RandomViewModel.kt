@@ -16,6 +16,7 @@ data class RandomUiState(
     val numberResult: Int? = null,
     val coinResult: Boolean? = null, // true = heads
     val diceCount: Int = 1,
+    val diceSides: Int = 6,
     val diceResults: List<Int> = emptyList(),
     val isAnimating: Boolean = false,
 )
@@ -35,6 +36,10 @@ class RandomViewModel : ViewModel() {
         _state.update { it.copy(diceCount = count.coerceIn(1, 6)) }
     }
 
+    fun setDiceSides(sides: Int) {
+        _state.update { it.copy(diceSides = sides) }
+    }
+
     fun generateNumber() {
         val min = _state.value.min.toIntOrNull() ?: 1
         val max = _state.value.max.toIntOrNull() ?: 100
@@ -47,7 +52,8 @@ class RandomViewModel : ViewModel() {
     }
 
     fun rollDice() {
-        val results = List(_state.value.diceCount) { Random.nextInt(1, 7) }
+        val sides = _state.value.diceSides
+        val results = List(_state.value.diceCount) { Random.nextInt(1, sides + 1) }
         _state.update { it.copy(diceResults = results) }
     }
 }

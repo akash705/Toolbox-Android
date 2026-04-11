@@ -8,23 +8,55 @@ import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.ExposurePlus1
 import androidx.compose.material.icons.filled.Flare
 import androidx.compose.material.icons.filled.FlashlightOn
+import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Height
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Percent
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Pin
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.SyncAlt
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.ZoomIn
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
-enum class ToolCategory(val label: String) {
-    MeasurementSensors("Measurement & Sensors"),
-    ConversionCalculation("Conversion & Calculation"),
-    Lighting("Lighting"),
-    EverydayTools("Everyday Tools"),
+enum class ToolCategory(
+    val label: String,
+    val tileColor: Color,
+    val iconTint: Color,
+) {
+    MeasurementSensors(
+        label = "Measurement & Sensors",
+        tileColor = Color(0xFFDCEEFD),
+        iconTint = Color(0xFF3B7DD8),
+    ),
+    ConversionCalculation(
+        label = "Conversion & Calculation",
+        tileColor = Color(0xFFE5E0F6),
+        iconTint = Color(0xFF6B5BAE),
+    ),
+    Lighting(
+        label = "Lighting",
+        tileColor = Color(0xFFFFF3D0),
+        iconTint = Color(0xFFA67C00),
+    ),
+    EverydayTools(
+        label = "Everyday Tools",
+        tileColor = Color(0xFFD4F5E0),
+        iconTint = Color(0xFF2E8B57),
+    ),
 }
 
 data class ToolDefinition(
@@ -32,6 +64,7 @@ data class ToolDefinition(
     val name: String,
     val icon: ImageVector,
     val category: ToolCategory,
+    val description: String = "",
     val requiredSensorType: Int? = null,
     val requiresCamera: Boolean = false,
     val searchKeywords: List<String> = emptyList(),
@@ -44,6 +77,7 @@ val allTools = listOf(
         name = "Bubble Level",
         icon = Icons.Default.Flare,
         category = ToolCategory.MeasurementSensors,
+        description = "Check if surfaces are perfectly horizontal or vertical. Place your phone on any surface to see real-time tilt angles. Great for hanging pictures, leveling shelves, or aligning furniture.",
         requiredSensorType = Sensor.TYPE_ACCELEROMETER,
         searchKeywords = listOf("bubble", "spirit", "horizontal", "tilt", "level"),
     ),
@@ -52,6 +86,7 @@ val allTools = listOf(
         name = "Compass",
         icon = Icons.Default.Explore,
         category = ToolCategory.MeasurementSensors,
+        description = "Find cardinal directions using your phone's magnetic sensor. Shows heading in degrees, cardinal direction, and a rotating compass dial. Useful for navigation, hiking, or orienting yourself outdoors.",
         requiredSensorType = Sensor.TYPE_MAGNETIC_FIELD,
         searchKeywords = listOf("direction", "north", "bearing", "heading"),
     ),
@@ -60,6 +95,7 @@ val allTools = listOf(
         name = "Protractor",
         icon = Icons.Default.Architecture,
         category = ToolCategory.MeasurementSensors,
+        description = "Measure angles by tilting your phone or using the on-screen protractor. Perfect for measuring slopes, roof pitches, or any angle you need to check.",
         searchKeywords = listOf("angle", "degree", "measure"),
     ),
     ToolDefinition(
@@ -67,6 +103,7 @@ val allTools = listOf(
         name = "Sound Meter",
         icon = Icons.Default.GraphicEq,
         category = ToolCategory.MeasurementSensors,
+        description = "Measure ambient noise levels in decibels (dB) using your phone's microphone. Shows real-time sound level, min/max readings, and a noise level gauge with reference labels.",
         searchKeywords = listOf("decibel", "db", "noise", "volume", "microphone"),
     ),
     ToolDefinition(
@@ -74,7 +111,71 @@ val allTools = listOf(
         name = "Ruler",
         icon = Icons.Default.Straighten,
         category = ToolCategory.MeasurementSensors,
+        description = "Measure lengths directly on your phone screen in centimeters or inches. Drag markers to measure objects placed against your screen. Calibrated to your device's display.",
         searchKeywords = listOf("measure", "inch", "centimeter", "cm", "length"),
+    ),
+    ToolDefinition(
+        id = "vibrometer",
+        name = "Vibrometer",
+        icon = Icons.Default.Vibration,
+        category = ToolCategory.MeasurementSensors,
+        description = "Detect and measure vibrations using the accelerometer. Shows real-time vibration frequency and amplitude with a live waveform display. Useful for checking appliance vibrations or surface stability.",
+        requiredSensorType = Sensor.TYPE_ACCELEROMETER,
+        searchKeywords = listOf("vibration", "frequency", "waveform", "surface"),
+    ),
+    ToolDefinition(
+        id = "light_meter",
+        name = "Light Meter",
+        icon = Icons.Default.LightMode,
+        category = ToolCategory.MeasurementSensors,
+        description = "Measure ambient light intensity in lux using your phone's light sensor. Helpful for photography, checking workplace lighting conditions, or comparing light levels in different rooms.",
+        requiredSensorType = Sensor.TYPE_LIGHT,
+        searchKeywords = listOf("lux", "light", "ambient", "brightness", "illuminance"),
+    ),
+    ToolDefinition(
+        id = "barometer",
+        name = "Barometer",
+        icon = Icons.Default.Speed,
+        category = ToolCategory.MeasurementSensors,
+        description = "Measure atmospheric pressure in hPa using the built-in pressure sensor. Track pressure trends to predict weather changes. Also estimates altitude based on barometric readings.",
+        requiredSensorType = Sensor.TYPE_PRESSURE,
+        searchKeywords = listOf("barometer", "pressure", "altitude", "weather", "hpa"),
+    ),
+    ToolDefinition(
+        id = "humidity",
+        name = "Humidity",
+        icon = Icons.Default.WaterDrop,
+        category = ToolCategory.MeasurementSensors,
+        description = "Monitor relative humidity percentage using the device's humidity sensor. Tracks comfort level with dew point and heat index calculations. Useful for monitoring indoor climate.",
+        requiredSensorType = Sensor.TYPE_RELATIVE_HUMIDITY,
+        searchKeywords = listOf("humidity", "moisture", "dew", "relative", "comfort"),
+    ),
+    ToolDefinition(
+        id = "pedometer",
+        name = "Pedometer",
+        icon = Icons.Default.DirectionsWalk,
+        category = ToolCategory.MeasurementSensors,
+        description = "Count your steps and estimate distance walked using the step counter sensor. Track daily walking activity with a simple start/stop interface. Shows steps, distance, and calories.",
+        requiredSensorType = Sensor.TYPE_STEP_COUNTER,
+        searchKeywords = listOf("step", "walk", "pedometer", "counter", "fitness", "distance"),
+    ),
+    ToolDefinition(
+        id = "gyroscope",
+        name = "Gyroscope",
+        icon = Icons.Default.ScreenRotation,
+        category = ToolCategory.MeasurementSensors,
+        description = "Visualize rotational motion in real time across pitch, roll, and yaw axes. Shows angular velocity data with a 3D orientation display. Useful for testing device sensors or understanding rotation.",
+        requiredSensorType = Sensor.TYPE_GYROSCOPE,
+        searchKeywords = listOf("gyroscope", "rotation", "pitch", "roll", "yaw", "angular"),
+    ),
+    ToolDefinition(
+        id = "metal_detector",
+        name = "Metal Detector",
+        icon = Icons.Default.Search,
+        category = ToolCategory.MeasurementSensors,
+        description = "Detect nearby metal objects using the magnetic field sensor. Shows magnetic field strength and alerts when metal is detected. Can help find studs in walls, lost metal objects, or magnetic sources.",
+        requiredSensorType = Sensor.TYPE_MAGNETIC_FIELD,
+        searchKeywords = listOf("metal", "magnet", "magnetic", "field", "stud", "ferrous"),
     ),
 
     // Conversion & Calculation
@@ -83,6 +184,7 @@ val allTools = listOf(
         name = "Unit Converter",
         icon = Icons.Default.SyncAlt,
         category = ToolCategory.ConversionCalculation,
+        description = "Convert between units across 17+ categories including length, weight, temperature, volume, speed, area, and more. Supports all common units with instant real-time conversion.",
         searchKeywords = listOf("convert", "length", "weight", "temperature", "volume"),
     ),
     ToolDefinition(
@@ -90,6 +192,7 @@ val allTools = listOf(
         name = "Percentage",
         icon = Icons.Default.Percent,
         category = ToolCategory.ConversionCalculation,
+        description = "Quickly calculate percentages, discounts, markups, and percentage changes. Enter any two values to find the third. Perfect for shopping discounts or calculating tips.",
         searchKeywords = listOf("percent", "discount", "markup", "ratio"),
     ),
     ToolDefinition(
@@ -97,6 +200,7 @@ val allTools = listOf(
         name = "Tip Calculator",
         icon = Icons.Default.Payments,
         category = ToolCategory.ConversionCalculation,
+        description = "Calculate tips and split bills easily. Enter the bill amount, choose a tip percentage, and split among any number of people. Shows per-person totals with tip included.",
         searchKeywords = listOf("tip", "bill", "split", "restaurant"),
     ),
     ToolDefinition(
@@ -104,6 +208,7 @@ val allTools = listOf(
         name = "Number Base",
         icon = Icons.Default.Pin,
         category = ToolCategory.ConversionCalculation,
+        description = "Convert numbers between decimal, binary, hexadecimal, and octal systems. Useful for programmers, students, and anyone working with different number formats.",
         searchKeywords = listOf("binary", "hex", "octal", "decimal", "base"),
     ),
 
@@ -113,6 +218,7 @@ val allTools = listOf(
         name = "Flashlight",
         icon = Icons.Default.FlashlightOn,
         category = ToolCategory.Lighting,
+        description = "Turn your phone into a bright flashlight using the camera flash LED. Features adjustable brightness, SOS mode for emergencies, and strobe mode.",
         searchKeywords = listOf("torch", "light", "sos", "strobe"),
     ),
 
@@ -122,6 +228,7 @@ val allTools = listOf(
         name = "QR Scanner",
         icon = Icons.Default.QrCodeScanner,
         category = ToolCategory.EverydayTools,
+        description = "Scan QR codes and barcodes using your camera. Instantly opens links, copies text, or shows encoded data. Can also generate QR codes from text or URLs.",
         requiresCamera = true,
         searchKeywords = listOf("qr", "barcode", "scan", "generate", "code"),
     ),
@@ -130,6 +237,7 @@ val allTools = listOf(
         name = "Counter",
         icon = Icons.Default.ExposurePlus1,
         category = ToolCategory.EverydayTools,
+        description = "A simple tally counter for counting anything. Tap to increment, with undo support. Great for counting people, inventory items, repetitions, or anything else.",
         searchKeywords = listOf("count", "tally", "increment", "clicker"),
     ),
     ToolDefinition(
@@ -137,6 +245,7 @@ val allTools = listOf(
         name = "Stopwatch",
         icon = Icons.Default.Timer,
         category = ToolCategory.EverydayTools,
+        description = "Stopwatch with lap timing and countdown timer in one tool. Start, stop, and record laps with precision. The timer supports custom durations with alarm notification.",
         searchKeywords = listOf("stopwatch", "timer", "countdown", "lap"),
     ),
     ToolDefinition(
@@ -144,6 +253,7 @@ val allTools = listOf(
         name = "Random/Dice",
         icon = Icons.Default.Casino,
         category = ToolCategory.EverydayTools,
+        description = "Generate random numbers, flip coins, and roll dice. Set custom ranges for number generation. Features animated coin flip and dice roll for games and decision making.",
         searchKeywords = listOf("random", "coin", "flip", "dice", "number"),
     ),
     ToolDefinition(
@@ -151,6 +261,7 @@ val allTools = listOf(
         name = "Color Picker",
         icon = Icons.Default.Palette,
         category = ToolCategory.EverydayTools,
+        description = "Pick colors from the real world using your camera. Point at any object to capture its color with HEX, RGB, and HSL values. Save colors to a palette for design reference.",
         requiresCamera = true,
         searchKeywords = listOf("color", "hex", "rgb", "eyedropper", "palette"),
     ),
@@ -159,7 +270,54 @@ val allTools = listOf(
         name = "Magnifier",
         icon = Icons.Default.ZoomIn,
         category = ToolCategory.EverydayTools,
+        description = "Use your camera as a magnifying glass to zoom in on small text, labels, or objects. Supports pinch-to-zoom and flashlight toggle for better visibility.",
         requiresCamera = true,
         searchKeywords = listOf("magnify", "zoom", "magnifying glass", "enlarge"),
+    ),
+    ToolDefinition(
+        id = "mirror",
+        name = "Mirror",
+        icon = Icons.Default.Person,
+        category = ToolCategory.EverydayTools,
+        description = "Use the front camera as a mirror. Includes a true mirror mode that shows your un-flipped reflection, so you see yourself as others see you.",
+        requiresCamera = true,
+        searchKeywords = listOf("mirror", "selfie", "front camera", "reflection", "true mirror"),
+    ),
+    ToolDefinition(
+        id = "heart_rate",
+        name = "Heart Rate",
+        icon = Icons.Default.Favorite,
+        category = ToolCategory.EverydayTools,
+        description = "Measure your heart rate by placing your finger over the camera lens. Uses photoplethysmography (PPG) to detect pulse from blood flow changes. For reference only, not a medical device.",
+        requiresCamera = true,
+        searchKeywords = listOf("heart", "pulse", "bpm", "heartbeat", "ppg", "monitor"),
+    ),
+
+    // Measurement & Sensors (Phase 9)
+    ToolDefinition(
+        id = "spectrum_analyzer",
+        name = "Spectrum",
+        icon = Icons.Default.Equalizer,
+        category = ToolCategory.MeasurementSensors,
+        description = "Visualize audio frequencies in real time using FFT analysis. Shows frequency bands from sub-bass to brilliance with bar and waterfall (spectrogram) views. Useful for music, acoustics, and audio troubleshooting.",
+        searchKeywords = listOf("spectrum", "fft", "frequency", "audio", "analyzer", "equalizer"),
+    ),
+
+    // Measurement & Sensors (Phase 10)
+    ToolDefinition(
+        id = "speedometer",
+        name = "Speedometer",
+        icon = Icons.Default.Speed,
+        category = ToolCategory.MeasurementSensors,
+        description = "Measure your speed using GPS with a real-time gauge display. Supports km/h, mph, m/s, and knots. Track trips with distance, max speed, and average speed statistics.",
+        searchKeywords = listOf("speed", "velocity", "gps", "kmh", "mph", "trip", "distance"),
+    ),
+    ToolDefinition(
+        id = "altitude",
+        name = "Altitude",
+        icon = Icons.Default.Height,
+        category = ToolCategory.MeasurementSensors,
+        description = "Measure your altitude above sea level using GPS. Track elevation changes with total ascent and descent. Shows altitude chart, min/max readings, and GPS accuracy.",
+        searchKeywords = listOf("altitude", "elevation", "gps", "height", "ascent", "descent"),
     ),
 )

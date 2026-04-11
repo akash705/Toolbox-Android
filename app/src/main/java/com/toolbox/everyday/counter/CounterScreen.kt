@@ -1,5 +1,6 @@
 package com.toolbox.everyday.counter
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,19 +11,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,8 +36,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,16 +53,36 @@ fun CounterScreen(
     val haptic = LocalHapticFeedback.current
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Counter tabs
-        if (state.counters.size > 1) {
-            PrimaryScrollableTabRow(selectedTabIndex = state.activeIndex) {
-                state.counters.forEachIndexed { index, counter ->
-                    Tab(
-                        selected = state.activeIndex == index,
-                        onClick = { viewModel.selectCounter(index) },
-                        text = { Text(counter.name) },
-                    )
-                }
+        // Counter tabs as chips
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            itemsIndexed(state.counters) { index, counter ->
+                FilterChip(
+                    selected = state.activeIndex == index,
+                    onClick = {
+                        if (state.activeIndex == index) {
+                            viewModel.showEditDialog(index)
+                        } else {
+                            viewModel.selectCounter(index)
+                        }
+                    },
+                    label = { Text(counter.name) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+                )
+            }
+            item {
+                FilterChip(
+                    selected = false,
+                    onClick = { viewModel.showAddDialog() },
+                    label = { Text("+ New") },
+                )
             }
         }
 
@@ -72,35 +97,102 @@ fun CounterScreen(
                 },
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = "${state.activeCounter.value}",
-                style = MaterialTheme.typography.displayLarge.copy(fontSize = 96.sp),
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "${state.activeCounter.value}",
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontSize = 96.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "CURRENT COUNT",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 1.sp,
+                )
+            }
         }
 
         // Bottom controls
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            IconButton(onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                viewModel.decrement()
-            }) {
-                Icon(Icons.Default.Remove, contentDescription = "Decrement", modifier = Modifier.padding(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Minus button — smaller, outlined style
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            viewModel.decrement()
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Default.Remove,
+                        contentDescription = "Decrement",
+                        modifier = Modifier.size(28.dp),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Plus button — larger, filled primary
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(MaterialTheme.colorScheme.primary)
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            viewModel.increment()
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Increment",
+                        modifier = Modifier.size(32.dp),
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
             }
 
-            IconButton(onClick = { viewModel.showResetDialog() }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Reset")
-            }
+            Spacer(modifier = Modifier.height(16.dp))
 
-            IconButton(onClick = { viewModel.showAddDialog() }) {
-                Icon(Icons.Default.Add, contentDescription = "Add counter")
+            // Reset button
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { viewModel.showResetDialog() }
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Reset",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
@@ -116,6 +208,45 @@ fun CounterScreen(
             },
             dismissButton = {
                 TextButton(onClick = viewModel::dismissResetDialog) { Text("Cancel") }
+            },
+        )
+    }
+
+    // Edit counter dialog
+    if (state.editingIndex >= 0) {
+        val editingCounter = state.counters[state.editingIndex]
+        var editName by remember(state.editingIndex) { mutableStateOf(editingCounter.name) }
+        AlertDialog(
+            onDismissRequest = viewModel::dismissEditDialog,
+            title = { Text("Edit counter") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = editName,
+                        onValueChange = { editName = it },
+                        label = { Text("Name") },
+                        singleLine = true,
+                    )
+                    if (state.counters.size > 1) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TextButton(
+                            onClick = { viewModel.deleteCounter(state.editingIndex) },
+                        ) {
+                            Text(
+                                "Delete counter",
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { viewModel.renameCounter(state.editingIndex, editName.ifBlank { editingCounter.name }) },
+                ) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissEditDialog) { Text("Cancel") }
             },
         )
     }

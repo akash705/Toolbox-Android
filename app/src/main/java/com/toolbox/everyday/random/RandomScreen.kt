@@ -14,16 +14,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
@@ -40,11 +42,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+
+private val diceSidesOptions = listOf(4, 6, 8, 10, 12, 20)
 
 @Composable
 fun RandomScreen(
@@ -69,7 +74,7 @@ fun RandomScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         when (state.mode) {
             RandomMode.Number -> NumberTab(state, viewModel)
@@ -83,7 +88,10 @@ fun RandomScreen(
 private fun NumberTab(state: RandomUiState, viewModel: RandomViewModel) {
     val haptic = LocalHapticFeedback.current
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -106,20 +114,45 @@ private fun NumberTab(state: RandomUiState, viewModel: RandomViewModel) {
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = state.numberResult?.toString() ?: "—",
-            style = MaterialTheme.typography.displayLarge.copy(fontSize = 72.sp),
-            color = MaterialTheme.colorScheme.primary,
-        )
+        // Result card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+            ),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "Result",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = state.numberResult?.toString() ?: "—",
+                    fontSize = 72.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
+        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Button(onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            viewModel.generateNumber()
-        }) {
+        Button(
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                viewModel.generateNumber()
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Text("Generate")
         }
     }
@@ -143,11 +176,11 @@ private fun CoinTab(state: RandomUiState, viewModel: RandomViewModel) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Card(
             modifier = Modifier
-                .size(120.dp)
+                .size(140.dp)
                 .rotate(rotation.value),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -163,7 +196,8 @@ private fun CoinTab(state: RandomUiState, viewModel: RandomViewModel) {
                         false -> "T"
                         null -> "?"
                     },
-                    style = MaterialTheme.typography.displayMedium,
+                    fontSize = 56.sp,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
             }
@@ -175,17 +209,22 @@ private fun CoinTab(state: RandomUiState, viewModel: RandomViewModel) {
             text = when (state.coinResult) {
                 true -> "Heads"
                 false -> "Tails"
-                null -> ""
+                null -> "Tap Flip to start"
             },
             style = MaterialTheme.typography.headlineSmall,
+            color = if (state.coinResult == null) MaterialTheme.colorScheme.onSurfaceVariant
+            else MaterialTheme.colorScheme.onSurface,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Button(onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            viewModel.flipCoin()
-        }) {
+        Button(
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                viewModel.flipCoin()
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Text("Flip")
         }
     }
@@ -197,10 +236,39 @@ private fun DiceTab(state: RandomUiState, viewModel: RandomViewModel) {
     val haptic = LocalHapticFeedback.current
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // Dice sides selector
+        Text(
+            text = "Sides",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            diceSidesOptions.forEach { sides ->
+                FilterChip(
+                    selected = state.diceSides == sides,
+                    onClick = { viewModel.setDiceSides(sides) },
+                    label = { Text("d$sides") },
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Dice count selector
+        Text(
+            text = "Count",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -214,49 +282,72 @@ private fun DiceTab(state: RandomUiState, viewModel: RandomViewModel) {
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Dice results
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            state.diceResults.forEach { value ->
-                Card(
-                    modifier = Modifier.size(64.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    ),
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
+        if (state.diceResults.isNotEmpty()) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                state.diceResults.forEach { value ->
+                    Card(
+                        modifier = Modifier.size(64.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        ),
                     ) {
-                        Text(
-                            text = "$value",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "$value",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                        }
                     }
                 }
             }
+
+            if (state.diceResults.size > 1) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Total: ${state.diceResults.sum()}",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            ) {
+                Text(
+                    text = "Tap Roll to start",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
 
-        if (state.diceResults.size > 1) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Total: ${state.diceResults.sum()}",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            viewModel.rollDice()
-        }) {
+        Button(
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                viewModel.rollDice()
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Text("Roll")
         }
     }

@@ -26,6 +26,22 @@ class SensorAvailability(context: Context) {
         private val CHECKED_SENSOR_TYPES = intArrayOf(
             android.hardware.Sensor.TYPE_ACCELEROMETER,
             android.hardware.Sensor.TYPE_MAGNETIC_FIELD,
+            android.hardware.Sensor.TYPE_LIGHT,
+            android.hardware.Sensor.TYPE_PRESSURE,
+            android.hardware.Sensor.TYPE_RELATIVE_HUMIDITY,
+            android.hardware.Sensor.TYPE_STEP_COUNTER,
+            android.hardware.Sensor.TYPE_GYROSCOPE,
         )
+
+        fun sensorName(sensorType: Int): String = when (sensorType) {
+            android.hardware.Sensor.TYPE_ACCELEROMETER -> "accelerometer"
+            android.hardware.Sensor.TYPE_MAGNETIC_FIELD -> "magnetic field"
+            android.hardware.Sensor.TYPE_LIGHT -> "light"
+            android.hardware.Sensor.TYPE_PRESSURE -> "pressure"
+            android.hardware.Sensor.TYPE_RELATIVE_HUMIDITY -> "humidity"
+            android.hardware.Sensor.TYPE_STEP_COUNTER -> "step counter"
+            android.hardware.Sensor.TYPE_GYROSCOPE -> "gyroscope"
+            else -> "required"
+        }
     }
 }

@@ -11,6 +11,13 @@ enum class UnitCategory(val label: String) {
     Data("Data"),
     Pressure("Pressure"),
     Energy("Energy"),
+    Power("Power"),
+    Force("Force"),
+    Torque("Torque"),
+    Density("Density"),
+    FuelEconomy("Fuel Economy"),
+    Angle("Angle"),
+    Frequency("Frequency"),
 }
 
 data class UnitDef(
@@ -39,6 +46,8 @@ val allUnits: List<UnitDef> = buildList {
     add(linearUnit("Foot", "ft", UnitCategory.Length, 0.3048))
     add(linearUnit("Yard", "yd", UnitCategory.Length, 0.9144))
     add(linearUnit("Mile", "mi", UnitCategory.Length, 1609.344))
+    add(linearUnit("Nautical Mile", "nmi", UnitCategory.Length, 1852.0))
+    add(linearUnit("Micrometer", "µm", UnitCategory.Length, 0.000001))
 
     // Weight (base: kilogram)
     add(linearUnit("Milligram", "mg", UnitCategory.Weight, 0.000001))
@@ -47,6 +56,10 @@ val allUnits: List<UnitDef> = buildList {
     add(linearUnit("Metric Ton", "t", UnitCategory.Weight, 1000.0))
     add(linearUnit("Ounce", "oz", UnitCategory.Weight, 0.0283495))
     add(linearUnit("Pound", "lb", UnitCategory.Weight, 0.453592))
+    add(linearUnit("Stone", "st", UnitCategory.Weight, 6.35029))
+    add(linearUnit("US Ton", "ton", UnitCategory.Weight, 907.185))
+    add(linearUnit("Imperial Ton", "long ton", UnitCategory.Weight, 1016.05))
+    add(linearUnit("Carat", "ct", UnitCategory.Weight, 0.0002))
 
     // Volume (base: liter)
     add(linearUnit("Milliliter", "mL", UnitCategory.Volume, 0.001))
@@ -57,6 +70,11 @@ val allUnits: List<UnitDef> = buildList {
     add(linearUnit("US Fl Oz", "fl oz", UnitCategory.Volume, 0.0295735))
     add(linearUnit("Tablespoon", "tbsp", UnitCategory.Volume, 0.0147868))
     add(linearUnit("Teaspoon", "tsp", UnitCategory.Volume, 0.00492892))
+    add(linearUnit("Imperial Gallon", "imp gal", UnitCategory.Volume, 4.54609))
+    add(linearUnit("Imperial Pint", "imp pt", UnitCategory.Volume, 0.568261))
+    add(linearUnit("Cubic Meter", "m³", UnitCategory.Volume, 1000.0))
+    add(linearUnit("Cubic Foot", "ft³", UnitCategory.Volume, 28.3168))
+    add(linearUnit("Cubic Inch", "in³", UnitCategory.Volume, 0.0163871))
 
     // Temperature (base: Celsius — formula-based)
     add(UnitDef("Celsius", "°C", UnitCategory.Temperature, { it }, { it }))
@@ -68,6 +86,8 @@ val allUnits: List<UnitDef> = buildList {
     add(linearUnit("km/h", "km/h", UnitCategory.Speed, 1.0 / 3.6))
     add(linearUnit("mph", "mph", UnitCategory.Speed, 0.44704))
     add(linearUnit("Knot", "kn", UnitCategory.Speed, 0.514444))
+    add(linearUnit("ft/s", "ft/s", UnitCategory.Speed, 0.3048))
+    add(linearUnit("cm/s", "cm/s", UnitCategory.Speed, 0.01))
 
     // Area (base: m²)
     add(linearUnit("sq mm", "mm²", UnitCategory.Area, 0.000001))
@@ -111,6 +131,58 @@ val allUnits: List<UnitDef> = buildList {
     add(linearUnit("Kilocalorie", "kcal", UnitCategory.Energy, 4184.0))
     add(linearUnit("Watt-hour", "Wh", UnitCategory.Energy, 3600.0))
     add(linearUnit("kWh", "kWh", UnitCategory.Energy, 3_600_000.0))
+
+    // Power (base: Watt)
+    add(linearUnit("Watt", "W", UnitCategory.Power, 1.0))
+    add(linearUnit("Kilowatt", "kW", UnitCategory.Power, 1000.0))
+    add(linearUnit("Megawatt", "MW", UnitCategory.Power, 1_000_000.0))
+    add(linearUnit("Horsepower", "hp", UnitCategory.Power, 745.7))
+    add(linearUnit("BTU/hr", "BTU/hr", UnitCategory.Power, 0.293071))
+
+    // Force (base: Newton)
+    add(linearUnit("Newton", "N", UnitCategory.Force, 1.0))
+    add(linearUnit("Kilonewton", "kN", UnitCategory.Force, 1000.0))
+    add(linearUnit("Pound-force", "lbf", UnitCategory.Force, 4.44822))
+    add(linearUnit("Dyne", "dyn", UnitCategory.Force, 0.00001))
+    add(linearUnit("Kilogram-force", "kgf", UnitCategory.Force, 9.80665))
+
+    // Torque (base: N·m)
+    add(linearUnit("Newton-meter", "N·m", UnitCategory.Torque, 1.0))
+    add(linearUnit("Foot-pound", "ft·lb", UnitCategory.Torque, 1.35582))
+    add(linearUnit("Inch-pound", "in·lb", UnitCategory.Torque, 0.112985))
+    add(linearUnit("Kilogram-meter", "kg·m", UnitCategory.Torque, 9.80665))
+
+    // Density (base: kg/m³)
+    add(linearUnit("kg/m³", "kg/m³", UnitCategory.Density, 1.0))
+    add(linearUnit("g/cm³", "g/cm³", UnitCategory.Density, 1000.0))
+    add(linearUnit("lb/ft³", "lb/ft³", UnitCategory.Density, 16.0185))
+    add(linearUnit("lb/gal", "lb/gal", UnitCategory.Density, 119.826))
+
+    // Fuel Economy (base: km/L — inverse relationship for L/100km)
+    add(UnitDef("km/L", "km/L", UnitCategory.FuelEconomy, { it }, { it }))
+    add(UnitDef("mpg (US)", "mpg", UnitCategory.FuelEconomy, { it * 0.425144 }, { it / 0.425144 }))
+    add(UnitDef("mpg (UK)", "mpg UK", UnitCategory.FuelEconomy, { it * 0.354006 }, { it / 0.354006 }))
+    add(UnitDef("L/100km", "L/100km", UnitCategory.FuelEconomy,
+        toBase = { if (it > 0) 100.0 / it else 0.0 },
+        fromBase = { if (it > 0) 100.0 / it else 0.0 },
+    ))
+
+    // Angle (base: degree)
+    add(linearUnit("Degree", "°", UnitCategory.Angle, 1.0))
+    add(UnitDef("Radian", "rad", UnitCategory.Angle,
+        toBase = { Math.toDegrees(it) },
+        fromBase = { Math.toRadians(it) },
+    ))
+    add(linearUnit("Gradian", "grad", UnitCategory.Angle, 0.9))
+    add(linearUnit("Arcminute", "′", UnitCategory.Angle, 1.0 / 60.0))
+    add(linearUnit("Arcsecond", "″", UnitCategory.Angle, 1.0 / 3600.0))
+
+    // Frequency (base: Hertz)
+    add(linearUnit("Hertz", "Hz", UnitCategory.Frequency, 1.0))
+    add(linearUnit("Kilohertz", "kHz", UnitCategory.Frequency, 1000.0))
+    add(linearUnit("Megahertz", "MHz", UnitCategory.Frequency, 1_000_000.0))
+    add(linearUnit("Gigahertz", "GHz", UnitCategory.Frequency, 1_000_000_000.0))
+    add(linearUnit("RPM", "rpm", UnitCategory.Frequency, 1.0 / 60.0))
 }
 
 val unitsByCategory: Map<UnitCategory, List<UnitDef>> = allUnits.groupBy { it.category }

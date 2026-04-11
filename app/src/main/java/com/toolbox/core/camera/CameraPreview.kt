@@ -1,6 +1,7 @@
 package com.toolbox.core.camera
 
 import android.view.ViewGroup
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -21,6 +22,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
  * @param cameraSelector front or back camera
  * @param imageAnalyzer optional analyzer for frame-by-frame processing (QR, color pick)
  * @param onPreviewView callback providing the PreviewView for zoom/focus control
+ * @param onCameraBound callback providing the Camera object for zoom/torch control
  */
 @Composable
 fun CameraPreview(
@@ -28,6 +30,7 @@ fun CameraPreview(
     cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
     imageAnalyzer: ImageAnalysis.Analyzer? = null,
     onPreviewView: ((PreviewView) -> Unit)? = null,
+    onCameraBound: ((Camera) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -63,7 +66,7 @@ fun CameraPreview(
                 try {
                     cameraProvider.unbindAll()
 
-                    if (imageAnalyzer != null) {
+                    val camera = if (imageAnalyzer != null) {
                         val analysis = ImageAnalysis.Builder()
                             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                             .build()
@@ -77,6 +80,7 @@ fun CameraPreview(
                             lifecycleOwner, cameraSelector, preview,
                         )
                     }
+                    onCameraBound?.invoke(camera)
                 } catch (_: Exception) {
                     // Camera not available
                 }

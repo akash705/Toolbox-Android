@@ -4,6 +4,12 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+fun getKeychainPassword(account: String, service: String): String {
+    return Runtime.getRuntime()
+        .exec(arrayOf("security", "find-generic-password", "-a", account, "-s", service, "-w"))
+        .inputStream.bufferedReader().readLine() ?: ""
+}
+
 android {
     namespace = "com.toolbox"
     compileSdk = 36
@@ -18,8 +24,18 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("${System.getProperty("user.home")}/.android/release.jks")
+            storePassword = getKeychainPassword("release-key", "android-release-keystore")
+            keyAlias = "release-key"
+            keyPassword = getKeychainPassword("release-key", "android-release-keystore")
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

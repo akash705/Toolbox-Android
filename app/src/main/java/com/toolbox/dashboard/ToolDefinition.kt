@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.SyncAlt
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.ZoomIn
@@ -211,6 +213,14 @@ val allTools = listOf(
         description = "Convert numbers between decimal, binary, hexadecimal, and octal systems. Useful for programmers, students, and anyone working with different number formats.",
         searchKeywords = listOf("binary", "hex", "octal", "decimal", "base"),
     ),
+    ToolDefinition(
+        id = "scientific_calculator",
+        name = "Calculator",
+        icon = Icons.Default.Calculate,
+        category = ToolCategory.ConversionCalculation,
+        description = "Full scientific calculator with trigonometric functions, logarithms, exponents, factorial, and more. Supports DEG/RAD modes and expression-based input.",
+        searchKeywords = listOf("calculator", "scientific", "math", "sin", "cos", "tan", "log", "sqrt"),
+    ),
 
     // Lighting
     ToolDefinition(
@@ -291,6 +301,22 @@ val allTools = listOf(
         description = "Measure your heart rate by placing your finger over the camera lens. Uses photoplethysmography (PPG) to detect pulse from blood flow changes. For reference only, not a medical device.",
         requiresCamera = true,
         searchKeywords = listOf("heart", "pulse", "bpm", "heartbeat", "ppg", "monitor"),
+    ),
+    ToolDefinition(
+        id = "breathing_exercise",
+        name = "Breathing",
+        icon = Icons.Default.Air,
+        category = ToolCategory.EverydayTools,
+        description = "Follow guided breathing patterns to relax and reduce stress. Choose from Box Breathing, 4-7-8, or Relaxing techniques with visual animation, sound cues, and haptic feedback.",
+        searchKeywords = listOf("breathe", "breathing", "relax", "meditation", "calm", "stress", "wellness"),
+    ),
+    ToolDefinition(
+        id = "morse_code",
+        name = "Morse Code",
+        icon = Icons.Default.GraphicEq,
+        category = ToolCategory.EverydayTools,
+        description = "Translate text to Morse code and back. Play Morse output as sound, haptic vibration, or flashlight blinks. Adjustable speed from 5 to 25 WPM.",
+        searchKeywords = listOf("morse", "code", "dots", "dashes", "sos", "translate", "signal"),
     ),
 
     // Measurement & Sensors (Phase 9)

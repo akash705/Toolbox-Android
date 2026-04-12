@@ -43,6 +43,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
+import com.toolbox.conversion.calculator.CalculatorScreen
 import com.toolbox.conversion.numberbase.NumberBaseScreen
 import com.toolbox.conversion.percentage.PercentageScreen
 import com.toolbox.conversion.tipcalculator.TipCalculatorScreen
@@ -60,6 +61,8 @@ import com.toolbox.everyday.qrscanner.QrScannerScreen
 import com.toolbox.lighting.FlashlightScreen
 import com.toolbox.everyday.random.RandomScreen
 import com.toolbox.everyday.stopwatch.StopwatchTimerScreen
+import com.toolbox.everyday.breathing.BreathingExerciseScreen
+import com.toolbox.everyday.morse.MorseCodeScreen
 import com.toolbox.everyday.heartrate.HeartRateScreen
 import com.toolbox.everyday.mirror.MirrorScreen
 import com.toolbox.motion.pedometer.PedometerScreen
@@ -77,6 +80,9 @@ import com.toolbox.measurement.soundmeter.SoundMeterScreen
 import com.toolbox.measurement.speedometer.SpeedometerScreen
 import com.toolbox.measurement.spectrum.SpectrumScreen
 import com.toolbox.measurement.vibrometer.VibrometerScreen
+import com.toolbox.nav.BreathingExercise
+import com.toolbox.nav.ScientificCalculator
+import com.toolbox.nav.MorseCode
 import com.toolbox.nav.Barometer
 import com.toolbox.nav.Humidity
 import com.toolbox.nav.Gyroscope
@@ -226,6 +232,9 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                     composable<SpectrumAnalyzer> { ToolScreen("Spectrum Analyzer", "spectrum_analyzer", navController, this@SharedTransitionLayout, this@composable) { SpectrumScreen() } }
                     composable<Speedometer> { ToolScreen("Speedometer", "speedometer", navController, this@SharedTransitionLayout, this@composable) { SpeedometerScreen() } }
                     composable<Altitude> { ToolScreen("Altitude", "altitude", navController, this@SharedTransitionLayout, this@composable) { AltitudeScreen() } }
+                    composable<BreathingExercise> { ToolScreen("Breathing Exercise", "breathing_exercise", navController, this@SharedTransitionLayout, this@composable) { BreathingExerciseScreen() } }
+                    composable<ScientificCalculator> { ToolScreen("Calculator", "scientific_calculator", navController, this@SharedTransitionLayout, this@composable) { CalculatorScreen() } }
+                    composable<MorseCode> { ToolScreen("Morse Code", "morse_code", navController, this@SharedTransitionLayout, this@composable) { MorseCodeScreen() } }
                 }
             }
         }
@@ -329,5 +338,8 @@ private fun toolDestination(toolId: String): Any? = when (toolId) {
     "spectrum_analyzer" -> SpectrumAnalyzer
     "speedometer" -> Speedometer
     "altitude" -> Altitude
+    "breathing_exercise" -> BreathingExercise
+    "scientific_calculator" -> ScientificCalculator
+    "morse_code" -> MorseCode
     else -> null
 }

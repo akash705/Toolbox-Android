@@ -47,3 +47,8 @@ import kotlinx.serialization.Serializable
 // Phase 10 Tools
 @Serializable object Speedometer
 @Serializable object Altitude
+
+// Phase 11 Tools
+@Serializable object BreathingExercise
+@Serializable object ScientificCalculator
+@Serializable object MorseCode

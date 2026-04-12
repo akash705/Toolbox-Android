@@ -47,8 +47,8 @@ class RandomViewModel : ViewModel() {
         _state.update { it.copy(numberResult = Random.nextInt(lo, hi + 1)) }
     }
 
-    fun flipCoin() {
-        _state.update { it.copy(coinResult = Random.nextBoolean()) }
+    fun setCoinResult(result: Boolean) {
+        _state.update { it.copy(coinResult = result) }
     }
 
     fun rollDice() {

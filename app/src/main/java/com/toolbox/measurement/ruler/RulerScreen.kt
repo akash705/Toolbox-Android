@@ -2,28 +2,19 @@ package com.toolbox.measurement.ruler
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,10 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -48,20 +37,15 @@ import androidx.compose.ui.unit.sp
 
 private enum class RulerUnit { CM, IN }
 
-private const val CREDIT_CARD_WIDTH_MM = 85.6f
-
 @Composable
 fun RulerScreen() {
     var unit by remember { mutableStateOf(RulerUnit.CM) }
     var scrollOffsetPx by remember { mutableFloatStateOf(0f) }
-    var calibratedPxPerMm by remember { mutableFloatStateOf(0f) }
 
-    val density = LocalDensity.current
-    val defaultPxPerMm = with(density) { density.density * 160f / 25.4f }
-    val pxPerMm = if (calibratedPxPerMm > 0f) calibratedPxPerMm else defaultPxPerMm
+    val context = LocalContext.current
+    // xdpi is the actual physical DPI reported by the hardware.
+    val pxPerMm = context.resources.displayMetrics.xdpi / 25.4f
 
-    // Measurement at the center pointer: pointer is at width/2, and the 0 mark starts
-    // at the center when scrollOffset=0, so the pointer always reads scrollOffset/pxPerMm.
     val measuredMm = scrollOffsetPx / pxPerMm
     val readout = when (unit) {
         RulerUnit.CM -> "%.1f cm".format(measuredMm / 10f)
@@ -69,7 +53,6 @@ fun RulerScreen() {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // cm / in segmented toggle
         SingleChoiceSegmentedButtonRow(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
@@ -87,7 +70,6 @@ fun RulerScreen() {
             ) { Text("in") }
         }
 
-        // Ruler strip
         RulerStrip(
             modifier = Modifier
                 .fillMaxWidth()
@@ -100,11 +82,10 @@ fun RulerScreen() {
             },
         )
 
-        // Readout card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             ),
@@ -129,14 +110,6 @@ fun RulerScreen() {
                 )
             }
         }
-
-        // Calibration card
-        CalibrationCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            onCalibrate = { widthPx -> calibratedPxPerMm = widthPx / CREDIT_CARD_WIDTH_MM },
-        )
     }
 }
 
@@ -258,100 +231,3 @@ private fun RulerStrip(
     }
 }
 
-@Composable
-private fun CalibrationCard(
-    modifier: Modifier = Modifier,
-    onCalibrate: (Float) -> Unit,
-) {
-    var handleOffsetPx by remember { mutableFloatStateOf(0f) }
-    var baseWidthPx by remember { mutableFloatStateOf(0f) }
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val density = LocalDensity.current
-
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-        ) {
-            Text(
-                text = "Calibration",
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Place a standard credit card on screen and drag the handle to match its right edge.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Credit card reference box with draggable right handle
-            BoxWithConstraints(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-            ) {
-                if (baseWidthPx == 0f) baseWidthPx = constraints.maxWidth * 0.65f
-                val currentWidthPx = (baseWidthPx + handleOffsetPx)
-                    .coerceIn(constraints.maxWidth * 0.2f, constraints.maxWidth.toFloat())
-                val currentWidthDp = with(density) { currentWidthPx.toDp() }
-
-                // Dashed border rectangle
-                Canvas(
-                    modifier = Modifier
-                        .width(currentWidthDp)
-                        .fillMaxHeight()
-                        .align(Alignment.CenterStart),
-                ) {
-                    drawRect(
-                        color = primaryColor,
-                        style = Stroke(
-                            width = 2.dp.toPx(),
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 4f)),
-                        ),
-                    )
-                }
-
-                // Drag handle circle on right edge
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .offset(x = currentWidthDp - 12.dp)
-                        .align(Alignment.CenterStart)
-                        .pointerInput(Unit) {
-                            detectDragGestures { change, dragAmount ->
-                                change.consume()
-                                handleOffsetPx += dragAmount.x
-                            }
-                        },
-                ) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        shape = CircleShape,
-                        color = primaryColor,
-                    ) {}
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = {
-                    val currentWidthPx = (baseWidthPx + handleOffsetPx)
-                        .coerceAtLeast(1f)
-                    onCalibrate(currentWidthPx)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                Text("Calibrate")
-            }
-        }
-    }
-}

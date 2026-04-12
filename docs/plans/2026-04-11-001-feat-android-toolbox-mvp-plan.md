@@ -1340,6 +1340,424 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Altitude reading is reasonable for known location. Elevation gain tracks when climbing stairs/hills.
 
+### Phase 11: Audio & Sound Tools
+
+- [x] **Unit 36: White Noise / Focus Sounds**
+
+  **Goal:** Ambient sound generator with looping tracks for focus, sleep, and relaxation.
+
+  **Requirements:** Daily-use retention feature
+
+  **Dependencies:** None
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/everyday/whitenoise/WhiteNoiseScreen.kt`
+  - Create: `app/src/main/java/com/toolbox/everyday/whitenoise/WhiteNoiseViewModel.kt`
+  - Create: `app/src/main/res/raw/` (sound assets: rain, brown noise, cafe, ocean, fireplace, wind)
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Use `MediaPlayer` or `ExoPlayer` with seamless looping on raw audio assets
+  - Sound categories: Rain, Brown Noise, White Noise, Cafe Ambience, Ocean Waves, Fireplace, Wind
+  - Mix multiple sounds with individual volume sliders
+  - Sleep timer (15/30/60 min) that fades out and stops playback
+  - Foreground notification with playback controls so audio continues when app is backgrounded
+  - Minimal UI: grid of sound tiles with active state, volume slider per active sound
+
+  **Test scenarios:**
+  - Happy path: Select sound, audio plays immediately, continues in background
+  - Happy path: Mix two sounds, adjust volumes independently
+  - Happy path: Sleep timer fades out and stops after set duration
+  - Edge case: Audio focus lost to phone call, resumes after
+
+  **Verification:**
+  - Audio plays seamlessly looped with no gap. Background playback works. Sleep timer fades correctly.
+
+- [x] **Unit 37: Pitch Tuner (Musical Note Detector)**
+
+  **Goal:** Detect musical pitch from microphone input and display the closest note with cents deviation.
+
+  **Requirements:** Reuse existing FFT infrastructure from Spectrum Analyzer
+
+  **Dependencies:** Unit 33 (Spectrum Analyzer FFT)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/measurement/pitchtuner/PitchTunerScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Reuse `AudioRecord` + FFT pipeline from Spectrum Analyzer
+  - Apply autocorrelation or harmonic product spectrum on FFT output for robust pitch detection
+  - Map detected frequency to nearest musical note (A4 = 440Hz, equal temperament)
+  - Display: note name (e.g., A4), frequency in Hz, cents sharp/flat (±50 cents gauge)
+  - Visual tuning gauge: needle/bar indicator showing how flat or sharp the detected pitch is
+  - Reference tone generator: tap a note to play its pure sine wave as reference
+  - Permission: RECORD_AUDIO (same as Sound Meter / Spectrum)
+
+  **Test scenarios:**
+  - Happy path: Sing or play a note, correct note name displayed within ±5 cents
+  - Happy path: Tuning gauge moves smoothly as pitch changes
+  - Edge case: Silence shows no detection, not a random note
+
+  **Verification:**
+  - A4 tuning fork or 440Hz tone app shows "A4" with ~0 cents deviation.
+
+- [x] **Unit 38: Metronome**
+
+  **Goal:** Adjustable-tempo metronome with audible click, visual flash, and optional haptic pulse.
+
+  **Requirements:** Simple utility for musicians, runners, physical therapy
+
+  **Dependencies:** None
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/everyday/metronome/MetronomeScreen.kt`
+  - Create: `app/src/main/java/com/toolbox/everyday/metronome/MetronomeViewModel.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - BPM range: 20-300, adjustable via slider and ±1 buttons
+  - Tap tempo: tap a button repeatedly to set BPM from tap intervals
+  - Time signatures: 2/4, 3/4, 4/4, 6/8 with accented first beat
+  - Audio: short click sound via `SoundPool` (low latency), accented beat uses different pitch
+  - Visual: beat indicator circles that flash on each beat, accent beat highlighted
+  - Haptic: optional vibration pulse on each beat
+  - Use `Handler`/`postDelayed` or `Choreographer` for precise timing
+
+  **Test scenarios:**
+  - Happy path: Set 120 BPM, audible clicks at exactly 2 per second
+  - Happy path: Tap tempo converges to correct BPM after 4-5 taps
+  - Edge case: Changing BPM while running adjusts immediately without stutter
+
+  **Verification:**
+  - Metronome at 60 BPM clicks once per second verified against a stopwatch.
+
+### Phase 12: Calculators & Converters
+
+- [x] **Unit 39: Date / Age Calculator**
+
+  **Goal:** Calculate days between dates, exact age in years/months/days, and countdown to future events.
+
+  **Requirements:** Frequently searched utility
+
+  **Dependencies:** None
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/conversion/datecalc/DateCalculatorScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Three modes via tabs: "Age Calculator", "Date Difference", "Add/Subtract Days"
+  - Age Calculator: input birthdate → shows years, months, days, total days, next birthday countdown
+  - Date Difference: two date pickers → shows difference in days, weeks, months, years
+  - Add/Subtract: date + number of days → result date
+  - Use Material 3 `DatePicker` dialog for date selection
+  - Display results in a clean card layout
+
+  **Test scenarios:**
+  - Happy path: Birthdate 1990-01-15 shows correct age today
+  - Happy path: Date difference between Jan 1 and Dec 31 shows 364 days
+  - Edge case: Leap year February 29 handled correctly
+
+  **Verification:**
+  - Age and date difference results match manual calculation.
+
+- [x] **Unit 40: BMI Calculator**
+
+  **Goal:** Calculate Body Mass Index from height and weight with health category display.
+
+  **Requirements:** High search volume utility
+
+  **Dependencies:** None
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/conversion/bmi/BmiCalculatorScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Input: height (cm or ft/in), weight (kg or lb) with unit toggle
+  - Formula: BMI = weight(kg) / height(m)²
+  - Display: BMI value, category (Underweight <18.5, Normal 18.5-24.9, Overweight 25-29.9, Obese 30+)
+  - Visual: colored gauge/bar showing where the result falls on the BMI scale
+  - Healthy weight range display for the given height
+  - Include disclaimer: "BMI is a screening tool, not a diagnostic measure"
+
+  **Test scenarios:**
+  - Happy path: 70kg, 175cm → BMI 22.9 (Normal)
+  - Happy path: Imperial units convert correctly (5'10", 154lb → same result)
+  - Edge case: Zero or negative inputs handled gracefully
+
+  **Verification:**
+  - BMI calculation matches standard formula for known inputs.
+
+- [x] **Unit 41: Aspect Ratio Calculator**
+
+  **Goal:** Calculate aspect ratios and resize dimensions proportionally for designers and photographers.
+
+  **Requirements:** Niche but frequently needed by creative professionals
+
+  **Dependencies:** None
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/conversion/aspectratio/AspectRatioScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Input width and height → display simplified ratio (e.g., 1920×1080 → 16:9)
+  - Lock ratio, change one dimension → other updates proportionally
+  - Common presets: 16:9, 4:3, 1:1, 21:9, 3:2, A4 paper
+  - Visual preview rectangle showing the proportions
+  - GCD-based ratio simplification
+
+  **Test scenarios:**
+  - Happy path: 1920×1080 shows 16:9
+  - Happy path: Lock 16:9, set width 3840 → height auto-fills 2160
+  - Edge case: Non-standard dimensions like 1000×333 simplify correctly
+
+  **Verification:**
+  - Ratios simplify correctly. Proportional resize maintains exact ratio.
+
+- [x] **Unit 42: Password Generator**
+
+  **Goal:** Generate secure random passwords with configurable length and character sets.
+
+  **Requirements:** Trust-based utility — users prefer offline generators
+
+  **Dependencies:** None
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/everyday/password/PasswordGeneratorScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Length slider: 8-64 characters
+  - Toggle switches: uppercase, lowercase, numbers, symbols
+  - Generated password displayed in large monospace font with copy-to-clipboard button
+  - Password strength indicator (weak/medium/strong/very strong) based on entropy calculation
+  - "Regenerate" button with dice icon
+  - History of last 5 generated passwords (in-memory only, not persisted)
+  - Uses `java.security.SecureRandom` for cryptographic randomness
+
+  **Test scenarios:**
+  - Happy path: Generate 16-char password with all toggles → contains all character types
+  - Happy path: Copy button places password on clipboard
+  - Edge case: All toggles off shows error/warning
+
+  **Verification:**
+  - Generated passwords match selected character set constraints. No duplicates in sequence.
+
+### Phase 13: Visual & Camera Tools
+
+- [ ] **Unit 43: Document Scanner**
+
+  **Goal:** Scan documents via camera with edge detection, perspective correction, and export to image/PDF.
+
+  **Requirements:** Replaces dedicated scanner apps for quick scans
+
+  **Dependencies:** Unit 15 (CameraX)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/everyday/docscanner/DocScannerScreen.kt`
+  - Create: `app/src/main/java/com/toolbox/everyday/docscanner/EdgeDetector.kt`
+  - Create: `app/src/main/java/com/toolbox/everyday/docscanner/PerspectiveTransform.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Camera preview with real-time edge detection overlay (find document corners)
+  - Auto-capture when stable document detected, or manual shutter button
+  - Perspective correction: 4-point transform to flatten the document
+  - Post-processing: contrast enhancement, grayscale/B&W filter, brightness adjustment
+  - Export as PNG or multi-page PDF (using Android `PdfDocument` API)
+  - Share via intent or save to device storage
+  - Permission: CAMERA
+
+  **Test scenarios:**
+  - Happy path: Point at a document, corners detected, capture produces flat image
+  - Happy path: Adjust corners manually if auto-detection is off
+  - Happy path: Export as PDF opens share sheet
+  - Edge case: Poor lighting still allows manual capture and correction
+
+  **Verification:**
+  - Scanned document is legible with corrected perspective. PDF export opens in a reader.
+
+- [x] **Unit 44: Screen Flasher / Strobe Light**
+
+  **Goal:** Full-screen color flash for concerts, emergencies, or visual signaling.
+
+  **Requirements:** Simple visual tool
+
+  **Dependencies:** None
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/lighting/screenflash/ScreenFlashScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Full-screen solid color display with max brightness
+  - Color picker: white, red, blue, green, yellow, orange, purple, custom
+  - Strobe mode: adjustable frequency (1-20 Hz) with seizure warning
+  - SOS mode: flash SOS pattern in selected color
+  - Tap to toggle on/off
+  - Set screen brightness to max while active, restore on exit
+  - Immersive mode (hide system bars) for true full-screen
+
+  **Test scenarios:**
+  - Happy path: Select color, screen fills completely, brightness maxed
+  - Happy path: Strobe at 5Hz flashes visibly
+  - Edge case: Seizure warning shown before enabling strobe mode
+
+  **Verification:**
+  - Full screen coverage with no UI elements visible. Brightness restores on exit.
+
+- [x] **Unit 45: Plumb Bob (Vertical Level)**
+
+  **Goal:** Camera overlay with a vertical reference line for checking vertical alignment.
+
+  **Requirements:** Construction/DIY companion to existing Bubble Level
+
+  **Dependencies:** Unit 15 (CameraX), Unit 11 (accelerometer)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/measurement/plumbbob/PlumbBobScreen.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Rear camera preview as background
+  - Overlay: vertical plumb line drawn using accelerometer gravity vector
+  - Line stays true vertical regardless of phone tilt (within reasonable range)
+  - Deviation readout in degrees from true vertical
+  - Color-coded: green when within 0.5° of vertical, yellow within 2°, red beyond
+  - Crosshair option for centering alignment
+  - Permission: CAMERA
+
+  **Test scenarios:**
+  - Happy path: Hold phone against a wall, plumb line shows if wall is vertical
+  - Happy path: Tilt phone slightly, line stays true vertical relative to camera view
+  - Edge case: Horizontal phone orientation handled gracefully
+
+  **Verification:**
+  - Plumb line aligns with actual vertical (test against physical plumb bob or level).
+
+### Phase 14: Connectivity & Network Tools
+
+- [x] **Unit 46: WiFi Signal Mapper**
+
+  **Goal:** Measure and log WiFi signal strength at different locations to identify dead zones.
+
+  **Requirements:** Practical network troubleshooting tool
+
+  **Dependencies:** None (uses WifiManager API)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/measurement/wifisignal/WifiSignalScreen.kt`
+  - Create: `app/src/main/java/com/toolbox/measurement/wifisignal/WifiSignalViewModel.kt`
+  - Modify: `app/src/main/java/com/toolbox/dashboard/ToolDefinition.kt`
+  - Modify: `app/src/main/java/com/toolbox/nav/Destinations.kt`
+  - Modify: `app/src/main/java/com/toolbox/ToolboxApp.kt`
+
+  **Approach:**
+  - Read current WiFi RSSI via `WifiManager.connectionInfo.rssi`
+  - Display: signal strength in dBm, signal quality percentage, link speed, frequency band (2.4/5 GHz)
+  - Real-time signal strength gauge with history chart (last 60 seconds)
+  - Signal quality labels: Excellent (>-50), Good (-50 to -60), Fair (-60 to -70), Weak (-70 to -80), Poor (<-80)
+  - "Log Reading" button to save current reading with timestamp and optional room label
+  - Export logged readings as shareable text/CSV
+  - Permission: ACCESS_FINE_LOCATION (required for WiFi info on Android 8+), ACCESS_WIFI_STATE
+
+  **Test scenarios:**
+  - Happy path: Shows current WiFi signal strength updating in real-time
+  - Happy path: Log readings in different rooms, export as text
+  - Edge case: No WiFi connected shows appropriate empty state
+
+  **Verification:**
+  - Signal strength readings match system WiFi indicator. Logged data exports correctly.
+
+### Phase 15: Home Screen & System Integration
+
+- [x] **Unit 47: Home Screen Widgets**
+
+  **Goal:** Add home screen widgets for Counter, Pedometer, and Compass for at-a-glance access.
+
+  **Requirements:** Keeps app visible and accessible without opening it
+
+  **Dependencies:** Units 7 (Counter), 30 (Pedometer), 13 (Compass)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/widgets/CounterWidget.kt`
+  - Create: `app/src/main/java/com/toolbox/widgets/PedometerWidget.kt`
+  - Create: `app/src/main/java/com/toolbox/widgets/CompassWidget.kt`
+  - Create: `app/src/main/res/xml/counter_widget_info.xml`
+  - Create: `app/src/main/res/xml/pedometer_widget_info.xml`
+  - Create: `app/src/main/res/xml/compass_widget_info.xml`
+  - Modify: `app/src/main/AndroidManifest.xml` (register widget receivers)
+
+  **Approach:**
+  - Use Glance (Jetpack Compose for widgets) for modern widget implementation
+  - Counter widget: displays current count with +/- buttons, tappable to open full tool
+  - Pedometer widget: shows today's step count, updates periodically via WorkManager
+  - Compass widget: shows current bearing and cardinal direction, updates on tap
+  - Sizes: 2×1 (counter), 2×2 (pedometer), 2×2 (compass)
+  - Tap anywhere on widget opens the corresponding full tool screen
+  - Widget configuration activity for selecting which counter to display
+
+  **Test scenarios:**
+  - Happy path: Add counter widget, increment/decrement from home screen
+  - Happy path: Pedometer widget shows today's steps, updates when tapped
+  - Edge case: Widget survives device reboot (persisted state)
+
+  **Verification:**
+  - Widgets appear in widget picker. Data syncs between widget and app. Tap opens correct tool.
+
+- [x] **Unit 48: Batch Measurement Export**
+
+  **Goal:** Export all recent measurement readings as a formatted text/CSV report.
+
+  **Requirements:** Professional users logging multiple readings across tools
+
+  **Dependencies:** Unit 26 (Shareable Measurement Cards)
+
+  **Files:**
+  - Create: `app/src/main/java/com/toolbox/core/export/MeasurementExporter.kt`
+  - Create: `app/src/main/java/com/toolbox/core/export/MeasurementLog.kt`
+  - Modify: `app/src/main/java/com/toolbox/settings/SettingsScreen.kt` (add export option)
+  - Modify: Various tool screens (add logging call when share button is used)
+
+  **Approach:**
+  - Each share action also logs the reading to an in-memory list: tool name, value, unit, label, timestamp
+  - Settings screen: "Export Measurement Log" button
+  - Export formats: plain text (human-readable) and CSV
+  - Share via intent (text/plain or text/csv)
+  - Log persists for current session only (cleared on app restart) to keep it lightweight
+  - Optional: persist to DataStore for cross-session logging
+
+  **Test scenarios:**
+  - Happy path: Share readings from 3 different tools, export shows all 3
+  - Happy path: CSV format opens correctly in spreadsheet apps
+  - Edge case: Empty log shows helpful message instead of blank export
+
+  **Verification:**
+  - Exported report contains all shared readings with correct timestamps and values.
+
 ## System-Wide Impact
 
 - **Interaction graph**: Dashboard ↔ Navigation ↔ 16 tool screens. TimerService ↔ StopwatchTimerScreen via bound service + StateFlow. TimerAlarmReceiver as fallback completion trigger. DataStore ↔ Counter, Unit Converter, Theme. CameraX provider shared across QR Scanner, Color Picker, Magnifier (only one camera binding active at a time via lifecycle)

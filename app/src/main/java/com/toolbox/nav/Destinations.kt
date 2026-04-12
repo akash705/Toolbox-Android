@@ -52,3 +52,21 @@ import kotlinx.serialization.Serializable
 @Serializable object BreathingExercise
 @Serializable object ScientificCalculator
 @Serializable object MorseCode
+
+// Phase 11 Tools (Audio)
+@Serializable object WhiteNoise
+@Serializable object PitchTuner
+@Serializable object Metronome
+
+// Phase 13 Tools
+@Serializable object ScreenFlash
+@Serializable object PlumbBob
+
+// Phase 14 Tools
+@Serializable object WifiSignal
+
+// Phase 12 Tools
+@Serializable object DateCalculator
+@Serializable object BmiCalculator
+@Serializable object AspectRatio
+@Serializable object PasswordGenerator

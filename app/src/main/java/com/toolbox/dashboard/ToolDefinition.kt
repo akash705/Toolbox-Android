@@ -27,7 +27,18 @@ import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.SyncAlt
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.AspectRatio
 import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Nightlight
+import androidx.compose.material.icons.filled.Plumbing
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.ZoomIn
@@ -222,6 +233,31 @@ val allTools = listOf(
         searchKeywords = listOf("calculator", "scientific", "math", "sin", "cos", "tan", "log", "sqrt"),
     ),
 
+    ToolDefinition(
+        id = "date_calculator",
+        name = "Date/Age",
+        icon = Icons.Default.DateRange,
+        category = ToolCategory.ConversionCalculation,
+        description = "Calculate days between dates, exact age in years/months/days, and add or subtract days from any date. Includes countdown to next birthday.",
+        searchKeywords = listOf("date", "age", "birthday", "difference", "days", "calendar"),
+    ),
+    ToolDefinition(
+        id = "bmi_calculator",
+        name = "BMI",
+        icon = Icons.Default.FitnessCenter,
+        category = ToolCategory.ConversionCalculation,
+        description = "Calculate Body Mass Index from height and weight. Supports metric and imperial units with health category display and healthy weight range.",
+        searchKeywords = listOf("bmi", "body", "mass", "index", "weight", "health", "obesity"),
+    ),
+    ToolDefinition(
+        id = "aspect_ratio",
+        name = "Aspect Ratio",
+        icon = Icons.Default.AspectRatio,
+        category = ToolCategory.ConversionCalculation,
+        description = "Calculate and simplify aspect ratios. Resize dimensions proportionally with ratio lock. Includes common presets like 16:9, 4:3, and A4.",
+        searchKeywords = listOf("aspect", "ratio", "resize", "dimension", "proportion", "16:9", "4:3"),
+    ),
+
     // Lighting
     ToolDefinition(
         id = "flashlight",
@@ -317,6 +353,70 @@ val allTools = listOf(
         category = ToolCategory.EverydayTools,
         description = "Translate text to Morse code and back. Play Morse output as sound, haptic vibration, or flashlight blinks. Adjustable speed from 5 to 25 WPM.",
         searchKeywords = listOf("morse", "code", "dots", "dashes", "sos", "translate", "signal"),
+    ),
+    ToolDefinition(
+        id = "password_generator",
+        name = "Password",
+        icon = Icons.Default.Lock,
+        category = ToolCategory.EverydayTools,
+        description = "Generate secure random passwords with configurable length and character sets. Features strength indicator, copy to clipboard, and recent history.",
+        searchKeywords = listOf("password", "generate", "secure", "random", "key", "strong"),
+    ),
+    ToolDefinition(
+        id = "white_noise",
+        name = "White Noise",
+        icon = Icons.Default.Nightlight,
+        category = ToolCategory.EverydayTools,
+        description = "Ambient sound generator with white, pink, and brown noise plus nature sounds. Features sleep timer and volume control for focus, sleep, and relaxation.",
+        searchKeywords = listOf("noise", "white", "pink", "brown", "rain", "ocean", "sleep", "ambient", "focus"),
+    ),
+    ToolDefinition(
+        id = "metronome",
+        name = "Metronome",
+        icon = Icons.Default.MusicNote,
+        category = ToolCategory.EverydayTools,
+        description = "Adjustable-tempo metronome with audible click, visual beat indicator, and haptic pulse. Supports tap tempo and time signatures from 2/4 to 6/8.",
+        searchKeywords = listOf("metronome", "bpm", "tempo", "beat", "rhythm", "music", "click"),
+    ),
+
+    // Phase 11 (Pitch Tuner)
+    ToolDefinition(
+        id = "pitch_tuner",
+        name = "Pitch Tuner",
+        icon = Icons.Default.Tune,
+        category = ToolCategory.MeasurementSensors,
+        description = "Detect musical pitch from microphone input. Shows nearest note, frequency, and cents deviation with a visual tuning gauge. Includes reference tone generator.",
+        searchKeywords = listOf("pitch", "tuner", "note", "music", "frequency", "tune", "guitar"),
+    ),
+
+    // Phase 13 (Visual Tools)
+    ToolDefinition(
+        id = "screen_flash",
+        name = "Screen Flash",
+        icon = Icons.Default.FlashOn,
+        category = ToolCategory.Lighting,
+        description = "Full-screen color flash for concerts, emergencies, or visual signaling. Supports solid color, strobe mode, and SOS pattern with adjustable frequency.",
+        searchKeywords = listOf("flash", "strobe", "screen", "color", "sos", "signal", "emergency"),
+    ),
+    ToolDefinition(
+        id = "plumb_bob",
+        name = "Plumb Bob",
+        icon = Icons.Default.Plumbing,
+        category = ToolCategory.MeasurementSensors,
+        description = "Camera overlay with a vertical plumb line for checking vertical alignment. Color-coded deviation indicator shows how far from true vertical.",
+        requiresCamera = true,
+        requiredSensorType = Sensor.TYPE_ACCELEROMETER,
+        searchKeywords = listOf("plumb", "vertical", "level", "alignment", "construction"),
+    ),
+
+    // Phase 14 (Connectivity)
+    ToolDefinition(
+        id = "wifi_signal",
+        name = "WiFi Signal",
+        icon = Icons.Default.Wifi,
+        category = ToolCategory.MeasurementSensors,
+        description = "Measure WiFi signal strength in dBm with quality rating. Log readings at different locations and export as CSV for network troubleshooting.",
+        searchKeywords = listOf("wifi", "signal", "strength", "rssi", "network", "dbm", "wireless"),
     ),
 
     // Measurement & Sensors (Phase 9)

@@ -85,4 +85,7 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.core.splashscreen)
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
 }

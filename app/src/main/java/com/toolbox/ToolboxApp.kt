@@ -43,7 +43,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
+import com.toolbox.conversion.aspectratio.AspectRatioScreen
+import com.toolbox.conversion.bmi.BmiCalculatorScreen
 import com.toolbox.conversion.calculator.CalculatorScreen
+import com.toolbox.conversion.datecalc.DateCalculatorScreen
 import com.toolbox.conversion.numberbase.NumberBaseScreen
 import com.toolbox.conversion.percentage.PercentageScreen
 import com.toolbox.conversion.tipcalculator.TipCalculatorScreen
@@ -62,7 +65,14 @@ import com.toolbox.lighting.FlashlightScreen
 import com.toolbox.everyday.random.RandomScreen
 import com.toolbox.everyday.stopwatch.StopwatchTimerScreen
 import com.toolbox.everyday.breathing.BreathingExerciseScreen
+import com.toolbox.everyday.metronome.MetronomeScreen
 import com.toolbox.everyday.morse.MorseCodeScreen
+import com.toolbox.lighting.screenflash.ScreenFlashScreen
+import com.toolbox.measurement.pitchtuner.PitchTunerScreen
+import com.toolbox.measurement.plumbbob.PlumbBobScreen
+import com.toolbox.measurement.wifisignal.WifiSignalScreen
+import com.toolbox.everyday.password.PasswordGeneratorScreen
+import com.toolbox.everyday.whitenoise.WhiteNoiseScreen
 import com.toolbox.everyday.heartrate.HeartRateScreen
 import com.toolbox.everyday.mirror.MirrorScreen
 import com.toolbox.motion.pedometer.PedometerScreen
@@ -80,9 +90,19 @@ import com.toolbox.measurement.soundmeter.SoundMeterScreen
 import com.toolbox.measurement.speedometer.SpeedometerScreen
 import com.toolbox.measurement.spectrum.SpectrumScreen
 import com.toolbox.measurement.vibrometer.VibrometerScreen
+import com.toolbox.nav.AspectRatio
+import com.toolbox.nav.BmiCalculator
 import com.toolbox.nav.BreathingExercise
+import com.toolbox.nav.DateCalculator
+import com.toolbox.nav.Metronome
+import com.toolbox.nav.PasswordGenerator
+import com.toolbox.nav.PitchTuner
+import com.toolbox.nav.PlumbBob
+import com.toolbox.nav.ScreenFlash
 import com.toolbox.nav.ScientificCalculator
 import com.toolbox.nav.MorseCode
+import com.toolbox.nav.WifiSignal
+import com.toolbox.nav.WhiteNoise
 import com.toolbox.nav.Barometer
 import com.toolbox.nav.Humidity
 import com.toolbox.nav.Gyroscope
@@ -235,6 +255,16 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                     composable<BreathingExercise> { ToolScreen("Breathing Exercise", "breathing_exercise", navController, this@SharedTransitionLayout, this@composable) { BreathingExerciseScreen() } }
                     composable<ScientificCalculator> { ToolScreen("Calculator", "scientific_calculator", navController, this@SharedTransitionLayout, this@composable) { CalculatorScreen() } }
                     composable<MorseCode> { ToolScreen("Morse Code", "morse_code", navController, this@SharedTransitionLayout, this@composable) { MorseCodeScreen() } }
+                    composable<DateCalculator> { ToolScreen("Date/Age Calculator", "date_calculator", navController, this@SharedTransitionLayout, this@composable) { DateCalculatorScreen() } }
+                    composable<BmiCalculator> { ToolScreen("BMI Calculator", "bmi_calculator", navController, this@SharedTransitionLayout, this@composable) { BmiCalculatorScreen() } }
+                    composable<AspectRatio> { ToolScreen("Aspect Ratio", "aspect_ratio", navController, this@SharedTransitionLayout, this@composable) { AspectRatioScreen() } }
+                    composable<PasswordGenerator> { ToolScreen("Password Generator", "password_generator", navController, this@SharedTransitionLayout, this@composable) { PasswordGeneratorScreen() } }
+                    composable<WhiteNoise> { ToolScreen("White Noise", "white_noise", navController, this@SharedTransitionLayout, this@composable) { WhiteNoiseScreen() } }
+                    composable<Metronome> { ToolScreen("Metronome", "metronome", navController, this@SharedTransitionLayout, this@composable) { MetronomeScreen() } }
+                    composable<PitchTuner> { ToolScreen("Pitch Tuner", "pitch_tuner", navController, this@SharedTransitionLayout, this@composable) { PitchTunerScreen() } }
+                    composable<ScreenFlash> { ToolScreen("Screen Flash", "screen_flash", navController, this@SharedTransitionLayout, this@composable) { ScreenFlashScreen() } }
+                    composable<PlumbBob> { ToolScreen("Plumb Bob", "plumb_bob", navController, this@SharedTransitionLayout, this@composable) { PlumbBobScreen() } }
+                    composable<WifiSignal> { ToolScreen("WiFi Signal", "wifi_signal", navController, this@SharedTransitionLayout, this@composable) { WifiSignalScreen() } }
                 }
             }
         }
@@ -341,5 +371,15 @@ private fun toolDestination(toolId: String): Any? = when (toolId) {
     "breathing_exercise" -> BreathingExercise
     "scientific_calculator" -> ScientificCalculator
     "morse_code" -> MorseCode
+    "date_calculator" -> DateCalculator
+    "bmi_calculator" -> BmiCalculator
+    "aspect_ratio" -> AspectRatio
+    "password_generator" -> PasswordGenerator
+    "white_noise" -> WhiteNoise
+    "metronome" -> Metronome
+    "pitch_tuner" -> PitchTuner
+    "screen_flash" -> ScreenFlash
+    "plumb_bob" -> PlumbBob
+    "wifi_signal" -> WifiSignal
     else -> null
 }

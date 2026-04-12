@@ -3,4 +3,6 @@
     <string name="shortcut_flashlight">Flashlight</string>
     <string name="shortcut_level">Bubble Level</string>
     <string name="shortcut_sound_meter">Sound Meter</string>
+    <string name="counter_widget_description">Counter with +/- buttons on your home screen</string>
+    <string name="quick_launch_widget_description">Quick access to your favorite tools</string>
 </resources>

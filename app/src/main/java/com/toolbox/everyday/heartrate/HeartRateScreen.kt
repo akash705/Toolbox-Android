@@ -342,6 +342,35 @@ private fun HeartRateContent() {
             }
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // How it works + accuracy disclaimer
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+            ),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+            ) {
+                Text(
+                    text = "How it works",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "This tool uses photoplethysmography (PPG) — the camera and flash detect subtle color changes in your fingertip caused by blood flow. This is the same principle used by pulse oximeters, but phone cameras are less precise. Results may vary by ±10-15 BPM depending on your device, lighting, and finger placement. For medical decisions, always use a certified device.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 18.sp,
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         // Start/Stop button
@@ -436,7 +465,7 @@ private fun HeartRateContent() {
 
         // Disclaimer
         Text(
-            text = "FOR REFERENCE ONLY. NOT A MEDICAL DEVICE.",
+            text = "For estimation purposes only. This is not a medical device.",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

@@ -63,6 +63,11 @@ class MorseCodeViewModel : ViewModel() {
         _state.update { it.copy(textInput = text, morseOutput = morse) }
     }
 
+    fun setMorseInput(morse: String) {
+        val decoded = morseToText(morse)
+        _state.update { it.copy(morseInput = morse, textOutput = decoded) }
+    }
+
     fun appendMorseSymbol(symbol: String) {
         val newMorse = _state.value.morseInput + symbol
         val decoded = morseToText(newMorse)

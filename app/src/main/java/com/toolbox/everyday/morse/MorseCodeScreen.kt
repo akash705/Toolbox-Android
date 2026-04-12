@@ -286,28 +286,20 @@ private fun MorseToTextTab(
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    // Morse input display
-    Card(
+    // Morse input text field
+    OutlinedTextField(
+        value = state.morseInput,
+        onValueChange = viewModel::setMorseInput,
+        label = { Text("Morse code (dots and dashes)") },
+        placeholder = { Text("Type or paste: .... . .-.. .-.. ---") },
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(
+            fontFamily = FontFamily.Monospace,
+            letterSpacing = 2.sp,
         ),
-    ) {
-        Text(
-            text = state.morseInput.ifEmpty { "Tap buttons below to input Morse code" },
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontFamily = FontFamily.Monospace,
-                letterSpacing = 2.sp,
-            ),
-            color = if (state.morseInput.isEmpty())
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            else MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            minLines = 2,
-        )
-    }
+        minLines = 2,
+        maxLines = 4,
+    )
 
     Spacer(modifier = Modifier.height(16.dp))
 

@@ -43,7 +43,35 @@
             justify-content: center;
             gap: 12px;
             flex-wrap: wrap;
-            margin-bottom: 8px;
+            margin-bottom: 32px;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 14px 36px;
+            background: #3a3f5c;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .download-btn:hover {
+            background: #5b6abf;
+            transform: translateY(-2px);
+        }
+
+        .download-btn svg {
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        .version-note {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: #888;
         }
 
         .badge {
@@ -168,6 +196,11 @@
             <span class="badge">No ads</span>
             <span class="badge">Fully offline</span>
         </div>
+        <a href="https://github.com/akash705/Toolbox-Android/releases/latest/download/app-release.apk" class="download-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download APK
+        </a>
+        <p class="version-note">v1.0.0 &middot; Android</p>
     </section>
 
     <section class="screenshots">

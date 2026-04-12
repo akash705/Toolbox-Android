@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Favorite
@@ -142,7 +143,9 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                                     text = "Toolbox",
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                    modifier = Modifier
+                                        .statusBarsPadding()
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
                                 )
                             },
                             bottomBar = {

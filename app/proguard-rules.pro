@@ -18,3 +18,15 @@
 -keepclasseswithmembers class com.toolbox.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
+
+# Glance widgets — ActionCallback classes resolved by name at runtime
+-keep class com.toolbox.widgets.** { *; }
+-keep class androidx.glance.** { *; }
+-dontwarn androidx.glance.**
+
+# Navigation Compose — keep @Serializable destination objects
+-keep class com.toolbox.nav.** { *; }
+
+# Keep Compose runtime for Glance
+-keep class androidx.compose.runtime.** { *; }
+-dontwarn androidx.compose.runtime.**

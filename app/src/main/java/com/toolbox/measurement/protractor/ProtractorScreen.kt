@@ -57,6 +57,7 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
+import com.toolbox.core.sharing.ShareButton
 
 @Composable
 fun ProtractorScreen() {
@@ -211,6 +212,12 @@ fun ProtractorScreen() {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Reset Zero")
             }
+            ShareButton(
+                toolName = "Protractor",
+                value = "%.1f".format(angle),
+                unit = "°",
+                modifier = Modifier.height(56.dp),
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))

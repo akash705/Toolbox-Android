@@ -53,6 +53,7 @@ import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
+import com.toolbox.core.sharing.ShareButton
 
 @Composable
 fun MetalDetectorScreen() {
@@ -226,6 +227,13 @@ fun MetalDetectorScreen() {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Reset")
             }
+            ShareButton(
+                toolName = "Metal Detector",
+                value = "%.1f".format(totalMagnitude),
+                unit = "μT",
+                label = signalLevel.label,
+                modifier = Modifier.height(56.dp),
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))

@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.toolbox.core.sensor.rememberPressureData
+import com.toolbox.core.sharing.ShareButton
 
 private const val CHART_SAMPLES = 60
 
@@ -350,6 +351,18 @@ fun BarometerScreen() {
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        ShareButton(
+            toolName = "Barometer",
+            value = formatPressure(currentPressure, selectedUnit),
+            unit = selectedUnit.label,
+            label = weatherLabel.label,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = "Available on supported devices only",

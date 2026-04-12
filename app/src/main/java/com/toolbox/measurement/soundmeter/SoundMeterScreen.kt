@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.toolbox.core.permission.PermissionGate
 import com.toolbox.core.sensor.rememberAudioLevel
+import com.toolbox.core.sharing.ShareButton
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -177,23 +178,35 @@ private fun SoundMeterContent() {
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // Reset button
-        OutlinedButton(
-            onClick = {
-                minDb = Float.MAX_VALUE
-                maxDb = 0f
-                sumDb = 0f
-                sampleCount = 0f
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp),
+        // Reset and Share buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text(
-                text = "Reset",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+            OutlinedButton(
+                onClick = {
+                    minDb = Float.MAX_VALUE
+                    maxDb = 0f
+                    sumDb = 0f
+                    sampleCount = 0f
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                shape = RoundedCornerShape(28.dp),
+            ) {
+                Text(
+                    text = "Reset",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            ShareButton(
+                toolName = "Sound Meter",
+                value = "${currentDb.toInt()}",
+                unit = "dB",
+                label = level.label,
+                modifier = Modifier.height(56.dp),
             )
         }
 

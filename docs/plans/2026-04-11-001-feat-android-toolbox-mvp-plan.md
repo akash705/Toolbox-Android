@@ -169,7 +169,7 @@ CameraX Provider → Preview + ImageAnalysis
 
 ### Phase 1: Project Scaffold
 
-- [ ] **Unit 1: Gradle project setup**
+- [x] **Unit 1: Gradle project setup**
 
   **Goal:** Create the Android project with all dependencies, version catalog, and build configuration.
 
@@ -204,7 +204,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Clean build succeeds with no warnings about missing dependencies
 
-- [ ] **Unit 2: Theme and app shell**
+- [x] **Unit 2: Theme and app shell**
 
   **Goal:** Set up Material 3 theming with dynamic color, light/dark support, and the single-Activity entry point.
 
@@ -239,7 +239,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - App renders with correct theme colors on both Android 12+ and older devices
 
-- [ ] **Unit 3: Dashboard and navigation**
+- [x] **Unit 3: Dashboard and navigation**
 
   **Goal:** Build the grid dashboard with categorized tool tiles, search bar, and navigation to tool screens.
 
@@ -284,7 +284,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - All 16 tiles visible on dashboard, each navigates to a placeholder tool screen and back
 
-- [ ] **Unit 4: Permission gate composable**
+- [x] **Unit 4: Permission gate composable**
 
   **Goal:** Build a reusable permission request composable that wraps camera/mic/location tools.
 
@@ -318,7 +318,7 @@ CameraX Provider → Preview + ImageAnalysis
 
 ### Phase 2: Zero-Permission Tools (no runtime permissions needed)
 
-- [ ] **Unit 5: Unit Converter**
+- [x] **Unit 5: Unit Converter**
 
   **Goal:** Build a full unit converter with 10 categories, bidirectional input, and favorite/recent persistence.
 
@@ -359,7 +359,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - All 10 categories convert correctly. Favorites persist.
 
-- [ ] **Unit 6: Percentage, Tip, and Number Base calculators**
+- [x] **Unit 6: Percentage, Tip, and Number Base calculators**
 
   **Goal:** Build 3 simple calculation tools.
 
@@ -393,7 +393,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - All 3 calculators produce correct results with valid input and handle edge cases gracefully
 
-- [ ] **Unit 7: Counter / Tally**
+- [x] **Unit 7: Counter / Tally**
 
   **Goal:** Build a counter with named counters, haptic feedback, and persistent state.
 
@@ -427,7 +427,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Multiple named counters work, values persist, haptics trigger
 
-- [ ] **Unit 8: Stopwatch & Timer**
+- [x] **Unit 8: Stopwatch & Timer**
 
   **Goal:** Build stopwatch with laps and timer with foreground service for background operation.
 
@@ -466,7 +466,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Timer completes and notifies even when app is in background
 
-- [ ] **Unit 9: Random / Coin Flip / Dice**
+- [x] **Unit 9: Random / Coin Flip / Dice**
 
   **Goal:** Build random number generator, coin flip, and dice roll with animations.
 
@@ -497,7 +497,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - All three modes produce valid random results with smooth animations
 
-- [ ] **Unit 10: On-Screen Ruler**
+- [x] **Unit 10: On-Screen Ruler**
 
   **Goal:** Build an on-screen ruler with credit card calibration.
 
@@ -529,7 +529,7 @@ CameraX Provider → Preview + ImageAnalysis
 
 ### Phase 3: Sensor Tools (runtime permissions for sensors)
 
-- [ ] **Unit 11: Sensor composable hooks**
+- [x] **Unit 11: Sensor composable hooks**
 
   **Goal:** Build reusable composable hooks for accelerometer, magnetometer, and microphone data.
 
@@ -565,7 +565,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Sensor hooks produce stable, lifecycle-aware data streams consumed by tool screens
 
-- [ ] **Unit 12: Bubble Level**
+- [x] **Unit 12: Bubble Level**
 
   **Goal:** Build a bubble level with circular and linear modes.
 
@@ -597,7 +597,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Level reads 0° on a known flat surface and responds smoothly to tilt
 
-- [ ] **Unit 13: Compass**
+- [x] **Unit 13: Compass**
 
   **Goal:** Build a compass with magnetic/true north toggle.
 
@@ -628,7 +628,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Compass points north consistently and switches between magnetic/true north
 
-- [ ] **Unit 14: Protractor and Sound Meter**
+- [x] **Unit 14: Protractor and Sound Meter**
 
   **Goal:** Build accelerometer-based protractor and microphone-based sound meter.
 
@@ -659,7 +659,7 @@ CameraX Provider → Preview + ImageAnalysis
 
 ### Phase 4: Camera Tools (camera permission required)
 
-- [ ] **Unit 15: Shared camera composable**
+- [x] **Unit 15: Shared camera composable**
 
   **Goal:** Build a reusable CameraX preview composable with image analysis support.
 
@@ -692,7 +692,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Camera preview composable works across 3 tool screens (QR, Color Picker, Magnifier)
 
-- [ ] **Unit 16: QR / Barcode Scanner + Generator**
+- [x] **Unit 16: QR / Barcode Scanner + Generator**
 
   **Goal:** Build QR/barcode scanner with ZXing and a QR/barcode generator.
 
@@ -728,7 +728,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Scanner decodes at least QR and EAN-13 barcodes. Generator produces scannable QR codes.
 
-- [ ] **Unit 17: Color Picker**
+- [x] **Unit 17: Color Picker**
 
   **Goal:** Build a camera-based color picker that displays hex/RGB/HSL values.
 
@@ -761,7 +761,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Color picker shows plausible color values that match the visible scene
 
-- [ ] **Unit 18: Magnifier**
+- [x] **Unit 18: Magnifier**
 
   **Goal:** Build a camera-based magnifier with zoom and torch.
 
@@ -792,7 +792,7 @@ CameraX Provider → Preview + ImageAnalysis
 
 ### Phase 5: Flashlight and Polish
 
-- [ ] **Unit 19: Flashlight**
+- [x] **Unit 19: Flashlight**
 
   **Goal:** Build flashlight with SOS and strobe modes.
 
@@ -825,7 +825,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Flash toggles reliably. SOS and strobe patterns are correct on physical device.
 
-- [ ] **Unit 20: Polish and Play Store prep**
+- [x] **Unit 20: Polish and Play Store prep**
 
   **Goal:** Final polish, transitions, testing, and Play Store listing preparation.
 
@@ -862,7 +862,7 @@ CameraX Provider → Preview + ImageAnalysis
 
 ### Phase 6: New Tools & Enhancements (Post-MVP)
 
-- [ ] **Unit 21: Unit Converter — Comprehensive expansion**
+- [x] **Unit 21: Unit Converter — Comprehensive expansion**
 
   **Goal:** Expand from 10 categories to 17+ categories, add missing units within existing categories.
 
@@ -886,7 +886,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - 17+ categories all converting correctly. All existing conversions unchanged.
 
-- [ ] **Unit 22: Vibrometer (Surface Vibration Analyzer)**
+- [x] **Unit 22: Vibrometer (Surface Vibration Analyzer)**
 
   **Goal:** Use accelerometer at high sample rate to detect and visualize surface vibrations.
 
@@ -916,7 +916,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Waveform renders smoothly. Frequency estimate is reasonable on vibrating surface.
 
-- [ ] **Unit 23: Mirror (True Mirror)**
+- [x] **Unit 23: Mirror (True Mirror)**
 
   **Goal:** Full-screen front camera feed as a mirror with standard/true mirror toggle.
 
@@ -947,7 +947,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Mirror displays correctly. True mirror flip is visually correct.
 
-- [ ] **Unit 24: Ambient Light Meter (Lux Logger)**
+- [x] **Unit 24: Ambient Light Meter (Lux Logger)**
 
   **Goal:** Display and log ambient light sensor readings with rolling chart and threshold alerts.
 
@@ -978,7 +978,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Lux readings respond to covering/uncovering the sensor. Chart scrolls.
 
-- [ ] **Unit 25: Magnetic Field Detector**
+- [x] **Unit 25: Magnetic Field Detector**
 
   **Goal:** 3-axis magnetic field strength display with metal detection mode.
 
@@ -1010,7 +1010,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Detects metal objects (keys, screws) at close range. Audio feedback follows magnitude.
 
-- [ ] **Unit 26: Shareable Measurement Cards**
+- [x] **Unit 26: Shareable Measurement Cards**
 
   **Goal:** Export any tool reading as a branded visual card (PNG) for sharing.
 
@@ -1037,7 +1037,7 @@ CameraX Provider → Preview + ImageAnalysis
   **Verification:**
   - Shared card image is visually clean and contains accurate data.
 
-- [ ] **Unit 27: Quick Settings Tiles**
+- [x] **Unit 27: Quick Settings Tiles**
 
   **Goal:** Register Android Quick Settings tiles for top tools (Flashlight, Sound Meter, Level, Timer).
 

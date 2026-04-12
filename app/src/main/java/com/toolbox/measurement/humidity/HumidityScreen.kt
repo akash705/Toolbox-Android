@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.toolbox.core.sensor.rememberHumidityData
 import com.toolbox.core.sensor.rememberTemperatureData
+import com.toolbox.core.sharing.ShareButton
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -221,6 +222,18 @@ fun HumidityScreen() {
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        ShareButton(
+            toolName = "Humidity",
+            value = "%.1f".format(currentHumidity),
+            unit = "%",
+            label = comfortLevel.label,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = "Available on supported devices only",

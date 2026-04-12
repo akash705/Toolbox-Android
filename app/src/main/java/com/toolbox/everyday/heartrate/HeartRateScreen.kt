@@ -64,6 +64,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.toolbox.core.permission.PermissionGate
 import kotlinx.coroutines.delay
 import java.util.concurrent.Executors
+import com.toolbox.core.sharing.ShareButton
 
 private val HeartPink = Color(0xFFE57373)
 private val HeartPinkLight = Color(0xFFF8BBD0)
@@ -373,37 +374,51 @@ private fun HeartRateContent() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Start/Stop button
-        Button(
-            onClick = {
-                if (isMeasuring) {
-                    isMeasuring = false
-                    analyzer.reset()
-                    camera?.cameraControl?.enableTorch(false)
-                } else {
-                    isMeasuring = true
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(26.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isMeasuring) MaterialTheme.colorScheme.error
-                else MaterialTheme.colorScheme.primary,
-            ),
+        // Start/Stop and Share buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(
-                imageVector = if (isMeasuring) Icons.Default.Stop else Icons.Default.PlayArrow,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = if (isMeasuring) "Stop Measurement" else "Start Measurement",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-            )
+            Button(
+                onClick = {
+                    if (isMeasuring) {
+                        isMeasuring = false
+                        analyzer.reset()
+                        camera?.cameraControl?.enableTorch(false)
+                    } else {
+                        isMeasuring = true
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+                shape = RoundedCornerShape(26.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isMeasuring) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.primary,
+                ),
+            ) {
+                Icon(
+                    imageVector = if (isMeasuring) Icons.Default.Stop else Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isMeasuring) "Stop Measurement" else "Start Measurement",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            if (bpm > 0 && !isMeasuring) {
+                ShareButton(
+                    toolName = "Heart Rate",
+                    value = "$bpm",
+                    unit = "BPM",
+                    label = pulseLabel,
+                    modifier = Modifier.height(52.dp),
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))

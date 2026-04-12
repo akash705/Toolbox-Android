@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.toolbox.core.sensor.rememberAccelerometerData
+import com.toolbox.core.sharing.ShareButton
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -156,34 +157,46 @@ fun LevelScreen() {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Lock button — filled with light blue tint, matching Stitch
-        Button(
-            onClick = {
-                if (!isLocked) {
-                    lockedPitch = rawPitch
-                    lockedRoll = rawRoll
-                }
-                isLocked = !isLocked
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary,
-            ),
+        // Lock and Share buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(
-                Icons.Default.Lock,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = if (isLocked) "Unlock Reading" else "Lock Reading",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+            Button(
+                onClick = {
+                    if (!isLocked) {
+                        lockedPitch = rawPitch
+                        lockedRoll = rawRoll
+                    }
+                    isLocked = !isLocked
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                shape = RoundedCornerShape(28.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
+            ) {
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isLocked) "Unlock Reading" else "Lock Reading",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            ShareButton(
+                toolName = "Bubble Level",
+                value = "%.1f".format(totalDeviation),
+                unit = "°",
+                label = if (isLevel) "Level" else "Pitch: ${"%.1f°".format(pitch)}, Roll: ${"%.1f°".format(roll)}",
+                modifier = Modifier.height(56.dp),
             )
         }
 

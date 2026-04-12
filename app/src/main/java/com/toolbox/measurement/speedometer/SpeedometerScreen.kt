@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import com.toolbox.core.permission.PermissionGate
 import kotlin.math.cos
 import kotlin.math.sin
+import com.toolbox.core.sharing.ShareButton
 
 private val GaugeGreen = Color(0xFF4CAF50)
 private val GaugeYellow = Color(0xFFFFC107)
@@ -381,31 +382,42 @@ private fun SpeedometerContent() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedButton(
-            onClick = {
-                currentSpeed = 0f
-                maxSpeed = 0f
-                totalSpeed = 0.0
-                speedSamples = 0
-                distance = 0.0
-                lastLocation = null
-                isTripActive = false
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(24.dp),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(
-                Icons.Default.Refresh,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Reset",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
+            OutlinedButton(
+                onClick = {
+                    currentSpeed = 0f
+                    maxSpeed = 0f
+                    totalSpeed = 0.0
+                    speedSamples = 0
+                    distance = 0.0
+                    lastLocation = null
+                    isTripActive = false
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(24.dp),
+            ) {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Reset",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            ShareButton(
+                toolName = "Speedometer",
+                value = if (displaySpeed < 10f) String.format("%.1f", displaySpeed) else "${displaySpeed.toInt()}",
+                unit = unitLabels[selectedUnit],
+                modifier = Modifier.height(48.dp),
             )
         }
 

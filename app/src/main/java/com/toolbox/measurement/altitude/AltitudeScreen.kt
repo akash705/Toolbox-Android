@@ -62,6 +62,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.toolbox.core.permission.PermissionGate
+import com.toolbox.core.sharing.ShareButton
 
 private val AscentGreen = Color(0xFF4CAF50)
 private val DescentRed = Color(0xFFF44336)
@@ -405,32 +406,43 @@ private fun AltitudeContent() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Reset button
-        OutlinedButton(
-            onClick = {
-                minAltitude = Double.MAX_VALUE
-                maxAltitude = Double.MIN_VALUE
-                totalAscent = 0.0
-                totalDescent = 0.0
-                lastAltitude = Double.NaN
-                isTracking = false
-                altitudeHistory.clear()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(24.dp),
+        // Reset and Share buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(
-                Icons.Default.Refresh,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Reset",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
+            OutlinedButton(
+                onClick = {
+                    minAltitude = Double.MAX_VALUE
+                    maxAltitude = Double.MIN_VALUE
+                    totalAscent = 0.0
+                    totalDescent = 0.0
+                    lastAltitude = Double.NaN
+                    isTracking = false
+                    altitudeHistory.clear()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(24.dp),
+            ) {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Reset",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            ShareButton(
+                toolName = "Altitude",
+                value = convertAltValue(currentAltitude),
+                unit = unitLabel,
+                modifier = Modifier.height(48.dp),
             )
         }
 

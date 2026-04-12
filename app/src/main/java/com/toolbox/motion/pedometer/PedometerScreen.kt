@@ -59,6 +59,7 @@ import com.toolbox.core.permission.PermissionGate
 import com.toolbox.core.sensor.rememberStepCount
 import kotlinx.coroutines.delay
 import java.text.NumberFormat
+import com.toolbox.core.sharing.ShareButton
 
 @Composable
 fun PedometerScreen() {
@@ -405,6 +406,17 @@ private fun PedometerContent() {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        ShareButton(
+            toolName = "Pedometer",
+            value = NumberFormat.getNumberInstance().format(dailySteps),
+            unit = "steps",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Footer
         Text(

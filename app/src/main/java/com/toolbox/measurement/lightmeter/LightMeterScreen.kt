@@ -49,6 +49,7 @@ import com.toolbox.core.sensor.rememberLightSensorData
 import kotlin.math.cos
 import kotlin.math.ln
 import kotlin.math.sin
+import com.toolbox.core.sharing.ShareButton
 
 private const val CHART_SAMPLES = 300
 
@@ -195,25 +196,37 @@ fun LightMeterScreen() {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Reset button
-        OutlinedButton(
-            onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                peakLux = 0f
-                chartIndex = 0
-                chartData.fill(0f)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+        // Reset and Share buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(
-                Icons.Default.RestartAlt,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
+            OutlinedButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    peakLux = 0f
+                    chartIndex = 0
+                    chartData.fill(0f)
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+            ) {
+                Icon(
+                    Icons.Default.RestartAlt,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Reset")
+            }
+            ShareButton(
+                toolName = "Light Meter",
+                value = "${currentLux.toInt()}",
+                unit = "lux",
+                label = lightCondition.label,
+                modifier = Modifier.height(56.dp),
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Reset")
         }
 
         Spacer(modifier = Modifier.height(16.dp))

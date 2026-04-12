@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.toolbox.core.sharing.ShareButton
 
 @Composable
 fun CounterScreen(
@@ -194,6 +195,16 @@ fun CounterScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            ShareButton(
+                toolName = "Counter",
+                value = "${state.activeCounter.value}",
+                unit = "",
+                label = state.activeCounter.name,
+                modifier = Modifier.height(40.dp),
+            )
         }
     }
 

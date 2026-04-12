@@ -47,6 +47,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.toolbox.core.sensor.rememberOrientationData
+import com.toolbox.core.sharing.ShareButton
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -224,6 +225,18 @@ fun CompassScreen() {
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        ShareButton(
+            toolName = "Compass",
+            value = "${bearing.toInt()}",
+            unit = "°",
+            label = getCardinalDirection(bearing),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+        )
     }
 }
 

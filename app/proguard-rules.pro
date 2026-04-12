@@ -30,3 +30,12 @@
 # Keep Compose runtime for Glance
 -keep class androidx.compose.runtime.** { *; }
 -dontwarn androidx.compose.runtime.**
+
+# WorkManager + Room — Glance transitively depends on WorkManager which uses Room.
+# R8 strips Room-generated _Impl classes causing WorkDatabase instantiation failure.
+-keep class androidx.work.** { *; }
+-keep class androidx.room.** { *; }
+-keep class * extends androidx.room.RoomDatabase
+-keep class * implements androidx.room.DatabaseConfiguration
+-dontwarn androidx.work.**
+-dontwarn androidx.room.**

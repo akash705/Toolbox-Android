@@ -7,6 +7,9 @@ import android.graphics.Bitmap
 import androidx.camera.core.Camera
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,6 +35,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.ZoomIn
+import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -39,7 +44,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -54,9 +61,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.toolbox.core.camera.CameraPreview
 import com.toolbox.core.permission.PermissionGate
+import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -77,7 +86,14 @@ private fun ColorPickerContent() {
     val colorHistory = remember { mutableStateListOf<Int>() }
     var camera by remember { mutableStateOf<Camera?>(null) }
     var torchOn by remember { mutableStateOf(false) }
+    var zoomLevel by remember { mutableFloatStateOf(0f) }
+    var showTooltip by remember { mutableStateOf(true) }
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        delay(4000)
+        showTooltip = false
+    }
 
     val analyzer = remember {
         CenterColorAnalyzer { color ->
@@ -132,6 +148,29 @@ private fun ColorPickerContent() {
                 drawLine(Color.White, Offset(cx, cy + 8), Offset(cx, cy + crosshairSize), strokeWidth = 2f)
             }
 
+            // Tooltip
+            androidx.compose.animation.AnimatedVisibility(
+                visible = showTooltip,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 48.dp),
+            ) {
+                Text(
+                    text = "Point the crosshair at any surface\nto pick its color",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .background(
+                            Color.Black.copy(alpha = 0.6f),
+                            RoundedCornerShape(8.dp),
+                        )
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+
             // Torch toggle
             IconButton(
                 onClick = {
@@ -147,6 +186,41 @@ private fun ColorPickerContent() {
                     contentDescription = if (torchOn) "Flash on" else "Flash off",
                     tint = Color.White,
                 )
+            }
+
+            // Zoom controls
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(20.dp)),
+            ) {
+                IconButton(
+                    onClick = {
+                        val newZoom = (zoomLevel + 0.1f).coerceAtMost(1f)
+                        zoomLevel = newZoom
+                        camera?.cameraControl?.setLinearZoom(newZoom)
+                    },
+                ) {
+                    Icon(
+                        Icons.Default.ZoomIn,
+                        contentDescription = "Zoom in",
+                        tint = Color.White,
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        val newZoom = (zoomLevel - 0.1f).coerceAtLeast(0f)
+                        zoomLevel = newZoom
+                        camera?.cameraControl?.setLinearZoom(newZoom)
+                    },
+                ) {
+                    Icon(
+                        Icons.Default.ZoomOut,
+                        contentDescription = "Zoom out",
+                        tint = Color.White,
+                    )
+                }
             }
         }
 

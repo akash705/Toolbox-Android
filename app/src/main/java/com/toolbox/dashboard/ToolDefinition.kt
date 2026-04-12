@@ -364,11 +364,11 @@ val allTools = listOf(
     ),
     ToolDefinition(
         id = "white_noise",
-        name = "White Noise",
+        name = "Ambient Sounds",
         icon = Icons.Default.Nightlight,
         category = ToolCategory.EverydayTools,
-        description = "Ambient sound generator with white, pink, and brown noise plus nature sounds. Features sleep timer and volume control for focus, sleep, and relaxation.",
-        searchKeywords = listOf("noise", "white", "pink", "brown", "rain", "ocean", "sleep", "ambient", "focus"),
+        description = "Ambient sound generator with white, pink, and brown noise plus nature sounds. Features sleep timer for focus, sleep, and relaxation.",
+        searchKeywords = listOf("noise", "white", "pink", "brown", "rain", "ocean", "sleep", "ambient", "focus", "fan"),
     ),
     ToolDefinition(
         id = "metronome",

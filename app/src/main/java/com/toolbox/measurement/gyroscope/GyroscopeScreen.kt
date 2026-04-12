@@ -3,6 +3,7 @@ package com.toolbox.measurement.gyroscope
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,7 +48,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.toolbox.core.sensor.GyroscopeData
 import com.toolbox.core.sensor.rememberGyroscopeData
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -120,7 +120,7 @@ private fun GyroscopeContent() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp),
+                .height(240.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             ),
@@ -130,27 +130,53 @@ private fun GyroscopeContent() {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                // Tilted phone icon that responds to gyro data
-                Icon(
-                    Icons.Default.ScreenRotation,
-                    contentDescription = null,
+                // Phone silhouette that responds to gyro data
+                Box(
                     modifier = Modifier
-                        .size(80.dp)
                         .graphicsLayer(
                             rotationX = (calibratedX * 2).coerceIn(-30f, 30f),
                             rotationY = (calibratedY * 2).coerceIn(-30f, 30f),
                             rotationZ = (calibratedZ * 2).coerceIn(-30f, 30f),
                         ),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
+                    contentAlignment = Alignment.Center,
+                ) {
+                    // Phone body
+                    Box(
+                        modifier = Modifier
+                            .size(width = 84.dp, height = 140.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                                shape = RoundedCornerShape(18.dp),
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        // Phone screen area
+                        Box(
+                            modifier = Modifier
+                                .size(width = 68.dp, height = 116.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(12.dp),
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Default.ScreenRotation,
+                                contentDescription = null,
+                                modifier = Modifier.size(40.dp),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Three small circular axis indicators
+        // Axis circle indicators
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AxisCircle("X", AxisBlue)
@@ -168,7 +194,10 @@ private fun GyroscopeContent() {
             color = AxisBlue,
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 12.dp),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+        )
 
         AxisRow(
             label = "Y",
@@ -177,7 +206,10 @@ private fun GyroscopeContent() {
             color = AxisDark,
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 12.dp),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+        )
 
         AxisRow(
             label = "Z",
@@ -352,16 +384,17 @@ private fun GyroscopeContent() {
 private fun AxisCircle(label: String, color: Color) {
     Box(
         modifier = Modifier
-            .size(32.dp)
-            .background(
-                color = color.copy(alpha = 0.1f),
+            .size(36.dp)
+            .border(
+                width = 1.5.dp,
+                color = color.copy(alpha = 0.4f),
                 shape = CircleShape,
             ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
             color = color,
         )

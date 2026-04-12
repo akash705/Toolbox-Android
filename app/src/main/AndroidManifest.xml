@@ -58,6 +58,15 @@
                 android:value="timer_countdown" />
         </service>
 
+        <service
+            android:name=".everyday.stopwatch.StopwatchService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="stopwatch_elapsed_time" />
+        </service>
+
         <receiver
             android:name=".everyday.stopwatch.TimerAlarmReceiver"
             android:exported="false" />

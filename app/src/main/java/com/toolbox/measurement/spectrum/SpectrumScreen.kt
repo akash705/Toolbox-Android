@@ -191,8 +191,7 @@ private fun SpectrumContent() {
         }
     }
 
-    val bandLabels = FFTProcessor.FrequencyBand.entries.map { it.label }
-    val freqLabels = listOf("20Hz", "100Hz", "500Hz", "1kHz", "5kHz", "20kHz")
+    val bandEntries = FFTProcessor.FrequencyBand.entries
 
     Column(
         modifier = Modifier
@@ -271,22 +270,31 @@ private fun SpectrumContent() {
             ),
             shape = RoundedCornerShape(12.dp),
         ) {
-            FlowRow(
-                modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                bandLabels.forEachIndexed { index, label ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Canvas(modifier = Modifier.size(10.dp)) {
-                            drawCircle(color = BandColors[index])
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "FREQUENCY BANDS",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 0.5.sp,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    bandEntries.forEachIndexed { index, band ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Canvas(modifier = Modifier.size(10.dp)) {
+                                drawCircle(color = BandColors[index])
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "${band.label} (${formatBandRange(band)})",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
                     }
                 }
             }
@@ -408,18 +416,19 @@ private fun DrawScope.drawBarSpectrum(
     textMeasurer: TextMeasurer,
 ) {
     val bandCount = magnitudes.size
-    val chartLeft = 30f
-    val chartBottom = size.height - 20f
+    val chartLeft = 35f
+    val chartBottom = size.height - 24f
     val chartTop = 10f
     val chartWidth = size.width - chartLeft - 10f
     val chartHeight = chartBottom - chartTop
 
-    val barWidth = chartWidth / bandCount * 0.7f
-    val barGap = chartWidth / bandCount * 0.3f
+    val totalBarSpace = chartWidth / bandCount
+    val barWidth = totalBarSpace * 0.75f
+    val barGap = totalBarSpace * 0.25f
 
     // Y-axis labels
     val dbLabels = listOf("0", "-20", "-40", "-60")
-    val labelStyle = TextStyle(fontSize = 8.sp, color = Color.White.copy(alpha = 0.5f))
+    val labelStyle = TextStyle(fontSize = 9.sp, color = Color.White.copy(alpha = 0.5f))
 
     for ((i, label) in dbLabels.withIndex()) {
         val y = chartTop + chartHeight * i / (dbLabels.size - 1)
@@ -434,39 +443,42 @@ private fun DrawScope.drawBarSpectrum(
         )
     }
 
-    // X-axis freq labels
-    val xLabels = listOf("20Hz", "100Hz", "500Hz", "1kHz", "5kHz", "10kHz", "20kHz")
-    for (i in 0 until bandCount) {
-        val x = chartLeft + i * (barWidth + barGap) + barWidth / 2
-        if (i < xLabels.size) {
-            val measured = textMeasurer.measure(xLabels[i], labelStyle)
-            drawText(measured, topLeft = Offset(x - measured.size.width / 2, chartBottom + 4f))
-        }
+    // X-axis freq labels (matching design: 6 labels spread across 7 bars)
+    val xLabels = listOf("20Hz", "500Hz", "1kHz", "5kHz", "10kHz", "20kHz")
+    val xLabelPositions = listOf(0, 2, 3, 4, 5, 6) // bar indices for label placement
+    val xLabelStyle = TextStyle(fontSize = 8.sp, color = Color.White.copy(alpha = 0.5f))
+    for ((labelIdx, barIdx) in xLabelPositions.withIndex()) {
+        val x = chartLeft + barIdx * totalBarSpace + barWidth / 2
+        val measured = textMeasurer.measure(xLabels[labelIdx], xLabelStyle)
+        drawText(measured, topLeft = Offset(x - measured.size.width / 2, chartBottom + 6f))
     }
 
     // Draw bars
     for (i in 0 until bandCount) {
         val db = magnitudes[i].coerceIn(-60f, 0f)
         val barHeight = ((db + 60f) / 60f) * chartHeight
-        val x = chartLeft + i * (barWidth + barGap)
-        val y = chartBottom - barHeight
+        val x = chartLeft + i * totalBarSpace + barGap / 2
 
-        drawRoundRect(
-            color = BandColors[i],
-            topLeft = Offset(x, y),
-            size = Size(barWidth, barHeight),
-            cornerRadius = CornerRadius(4f, 4f),
-        )
+        if (barHeight > 1f) {
+            drawRoundRect(
+                color = BandColors[i],
+                topLeft = Offset(x, chartBottom - barHeight),
+                size = Size(barWidth, barHeight),
+                cornerRadius = CornerRadius(4f, 4f),
+            )
+        }
 
-        // Peak hold marker
+        // Peak hold marker - only draw when above minimum level
         val peakDb = peakHolds[i].coerceIn(-60f, 0f)
-        val peakY = chartBottom - ((peakDb + 60f) / 60f) * chartHeight
-        drawLine(
-            color = BandColors[i].copy(alpha = 0.8f),
-            start = Offset(x, peakY),
-            end = Offset(x + barWidth, peakY),
-            strokeWidth = 2f,
-        )
+        if (peakDb > -59f) {
+            val peakY = chartBottom - ((peakDb + 60f) / 60f) * chartHeight
+            drawLine(
+                color = BandColors[i].copy(alpha = 0.8f),
+                start = Offset(x, peakY),
+                end = Offset(x + barWidth, peakY),
+                strokeWidth = 2f,
+            )
+        }
     }
 }
 
@@ -504,4 +516,10 @@ private fun formatFrequency(hz: Float): String = when {
     hz < 1f -> "-- Hz"
     hz >= 1000f -> String.format("%.1f kHz", hz / 1000f)
     else -> "${hz.toInt()} Hz"
+}
+
+private fun formatBandRange(band: FFTProcessor.FrequencyBand): String {
+    val min = if (band.minFreq >= 1000f) "${(band.minFreq / 1000f).toInt()}kHz" else "${band.minFreq.toInt()}Hz"
+    val max = if (band.maxFreq >= 1000f) "${(band.maxFreq / 1000f).toInt()}kHz" else "${band.maxFreq.toInt()}Hz"
+    return "$min-$max"
 }

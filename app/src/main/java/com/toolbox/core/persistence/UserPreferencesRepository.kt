@@ -19,6 +19,9 @@ class UserPreferencesRepository(private val context: Context) {
     private companion object {
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val FAVORITE_TOOLS = stringSetPreferencesKey("favorite_tools")
+        val PINNED_TOOLS = stringSetPreferencesKey("pinned_tools")
+        val FAVORITE_CONVERSIONS = stringSetPreferencesKey("favorite_conversions")
+        const val MAX_PINNED = 3
     }
 
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map { prefs ->
@@ -39,10 +42,45 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun toggleFavorite(toolId: String) {
         context.dataStore.edit { prefs ->
             val current = prefs[FAVORITE_TOOLS] ?: emptySet()
-            prefs[FAVORITE_TOOLS] = if (toolId in current) {
-                current - toolId
+            if (toolId in current) {
+                prefs[FAVORITE_TOOLS] = current - toolId
+                // Also unpin if removing from favorites
+                val pinned = prefs[PINNED_TOOLS] ?: emptySet()
+                prefs[PINNED_TOOLS] = pinned - toolId
             } else {
+                prefs[FAVORITE_TOOLS] = current + toolId
+            }
+        }
+    }
+
+    val pinnedToolIds: Flow<Set<String>> = context.dataStore.data.map { prefs ->
+        prefs[PINNED_TOOLS] ?: emptySet()
+    }
+
+    suspend fun togglePin(toolId: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[PINNED_TOOLS] ?: emptySet()
+            prefs[PINNED_TOOLS] = if (toolId in current) {
+                current - toolId
+            } else if (current.size < MAX_PINNED) {
                 current + toolId
+            } else {
+                current // Already at max, don't add
+            }
+        }
+    }
+
+    val favoriteConversions: Flow<Set<String>> = context.dataStore.data.map { prefs ->
+        prefs[FAVORITE_CONVERSIONS] ?: emptySet()
+    }
+
+    suspend fun toggleConversionFavorite(conversionKey: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[FAVORITE_CONVERSIONS] ?: emptySet()
+            prefs[FAVORITE_CONVERSIONS] = if (conversionKey in current) {
+                current - conversionKey
+            } else {
+                current + conversionKey
             }
         }
     }

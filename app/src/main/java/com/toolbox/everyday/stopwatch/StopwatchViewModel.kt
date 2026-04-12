@@ -1,66 +1,88 @@
 package com.toolbox.everyday.stopwatch
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.IBinder
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class StopwatchState(
-    val elapsedMs: Long = 0L,
-    val isRunning: Boolean = false,
-    val laps: List<Long> = emptyList(),
-)
+class StopwatchViewModel(application: Application) : AndroidViewModel(application) {
 
-class StopwatchViewModel : ViewModel() {
+    private val _serviceState = MutableStateFlow(StopwatchState())
+    val state: StateFlow<StopwatchState> = _serviceState.asStateFlow()
 
-    private val _state = MutableStateFlow(StopwatchState())
-    val state: StateFlow<StopwatchState> = _state.asStateFlow()
+    private var service: StopwatchService? = null
+    private var bound = false
+    private var collectJob: Job? = null
 
-    private var tickJob: Job? = null
-    private var startTimeNanos: Long = 0L
-    private var accumulatedMs: Long = 0L
-
-    fun startPause() {
-        if (_state.value.isRunning) {
-            pause()
-        } else {
-            start()
-        }
-    }
-
-    private fun start() {
-        startTimeNanos = System.nanoTime()
-        _state.update { it.copy(isRunning = true) }
-        tickJob = viewModelScope.launch {
-            while (true) {
-                delay(16) // ~60fps
-                val now = System.nanoTime()
-                val elapsed = accumulatedMs + (now - startTimeNanos) / 1_000_000
-                _state.update { it.copy(elapsedMs = elapsed) }
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+            service = (binder as? StopwatchService.LocalBinder)?.service
+            service?.let { svc ->
+                collectJob = viewModelScope.launch {
+                    svc.state.collect { _serviceState.value = it }
+                }
             }
         }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            service = null
+            collectJob?.cancel()
+        }
     }
 
-    private fun pause() {
-        tickJob?.cancel()
-        val now = System.nanoTime()
-        accumulatedMs += (now - startTimeNanos) / 1_000_000
-        _state.update { it.copy(isRunning = false, elapsedMs = accumulatedMs) }
+    init {
+        bindService()
+    }
+
+    private fun bindService() {
+        val context = getApplication<Application>()
+        val intent = Intent(context, StopwatchService::class.java)
+        context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        bound = true
+    }
+
+    fun startPause() {
+        val svc = service
+        if (svc != null) {
+            if (_serviceState.value.isRunning) {
+                svc.pauseStopwatch()
+            } else {
+                StopwatchService.start(getApplication())
+                svc.startStopwatch()
+            }
+        } else {
+            StopwatchService.start(getApplication())
+            bindService()
+        }
     }
 
     fun lap() {
-        _state.update { it.copy(laps = it.laps + it.elapsedMs) }
+        service?.lap()
     }
 
     fun reset() {
-        tickJob?.cancel()
-        accumulatedMs = 0L
-        _state.value = StopwatchState()
+        service?.resetStopwatch()
+    }
+
+    override fun onCleared() {
+        collectJob?.cancel()
+        if (bound) {
+            try {
+                getApplication<Application>().unbindService(connection)
+            } catch (_: Exception) {
+            }
+            bound = false
+        }
+        super.onCleared()
     }
 }
 

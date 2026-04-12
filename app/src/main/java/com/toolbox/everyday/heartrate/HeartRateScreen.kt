@@ -9,6 +9,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -183,15 +185,31 @@ private fun HeartRateContent() {
             .padding(horizontal = 24.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Heart icon
-        Icon(
-            imageVector = if (isMeasuring && fingerDetected) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-            contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = HeartPink,
-        )
+        // Heart icon with glow
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(120.dp),
+        ) {
+            // Glow layers
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .background(HeartPinkLight.copy(alpha = 0.10f), CircleShape),
+            )
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .background(HeartPinkLight.copy(alpha = 0.18f), CircleShape),
+            )
+            Icon(
+                imageVector = if (isMeasuring && fingerDetected) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                contentDescription = null,
+                modifier = Modifier.size(72.dp),
+                tint = HeartPink,
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -343,35 +361,6 @@ private fun HeartRateContent() {
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // How it works + accuracy disclaimer
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
-            ),
-            shape = RoundedCornerShape(12.dp),
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-            ) {
-                Text(
-                    text = "How it works",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "This tool uses photoplethysmography (PPG) — the camera and flash detect subtle color changes in your fingertip caused by blood flow. This is the same principle used by pulse oximeters, but phone cameras are less precise. Results may vary by ±10-15 BPM depending on your device, lighting, and finger placement. For medical decisions, always use a certified device.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 18.sp,
-                )
-            }
-        }
-
         Spacer(modifier = Modifier.height(16.dp))
 
         // Start/Stop and Share buttons
@@ -476,8 +465,6 @@ private fun HeartRateContent() {
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Disclaimer
         Text(
             text = "For estimation purposes only. This is not a medical device.",
@@ -487,7 +474,7 @@ private fun HeartRateContent() {
             letterSpacing = 0.5.sp,
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

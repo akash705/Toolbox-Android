@@ -117,74 +117,67 @@ fun CalculatorScreen(
                 viewModel.onInput(token)
             }
 
-            // Row 1: sin cos tan ( ) C
+            // Row 1: C ( ) % ⌫
             Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                SciButton("sin", buttonModifier) { onClick("sin(") }
-                SciButton("cos", buttonModifier) { onClick("cos(") }
-                SciButton("tan", buttonModifier) { onClick("tan(") }
-                SciButton("(", buttonModifier) { onClick("(") }
-                SciButton(")", buttonModifier) { onClick(")") }
                 ActionButton("C", buttonModifier) {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     viewModel.onClear()
                 }
-            }
-
-            // Row 2: ln log √ 7 8 9
-            Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                SciButton("ln", buttonModifier) { onClick("ln(") }
-                SciButton("log", buttonModifier) { onClick("log(") }
-                SciButton("√", buttonModifier) { onClick("sqrt(") }
-                NumButton("7", buttonModifier) { onClick("7") }
-                NumButton("8", buttonModifier) { onClick("8") }
-                NumButton("9", buttonModifier) { onClick("9") }
-            }
-
-            // Row 3: x^y π e 4 5 6
-            Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                SciButton("x^y", buttonModifier) { onClick("^") }
-                SciButton("π", buttonModifier) { onClick("π") }
-                SciButton("e", buttonModifier) { onClick("e") }
-                NumButton("4", buttonModifier) { onClick("4") }
-                NumButton("5", buttonModifier) { onClick("5") }
-                NumButton("6", buttonModifier) { onClick("6") }
-            }
-
-            // Row 4: n! abs % 1 2 3
-            Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                SciButton("n!", buttonModifier) { onClick("!") }
-                SciButton("abs", buttonModifier) { onClick("abs(") }
+                SciButton("(", buttonModifier) { onClick("(") }
+                SciButton(")", buttonModifier) { onClick(")") }
                 SciButton("%", buttonModifier) { onClick("%") }
-                NumButton("1", buttonModifier) { onClick("1") }
-                NumButton("2", buttonModifier) { onClick("2") }
-                NumButton("3", buttonModifier) { onClick("3") }
-            }
-
-            // Row 5: +/- ⌫ . 0 00 =
-            Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                SciButton("±", buttonModifier) {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    viewModel.onNegate()
-                }
                 ActionButton("⌫", buttonModifier) {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     viewModel.onBackspace()
                 }
-                NumButton(".", buttonModifier) { onClick(".") }
+            }
+
+            // Row 2: sin 7 8 9 ÷
+            Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                SciButton("sin", buttonModifier) { onClick("sin(") }
+                NumButton("7", buttonModifier) { onClick("7") }
+                NumButton("8", buttonModifier) { onClick("8") }
+                NumButton("9", buttonModifier) { onClick("9") }
+                OpButton("÷", buttonModifier) { onClick("÷") }
+            }
+
+            // Row 3: cos 4 5 6 ×
+            Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                SciButton("cos", buttonModifier) { onClick("cos(") }
+                NumButton("4", buttonModifier) { onClick("4") }
+                NumButton("5", buttonModifier) { onClick("5") }
+                NumButton("6", buttonModifier) { onClick("6") }
+                OpButton("×", buttonModifier) { onClick("×") }
+            }
+
+            // Row 4: tan 1 2 3 −
+            Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                SciButton("tan", buttonModifier) { onClick("tan(") }
+                NumButton("1", buttonModifier) { onClick("1") }
+                NumButton("2", buttonModifier) { onClick("2") }
+                NumButton("3", buttonModifier) { onClick("3") }
+                OpButton("−", buttonModifier) { onClick("-") }
+            }
+
+            // Row 5: log 0 . = +
+            Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                SciButton("log", buttonModifier) { onClick("log(") }
                 NumButton("0", buttonModifier) { onClick("0") }
-                NumButton("00", buttonModifier) { onClick("00") }
+                NumButton(".", buttonModifier) { onClick(".") }
                 EqualsButton("=", buttonModifier) {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     viewModel.onEquals()
                 }
+                OpButton("+", buttonModifier) { onClick("+") }
             }
 
-            // Row 6: operators
+            // Row 6: ln √ x^y π e
             Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                OpButton("÷", buttonModifier) { onClick("÷") }
-                OpButton("×", buttonModifier) { onClick("×") }
-                OpButton("−", buttonModifier) { onClick("-") }
-                OpButton("+", buttonModifier) { onClick("+") }
+                SciButton("ln", buttonModifier) { onClick("ln(") }
+                SciButton("√", buttonModifier) { onClick("sqrt(") }
+                SciButton("x^y", buttonModifier) { onClick("^") }
+                SciButton("π", buttonModifier) { onClick("π") }
+                SciButton("e", buttonModifier) { onClick("e") }
             }
         }
     }

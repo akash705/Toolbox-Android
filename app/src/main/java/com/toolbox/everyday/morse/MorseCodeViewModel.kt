@@ -1,9 +1,17 @@
 package com.toolbox.everyday.morse
 
+import android.app.Application
+import android.content.Context
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
-import androidx.lifecycle.ViewModel
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -41,18 +49,36 @@ data class MorseUiState(
     val morseInput: String = "",
     val textOutput: String = "",
     val soundEnabled: Boolean = true,
-    val hapticEnabled: Boolean = true,
+    val hapticEnabled: Boolean = false,
     val flashEnabled: Boolean = false,
+    val screenFlashEnabled: Boolean = false,
     val wpm: Int = 15,
     val isPlaying: Boolean = false,
+    val screenFlashOn: Boolean = false,
 )
 
-class MorseCodeViewModel : ViewModel() {
+class MorseCodeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _state = MutableStateFlow(MorseUiState())
     val state: StateFlow<MorseUiState> = _state.asStateFlow()
 
     private var playJob: Job? = null
+
+    private val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val manager = application.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        manager.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        application.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
+
+    private val cameraManager = application.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+    private val flashCameraId: String? = try {
+        cameraManager.cameraIdList.firstOrNull { id ->
+            cameraManager.getCameraCharacteristics(id)
+                .get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+        }
+    } catch (_: Exception) { null }
 
     fun setTab(tab: MorseTab) {
         _state.update { it.copy(tab = tab) }
@@ -89,6 +115,7 @@ class MorseCodeViewModel : ViewModel() {
     fun toggleSound() { _state.update { it.copy(soundEnabled = !it.soundEnabled) } }
     fun toggleHaptic() { _state.update { it.copy(hapticEnabled = !it.hapticEnabled) } }
     fun toggleFlash() { _state.update { it.copy(flashEnabled = !it.flashEnabled) } }
+    fun toggleScreenFlash() { _state.update { it.copy(screenFlashEnabled = !it.screenFlashEnabled) } }
 
     fun setWpm(wpm: Int) {
         _state.update { it.copy(wpm = wpm.coerceIn(5, 25)) }
@@ -115,18 +142,14 @@ class MorseCodeViewModel : ViewModel() {
                 if (!_state.value.isPlaying) break
                 when (char) {
                     '.' -> {
-                        if (_state.value.soundEnabled) playTone(unitMs)
-                        else delay(unitMs)
+                        signalOn(unitMs)
                         delay(unitMs) // inter-element gap
                     }
                     '-' -> {
-                        if (_state.value.soundEnabled) playTone(unitMs * 3)
-                        else delay(unitMs * 3)
+                        signalOn(unitMs * 3)
                         delay(unitMs) // inter-element gap
                     }
                     ' ' -> {
-                        // Could be letter gap (3 units) or word gap (7 units)
-                        // In our encoding, single space = letter gap, double handled by next space
                         delay(unitMs * 2) // additional 2 units (1 already from element gap = 3 total)
                     }
                     '/' -> {
@@ -135,14 +158,47 @@ class MorseCodeViewModel : ViewModel() {
                 }
             }
 
-            _state.update { it.copy(isPlaying = false) }
+            _state.update { it.copy(isPlaying = false, screenFlashOn = false) }
         }
+    }
+
+    private fun signalOn(durationMs: Long) {
+        val s = _state.value
+
+        // Start flash before blocking tone
+        if (s.flashEnabled) setFlash(true)
+        if (s.screenFlashEnabled) _state.update { it.copy(screenFlashOn = true) }
+
+        // Start vibration (non-blocking, OS-timed)
+        if (s.hapticEnabled) {
+            try {
+                vibrator.vibrate(
+                    VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE)
+                )
+            } catch (_: Exception) { }
+        }
+
+        // Play tone (blocking) or just delay
+        if (s.soundEnabled) playTone(durationMs)
+        else Thread.sleep(durationMs)
+
+        // Turn off flash/screen after element
+        if (s.flashEnabled) setFlash(false)
+        if (s.screenFlashEnabled) _state.update { it.copy(screenFlashOn = false) }
+    }
+
+    private fun setFlash(on: Boolean) {
+        val id = flashCameraId ?: return
+        try {
+            cameraManager.setTorchMode(id, on)
+        } catch (_: Exception) { }
     }
 
     private fun stopPlayback() {
         playJob?.cancel()
         playJob = null
-        _state.update { it.copy(isPlaying = false) }
+        setFlash(false)
+        _state.update { it.copy(isPlaying = false, screenFlashOn = false) }
     }
 
     private fun playTone(durationMs: Long) {
@@ -194,6 +250,7 @@ class MorseCodeViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         playJob?.cancel()
+        setFlash(false)
     }
 
     companion object {

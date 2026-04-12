@@ -88,6 +88,7 @@ fun ToolboxTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = ToolboxTypography,
+        shapes = ToolboxShapes,
         content = content,
     )
 }

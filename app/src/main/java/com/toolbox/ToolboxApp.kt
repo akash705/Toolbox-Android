@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -165,14 +166,28 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
 
                         Scaffold(
                             topBar = {
-                                Text(
-                                    text = "Toolbox",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.SemiBold,
+                                Column(
                                     modifier = Modifier
                                         .statusBarsPadding()
                                         .padding(horizontal = 16.dp, vertical = 12.dp),
-                                )
+                                ) {
+                                    Text(
+                                        text = when (selectedTab) {
+                                            1 -> "Favorites"
+                                            2 -> "Settings"
+                                            else -> "Toolbox"
+                                        },
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                    if (selectedTab == 1) {
+                                        Text(
+                                            text = "Your pinned tools for quick access.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
                             },
                             bottomBar = {
                                 NavigationBar {
@@ -216,6 +231,7 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                                                 navController.navigate(destination)
                                             }
                                         },
+                                        onBrowseAll = { selectedTab = 0 },
                                     )
                                     2 -> SettingsScreen()
                                 }
@@ -259,7 +275,7 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                     composable<BmiCalculator> { ToolScreen("BMI Calculator", "bmi_calculator", navController, this@SharedTransitionLayout, this@composable) { BmiCalculatorScreen() } }
                     composable<AspectRatio> { ToolScreen("Aspect Ratio", "aspect_ratio", navController, this@SharedTransitionLayout, this@composable) { AspectRatioScreen() } }
                     composable<PasswordGenerator> { ToolScreen("Password Generator", "password_generator", navController, this@SharedTransitionLayout, this@composable) { PasswordGeneratorScreen() } }
-                    composable<WhiteNoise> { ToolScreen("White Noise", "white_noise", navController, this@SharedTransitionLayout, this@composable) { WhiteNoiseScreen() } }
+                    composable<WhiteNoise> { ToolScreen("Ambient Sounds", "white_noise", navController, this@SharedTransitionLayout, this@composable) { WhiteNoiseScreen() } }
                     composable<Metronome> { ToolScreen("Metronome", "metronome", navController, this@SharedTransitionLayout, this@composable) { MetronomeScreen() } }
                     composable<PitchTuner> { ToolScreen("Pitch Tuner", "pitch_tuner", navController, this@SharedTransitionLayout, this@composable) { PitchTunerScreen() } }
                     composable<ScreenFlash> { ToolScreen("Screen Flash", "screen_flash", navController, this@SharedTransitionLayout, this@composable) { ScreenFlashScreen() } }

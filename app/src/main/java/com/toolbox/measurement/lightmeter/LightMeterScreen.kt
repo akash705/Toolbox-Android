@@ -42,7 +42,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.toolbox.core.sensor.rememberLightSensorData
@@ -75,7 +74,7 @@ fun LightMeterScreen() {
         label = "lux",
     )
 
-    // Map lux to gauge sweep using logarithmic scale (0-100k lux -> 0-360 degrees)
+    // Map lux to gauge sweep using logarithmic scale (0-100k lux -> 0-360 for internal mapping)
     val gaugeSweep = if (animatedLux > 0f) {
         (ln(animatedLux + 1f) / ln(100001f) * 360f).coerceIn(0f, 360f)
     } else 0f
@@ -90,10 +89,12 @@ fun LightMeterScreen() {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Circular gauge with lux in center
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(260.dp),
+            modifier = Modifier.size(280.dp),
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 drawLightGauge(
@@ -106,25 +107,27 @@ fun LightMeterScreen() {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "%.0f".format(animatedLux),
-                    fontSize = 48.sp,
+                    fontSize = 52.sp,
                     fontWeight = FontWeight.Bold,
-                    color = primaryColor,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "lux",
+                    text = "LUX",
                     style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 2.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Light history chart card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(140.dp),
+                .height(150.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             ),
@@ -133,12 +136,32 @@ fun LightMeterScreen() {
             Column(
                 modifier = Modifier.padding(12.dp),
             ) {
-                Text(
-                    text = "LIGHT HISTORY",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "LIGHT HISTORY",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Canvas(modifier = Modifier.size(6.dp)) {
+                            drawCircle(color = primaryColor)
+                        }
+                        Text(
+                            text = "LIVE",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = primaryColor,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Canvas(
                     modifier = Modifier
@@ -164,33 +187,17 @@ fun LightMeterScreen() {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             MeasurementCard(
-                label = "Current",
-                value = "%.0f lx".format(currentLux),
-                modifier = Modifier.weight(1f),
+                label = "CURRENT",
+                value = "%.0f".format(currentLux),
+                unit = "lx",
+                modifier = Modifier.weight(1f).height(120.dp),
                 isPrimary = true,
             )
             MeasurementCard(
-                label = "Peak",
-                value = if (peakLux == 0f) "-- lx" else "%.0f lx".format(peakLux),
-                modifier = Modifier.weight(1f),
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Light condition label
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = lightCondition.color.copy(alpha = 0.12f),
-            ),
-            shape = RoundedCornerShape(20.dp),
-        ) {
-            Text(
-                text = lightCondition.label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = lightCondition.color,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                label = "PEAK",
+                value = if (peakLux == 0f) "--" else "%.0f".format(peakLux),
+                unit = "lx",
+                modifier = Modifier.weight(1f).height(120.dp),
             )
         }
 
@@ -237,6 +244,7 @@ fun LightMeterScreen() {
 private fun MeasurementCard(
     label: String,
     value: String,
+    unit: String,
     modifier: Modifier = Modifier,
     isPrimary: Boolean = false,
 ) {
@@ -255,7 +263,6 @@ private fun MeasurementCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = label,
@@ -267,21 +274,38 @@ private fun MeasurementCard(
                 },
                 fontWeight = FontWeight.SemiBold,
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                color = if (isPrimary) {
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
-            )
+            Spacer(modifier = Modifier.weight(1f))
+            Row(
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                Text(
+                    text = value,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isPrimary) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = unit,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isPrimary) {
+                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    modifier = Modifier.padding(bottom = 6.dp),
+                )
+            }
         }
     }
 }
+
+private const val GAUGE_START_ANGLE = 135f
+private const val GAUGE_TOTAL_SWEEP = 270f
 
 private fun DrawScope.drawLightGauge(
     sweepAngle: Float,
@@ -289,74 +313,44 @@ private fun DrawScope.drawLightGauge(
     trackColor: Color,
 ) {
     val center = Offset(size.width / 2, size.height / 2)
-    val radius = size.minDimension / 2 - 24f
-    val strokeWidth = 14f
+    val radius = size.minDimension / 2 - 28f
+    val strokeWidth = 24f
 
-    // Track ring
-    drawCircle(
+    // Track arc (270 degrees with gap at bottom)
+    drawArc(
         color = trackColor,
-        radius = radius,
-        center = center,
-        style = Stroke(width = strokeWidth),
+        startAngle = GAUGE_START_ANGLE,
+        sweepAngle = GAUGE_TOTAL_SWEEP,
+        useCenter = false,
+        topLeft = Offset(center.x - radius, center.y - radius),
+        size = Size(radius * 2, radius * 2),
+        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
     )
 
     // Active arc
-    if (sweepAngle > 0.5f) {
+    val activeSweep = (sweepAngle / 360f * GAUGE_TOTAL_SWEEP).coerceIn(0f, GAUGE_TOTAL_SWEEP)
+    if (activeSweep > 0.5f) {
         drawArc(
             color = primaryColor,
-            startAngle = -90f,
-            sweepAngle = sweepAngle,
+            startAngle = GAUGE_START_ANGLE,
+            sweepAngle = activeSweep,
             useCenter = false,
             topLeft = Offset(center.x - radius, center.y - radius),
             size = Size(radius * 2, radius * 2),
             style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
         )
-    }
 
-    // Tick marks every 30 degrees
-    for (deg in 0 until 360 step 30) {
-        val rad = Math.toRadians(deg.toDouble() - 90.0)
-        val isMajor = deg % 90 == 0
-        val outerR = radius + if (isMajor) 8f else 4f
-        val innerR = radius - if (isMajor) 8f else 4f
-        drawLine(
-            color = primaryColor.copy(alpha = if (isMajor) 0.5f else 0.25f),
-            start = Offset(
-                center.x + outerR * cos(rad).toFloat(),
-                center.y + outerR * sin(rad).toFloat(),
+        // End cap circle at the tip of the active arc
+        val endAngleRad = Math.toRadians((GAUGE_START_ANGLE + activeSweep).toDouble())
+        drawCircle(
+            color = primaryColor,
+            radius = strokeWidth / 2 + 4f,
+            center = Offset(
+                center.x + radius * cos(endAngleRad).toFloat(),
+                center.y + radius * sin(endAngleRad).toFloat(),
             ),
-            end = Offset(
-                center.x + innerR * cos(rad).toFloat(),
-                center.y + innerR * sin(rad).toFloat(),
-            ),
-            strokeWidth = if (isMajor) 2f else 1.5f,
         )
     }
-
-    // Needle
-    val needleRad = Math.toRadians(sweepAngle.toDouble() - 90.0)
-    val needleInner = radius - strokeWidth
-    val needleOuter = radius + strokeWidth
-    drawLine(
-        color = primaryColor,
-        start = Offset(
-            center.x + needleInner * cos(needleRad).toFloat(),
-            center.y + needleInner * sin(needleRad).toFloat(),
-        ),
-        end = Offset(
-            center.x + needleOuter * cos(needleRad).toFloat(),
-            center.y + needleOuter * sin(needleRad).toFloat(),
-        ),
-        strokeWidth = 3f,
-        cap = StrokeCap.Round,
-    )
-
-    // Center dot
-    drawCircle(
-        color = primaryColor,
-        radius = 4f,
-        center = center,
-    )
 }
 
 private fun DrawScope.drawLightChart(

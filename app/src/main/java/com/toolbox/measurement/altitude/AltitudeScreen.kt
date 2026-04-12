@@ -8,7 +8,9 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,12 +21,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Landscape
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -62,14 +64,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.toolbox.core.permission.PermissionGate
-import com.toolbox.core.sharing.ShareButton
 
 private val AscentGreen = Color(0xFF4CAF50)
 private val DescentRed = Color(0xFFF44336)
 private val ChartBackground = Color(0xFF1E1E2E)
 private val ChartLine = Color(0xFF4CAF50)
-private val GpsGreen = Color(0xFF2E7D32)
-private val GpsAmber = Color(0xFFF9A825)
 
 @Composable
 fun AltitudeScreen() {
@@ -185,10 +184,11 @@ private fun AltitudeContent() {
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = if (selectedUnit == 0) "meters" else "feet",
+            text = if (selectedUnit == 0) "METERS" else "FEET",
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.SemiBold,
+            letterSpacing = 1.5.sp,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -222,48 +222,97 @@ private fun AltitudeContent() {
         // Altitude chart
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp),
+                .fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = ChartBackground),
             shape = RoundedCornerShape(16.dp),
         ) {
-            Canvas(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-            ) {
-                val data = altitudeHistory.toList()
-                if (data.size < 2) {
-                    // Placeholder flat line
-                    val midY = size.height / 2
-                    drawLine(
-                        Color.White.copy(alpha = 0.2f),
-                        Offset(0f, midY),
-                        Offset(size.width, midY),
-                        strokeWidth = 1f,
+            Column(modifier = Modifier.padding(16.dp)) {
+                // Chart header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "ALTITUDE LOG (24H)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.5.sp,
                     )
-                    return@Canvas
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(ChartLine, CircleShape),
+                        )
+                        Text(
+                            text = "LIVE GPS",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ChartLine,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                 }
 
-                val min = data.min()
-                val max = data.max()
-                val range = (max - min).coerceAtLeast(1f)
+                Spacer(modifier = Modifier.height(8.dp))
 
-                val path = Path()
-                val stepX = size.width / (data.size - 1).coerceAtLeast(1)
+                // Chart canvas with grid
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp),
+                ) {
+                    val gridColor = Color.White.copy(alpha = 0.1f)
+                    val gridLines = 4
 
-                data.forEachIndexed { index, value ->
-                    val x = index * stepX
-                    val y = size.height - ((value - min) / range) * size.height * 0.8f - size.height * 0.1f
-                    if (index == 0) path.moveTo(x, y)
-                    else path.lineTo(x, y)
+                    // Draw horizontal grid lines
+                    for (i in 0..gridLines) {
+                        val y = size.height * i / gridLines
+                        drawLine(
+                            gridColor,
+                            Offset(0f, y),
+                            Offset(size.width, y),
+                            strokeWidth = 1f,
+                        )
+                    }
+
+                    val data = altitudeHistory.toList()
+                    if (data.size < 2) {
+                        // Placeholder flat line
+                        val midY = size.height / 2
+                        drawLine(
+                            ChartLine.copy(alpha = 0.6f),
+                            Offset(0f, midY),
+                            Offset(size.width, midY),
+                            strokeWidth = 2.dp.toPx(),
+                        )
+                        return@Canvas
+                    }
+
+                    val min = data.min()
+                    val max = data.max()
+                    val range = (max - min).coerceAtLeast(1f)
+
+                    val path = Path()
+                    val stepX = size.width / (data.size - 1).coerceAtLeast(1)
+
+                    data.forEachIndexed { index, value ->
+                        val x = index * stepX
+                        val y = size.height - ((value - min) / range) * size.height * 0.8f - size.height * 0.1f
+                        if (index == 0) path.moveTo(x, y)
+                        else path.lineTo(x, y)
+                    }
+
+                    drawPath(
+                        path = path,
+                        color = ChartLine,
+                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
+                    )
                 }
-
-                drawPath(
-                    path = path,
-                    color = ChartLine,
-                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
-                )
             }
         }
 
@@ -280,8 +329,8 @@ private fun AltitudeContent() {
                 modifier = Modifier.weight(1f),
             )
             AltStatCard(
-                label = "MIN",
-                value = "${convertAlt(minAltitude)} $unitLabel",
+                label = "GPS ACCURACY",
+                value = if (gpsReady && gpsAccuracy > 0) "±${gpsAccuracy.toInt()} $unitLabel" else "-- $unitLabel",
                 modifier = Modifier.weight(1f),
             )
         }
@@ -293,13 +342,13 @@ private fun AltitudeContent() {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             AltStatCard(
-                label = "MAX",
-                value = "${convertAlt(maxAltitude)} $unitLabel",
+                label = "MIN",
+                value = "${convertAlt(minAltitude)} $unitLabel",
                 modifier = Modifier.weight(1f),
             )
             AltStatCard(
-                label = "GPS ACCURACY",
-                value = if (gpsReady && gpsAccuracy > 0) "±${gpsAccuracy.toInt()} m" else "-- m",
+                label = "MAX",
+                value = "${convertAlt(maxAltitude)} $unitLabel",
                 modifier = Modifier.weight(1f),
             )
         }
@@ -406,43 +455,32 @@ private fun AltitudeContent() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Reset and Share buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        // Reset button
+        OutlinedButton(
+            onClick = {
+                minAltitude = Double.MAX_VALUE
+                maxAltitude = Double.MIN_VALUE
+                totalAscent = 0.0
+                totalDescent = 0.0
+                lastAltitude = Double.NaN
+                isTracking = false
+                altitudeHistory.clear()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(24.dp),
         ) {
-            OutlinedButton(
-                onClick = {
-                    minAltitude = Double.MAX_VALUE
-                    maxAltitude = Double.MIN_VALUE
-                    totalAscent = 0.0
-                    totalDescent = 0.0
-                    lastAltitude = Double.NaN
-                    isTracking = false
-                    altitudeHistory.clear()
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp),
-                shape = RoundedCornerShape(24.dp),
-            ) {
-                Icon(
-                    Icons.Default.Refresh,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Reset",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-            ShareButton(
-                toolName = "Altitude",
-                value = convertAltValue(currentAltitude),
-                unit = unitLabel,
-                modifier = Modifier.height(48.dp),
+            Icon(
+                Icons.Default.Refresh,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Reset",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
             )
         }
 

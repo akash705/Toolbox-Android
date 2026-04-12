@@ -36,6 +36,7 @@ data class BreathingUiState(
     val phase: BreathingPhase = BreathingPhase.Idle,
     val secondsRemaining: Int = 0,
     val phaseDuration: Int = 0,
+    val phaseProgress: Float = 0f, // 0..1, smooth progress within phase
     val currentCycle: Int = 0,
     val totalCycles: Int = 5,
     val soundEnabled: Boolean = true,
@@ -124,17 +125,28 @@ class BreathingExerciseViewModel : ViewModel() {
     }
 
     private suspend fun runPhase(phase: BreathingPhase, durationSec: Int) {
+        val totalMs = durationSec * 1000L
+        val stepMs = 50L // Update every 50ms for smooth progress
         _state.update {
             it.copy(
                 phase = phase,
                 phaseDuration = durationSec,
                 secondsRemaining = durationSec,
+                phaseProgress = 1f,
             )
         }
-        for (s in durationSec downTo 1) {
-            _state.update { it.copy(secondsRemaining = s) }
-            delay(1000L)
+        var elapsed = 0L
+        while (elapsed < totalMs) {
+            delay(stepMs)
             if (!_state.value.isRunning) return
+            elapsed += stepMs
+            val remaining = ((totalMs - elapsed).coerceAtLeast(0)).toFloat() / 1000f
+            _state.update {
+                it.copy(
+                    secondsRemaining = remaining.toInt() + 1,
+                    phaseProgress = 1f - (elapsed.toFloat() / totalMs).coerceIn(0f, 1f),
+                )
+            }
         }
     }
 

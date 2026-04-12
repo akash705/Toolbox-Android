@@ -8,6 +8,8 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Binder
 import android.os.IBinder
 import android.os.SystemClock
@@ -101,12 +103,15 @@ class TimerService : Service() {
     private fun onTimerComplete() {
         cancelAlarm()
         val nm = getSystemService(NotificationManager::class.java)
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val notification = NotificationCompat.Builder(this, COMPLETION_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle("Timer complete!")
             .setContentText("Your timer has finished.")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setSound(alarmSound)
+            .setVibrate(longArrayOf(0, 500, 200, 500, 200, 500))
             .setAutoCancel(true)
             .build()
         nm.notify(COMPLETION_NOTIFICATION_ID, notification)
@@ -135,14 +140,36 @@ class TimerService : Service() {
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
+        val nm = getSystemService(NotificationManager::class.java)
+
+        val countdownChannel = NotificationChannel(
             CHANNEL_ID,
             "Timer",
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
             description = "Shows timer countdown"
         }
-        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        nm.createNotificationChannel(countdownChannel)
+
+        val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val completionChannel = NotificationChannel(
+            COMPLETION_CHANNEL_ID,
+            "Timer Alarm",
+            NotificationManager.IMPORTANCE_HIGH,
+        ).apply {
+            description = "Alarm when timer finishes"
+            setSound(
+                alarmSound,
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build(),
+            )
+            enableVibration(true)
+            vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 500)
+        }
+        nm.createNotificationChannel(completionChannel)
     }
 
     private fun buildNotification(remainingMs: Long): Notification {
@@ -173,6 +200,7 @@ class TimerService : Service() {
 
     companion object {
         const val CHANNEL_ID = "timer_channel"
+        const val COMPLETION_CHANNEL_ID = "timer_alarm_channel"
         const val NOTIFICATION_ID = 1001
         const val COMPLETION_NOTIFICATION_ID = 1002
     }

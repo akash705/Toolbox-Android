@@ -1,6 +1,10 @@
 package com.toolbox.conversion.bmi
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,10 +16,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -33,9 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlin.math.pow
-import kotlin.math.roundToInt
 
 private val underweightColor = Color(0xFF42A5F5)
 private val normalColor = Color(0xFF66BB6A)
@@ -58,18 +66,37 @@ fun BmiCalculatorScreen() {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Unit toggle
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = isMetric,
-                onClick = { isMetric = true },
-                label = { Text("Metric") },
-            )
-            FilterChip(
-                selected = !isMetric,
-                onClick = { isMetric = false },
-                label = { Text("Imperial") },
-            )
+        // Unit toggle with reset
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = isMetric,
+                    onClick = { isMetric = true },
+                    label = { Text("Metric") },
+                )
+                FilterChip(
+                    selected = !isMetric,
+                    onClick = { isMetric = false },
+                    label = { Text("Imperial") },
+                )
+            }
+            IconButton(onClick = {
+                heightCm = ""
+                weightKg = ""
+                heightFt = ""
+                heightIn = ""
+                weightLb = ""
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Reset",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
 
         // Input fields
@@ -134,7 +161,7 @@ fun BmiCalculatorScreen() {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 ),
             ) {
                 Column(
@@ -176,7 +203,7 @@ fun BmiCalculatorScreen() {
 
                         if (isMetric) {
                             Text(
-                                text = "Healthy weight: %.1f – %.1f kg".format(minWeight, maxWeight),
+                                text = "Healthy weight range: %.1f – %.1f kg for your height".format(minWeight, maxWeight),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -184,7 +211,7 @@ fun BmiCalculatorScreen() {
                             val minLb = minWeight * 2.20462
                             val maxLb = maxWeight * 2.20462
                             Text(
-                                text = "Healthy weight: %.0f – %.0f lb".format(minLb, maxLb),
+                                text = "Healthy weight range: %.0f – %.0f lb for your height".format(minLb, maxLb),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -194,10 +221,91 @@ fun BmiCalculatorScreen() {
             }
         }
 
+        // Understanding BMI section
+        UnderstandingBmiSection()
+
         // Disclaimer
         Text(
             text = "BMI is a screening tool, not a diagnostic measure. Consult a healthcare provider for health assessments.",
             style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun UnderstandingBmiSection() {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        ),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Understanding BMI",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(),
+                exit = shrinkVertically(),
+            ) {
+                Column(modifier = Modifier.padding(top = 12.dp)) {
+                    Text(
+                        text = "Body Mass Index (BMI) is a person's weight in kilograms divided by the square of height in meters. It is an inexpensive and easy screening method for weight categories that may lead to health problems.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "BMI Categories:",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    BmiCategoryLabel("Underweight", "< 18.5", underweightColor)
+                    BmiCategoryLabel("Normal", "18.5 – 24.9", normalColor)
+                    BmiCategoryLabel("Overweight", "25.0 – 29.9", overweightColor)
+                    BmiCategoryLabel("Obese", "≥ 30.0", obeseColor)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BmiCategoryLabel(label: String, range: String, color: Color) {
+    Row(
+        modifier = Modifier.padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = color,
+            fontWeight = FontWeight.Medium,
+        )
+        Text(
+            text = range,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

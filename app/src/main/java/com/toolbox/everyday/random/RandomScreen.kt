@@ -25,7 +25,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,9 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -75,14 +75,40 @@ fun RandomScreen(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            RandomMode.entries.forEachIndexed { index, mode ->
-                SegmentedButton(
-                    selected = state.mode == mode,
-                    onClick = { viewModel.setMode(mode) },
-                    shape = SegmentedButtonDefaults.itemShape(index, RandomMode.entries.size),
-                ) {
-                    Text(mode.name)
+        // Pill-style tab row
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 0.dp,
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
+            ) {
+                RandomMode.entries.forEach { mode ->
+                    val selected = state.mode == mode
+                    Surface(
+                        onClick = { viewModel.setMode(mode) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(50),
+                        color = if (selected)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ) {
+                        Text(
+                            text = mode.name,
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                            color = if (selected)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
@@ -124,54 +150,40 @@ private fun NumberTab(state: RandomUiState, viewModel: RandomViewModel) {
             )
         }
 
-        // Result fills remaining space, centered
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Result card
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .height(180.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
             contentAlignment = Alignment.Center,
         ) {
-            if (state.numberResult != null) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "RESULT",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        letterSpacing = 2.sp,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "${state.numberResult}",
-                        fontSize = 96.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        lineHeight = 96.sp,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "between ${state.min} and ${state.max}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            } else {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "—",
-                        fontSize = 96.sp,
-                        fontWeight = FontWeight.Light,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        lineHeight = 96.sp,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Tap Generate to get a number",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "RESULT",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 2.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = if (state.numberResult != null) "${state.numberResult}" else "—",
+                    fontSize = 64.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (state.numberResult != null)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f),
+                    lineHeight = 72.sp,
+                )
             }
         }
+
+        Spacer(modifier = Modifier.weight(1f))
 
         Button(
             onClick = {
@@ -180,11 +192,19 @@ private fun NumberTab(state: RandomUiState, viewModel: RandomViewModel) {
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .height(52.dp),
             shape = RoundedCornerShape(12.dp),
         ) {
+            Icon(
+                imageVector = Icons.Default.Shuffle,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             Text("Generate", style = MaterialTheme.typography.titleMedium)
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

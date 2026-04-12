@@ -1,6 +1,6 @@
 package com.toolbox.everyday.breathing
 
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.EaseInOutCubic
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,13 +24,16 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material.icons.outlined.Vibration
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -41,7 +45,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -86,37 +89,29 @@ fun BreathingExerciseScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Timing description
-        val t = state.technique
-        val timingText = buildString {
-            append("${t.inhaleSec}s in")
-            if (t.holdAfterInhaleSec > 0) append(" - ${t.holdAfterInhaleSec}s hold")
-            append(" - ${t.exhaleSec}s out")
-            if (t.holdAfterExhaleSec > 0) append(" - ${t.holdAfterExhaleSec}s hold")
-        }
-        Text(
-            text = timingText,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Breathing circle animation
         BreathingCircle(state = state)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Cycle counter
+        // Cycle counter text
         if (state.isRunning || state.isComplete) {
             Text(
-                text = if (state.isComplete) "Complete!" else "Cycle ${state.currentCycle} of ${state.totalCycles}",
-                style = MaterialTheme.typography.bodyMedium,
+                text = if (state.isComplete) "COMPLETE!" else "CYCLE ${state.currentCycle} OF ${state.totalCycles}",
+                style = MaterialTheme.typography.labelMedium,
+                letterSpacing = 1.sp,
                 color = if (state.isComplete) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            // Cycle dot indicators
+            if (!state.isComplete) {
+                Spacer(modifier = Modifier.height(8.dp))
+                CycleDots(currentCycle = state.currentCycle, totalCycles = state.totalCycles)
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
         }
 
@@ -152,7 +147,16 @@ fun BreathingExerciseScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("Cycles", style = MaterialTheme.typography.bodyMedium)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Outlined.Repeat,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Cycles", style = MaterialTheme.typography.bodyMedium)
+                    }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = { viewModel.setCycles(state.totalCycles - 1) },
@@ -176,30 +180,57 @@ fun BreathingExerciseScreen(
                     }
                 }
 
-                // Sound toggle
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text("Sound", style = MaterialTheme.typography.bodyMedium)
-                    Switch(
-                        checked = state.soundEnabled,
-                        onCheckedChange = { viewModel.toggleSound() },
-                    )
-                }
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                )
 
-                // Haptic toggle
+                // Sound and Haptic toggles side by side
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
-                    Text("Haptic", style = MaterialTheme.typography.bodyMedium)
-                    Switch(
-                        checked = state.hapticEnabled,
-                        onCheckedChange = { viewModel.toggleHaptic() },
-                    )
+                    // Sound toggle
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Outlined.VolumeUp,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Sound", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.weight(1f))
+                        Switch(
+                            checked = state.soundEnabled,
+                            onCheckedChange = { viewModel.toggleSound() },
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    // Haptic toggle
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(
+                            Icons.Outlined.Vibration,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Haptic", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.weight(1f))
+                        Switch(
+                            checked = state.hapticEnabled,
+                            onCheckedChange = { viewModel.toggleHaptic() },
+                        )
+                    }
                 }
             }
         }
@@ -212,9 +243,9 @@ private fun BreathingCircle(state: BreathingUiState) {
     val targetScale = when (state.phase) {
         BreathingPhase.Inhale -> 1f
         BreathingPhase.HoldIn -> 1f
-        BreathingPhase.Exhale -> 0.5f
-        BreathingPhase.HoldOut -> 0.5f
-        BreathingPhase.Idle -> 0.7f
+        BreathingPhase.Exhale -> 0.6f
+        BreathingPhase.HoldOut -> 0.6f
+        BreathingPhase.Idle -> 0.75f
     }
 
     val animDuration = when (state.phase) {
@@ -225,59 +256,32 @@ private fun BreathingCircle(state: BreathingUiState) {
 
     val scale by animateFloatAsState(
         targetValue = targetScale,
-        animationSpec = tween(durationMillis = animDuration, easing = LinearEasing),
+        animationSpec = tween(durationMillis = animDuration, easing = EaseInOutCubic),
         label = "breathingScale",
     )
 
-    // Progress arc (countdown within phase)
-    val progress = if (state.phaseDuration > 0 && state.isRunning) {
-        state.secondsRemaining.toFloat() / state.phaseDuration.toFloat()
-    } else {
-        0f
-    }
-
     val primaryColor = MaterialTheme.colorScheme.primary
-    val containerColor = MaterialTheme.colorScheme.primaryContainer
-    val trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
     val phaseLabel = state.phase.label
-    val countdown = if (state.isRunning) "${state.secondsRemaining}" else ""
-    val textColor = MaterialTheme.colorScheme.onPrimaryContainer
+    val countdown = if (state.isRunning) "${state.secondsRemaining}s" else ""
 
     Box(
-        modifier = Modifier.size(220.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .aspectRatio(1f),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val circleRadius = (size.minDimension / 2f) * scale
+            val maxRadius = size.minDimension / 2f
+            val circleRadius = maxRadius * scale
             val center = Offset(size.width / 2f, size.height / 2f)
 
-            // Filled circle
+            // Solid filled circle
             drawCircle(
-                color = containerColor,
+                color = primaryColor,
                 radius = circleRadius,
                 center = center,
             )
-
-            // Track ring
-            drawCircle(
-                color = trackColor,
-                radius = circleRadius,
-                center = center,
-                style = Stroke(width = 6.dp.toPx()),
-            )
-
-            // Progress arc
-            if (progress > 0f) {
-                drawArc(
-                    color = primaryColor,
-                    startAngle = -90f,
-                    sweepAngle = 360f * progress,
-                    useCenter = false,
-                    topLeft = Offset(center.x - circleRadius, center.y - circleRadius),
-                    size = androidx.compose.ui.geometry.Size(circleRadius * 2, circleRadius * 2),
-                    style = Stroke(width = 6.dp.toPx()),
-                )
-            }
         }
 
         // Phase text overlay
@@ -285,15 +289,35 @@ private fun BreathingCircle(state: BreathingUiState) {
             Text(
                 text = phaseLabel,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = textColor,
+                fontWeight = FontWeight.Medium,
+                color = Color.White,
             )
             if (countdown.isNotEmpty()) {
                 Text(
                     text = countdown,
-                    fontSize = 40.sp,
+                    fontSize = 48.sp,
                     fontWeight = FontWeight.Bold,
-                    color = textColor,
+                    color = Color.White,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CycleDots(currentCycle: Int, totalCycles: Int) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val activeColor = MaterialTheme.colorScheme.primary
+        val inactiveColor = MaterialTheme.colorScheme.outlineVariant
+
+        for (i in 1..totalCycles) {
+            Canvas(modifier = Modifier.size(8.dp)) {
+                drawCircle(
+                    color = if (i <= currentCycle) activeColor else inactiveColor,
+                    radius = size.minDimension / 2f,
                 )
             }
         }

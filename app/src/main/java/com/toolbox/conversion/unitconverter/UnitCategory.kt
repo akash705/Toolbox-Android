@@ -1,23 +1,43 @@
 package com.toolbox.conversion.unitconverter
 
-enum class UnitCategory(val label: String) {
-    Length("Length"),
-    Weight("Weight"),
-    Volume("Volume"),
-    Temperature("Temperature"),
-    Speed("Speed"),
-    Area("Area"),
-    Time("Time"),
-    Data("Data"),
-    Pressure("Pressure"),
-    Energy("Energy"),
-    Power("Power"),
-    Force("Force"),
-    Torque("Torque"),
-    Density("Density"),
-    FuelEconomy("Fuel Economy"),
-    Angle("Angle"),
-    Frequency("Frequency"),
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Architecture
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Compress
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.LocalDrink
+import androidx.compose.material.icons.filled.LocalGasStation
+import androidx.compose.material.icons.filled.OpenWith
+import androidx.compose.material.icons.filled.Power
+import androidx.compose.material.icons.automirrored.filled.RotateRight
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.SquareFoot
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Straighten
+import androidx.compose.material.icons.filled.Thermostat
+import androidx.compose.ui.graphics.vector.ImageVector
+
+enum class UnitCategory(val label: String, val icon: ImageVector) {
+    Length("Length", Icons.Default.Straighten),
+    Weight("Weight", Icons.Default.FitnessCenter),
+    Volume("Volume", Icons.Default.LocalDrink),
+    Temperature("Temperature", Icons.Default.Thermostat),
+    Speed("Speed", Icons.Default.Speed),
+    Area("Area", Icons.Default.SquareFoot),
+    Time("Time", Icons.Default.Schedule),
+    Data("Data", Icons.Default.Storage),
+    Pressure("Pressure", Icons.Default.Compress),
+    Energy("Energy", Icons.Default.Bolt),
+    Power("Power", Icons.Default.Power),
+    Force("Force", Icons.Default.OpenWith),
+    Torque("Torque", Icons.AutoMirrored.Filled.RotateRight),
+    Density("Density", Icons.Default.Science),
+    FuelEconomy("Fuel Economy", Icons.Default.LocalGasStation),
+    Angle("Angle", Icons.Default.Architecture),
+    Frequency("Frequency", Icons.Default.GraphicEq),
 }
 
 data class UnitDef(

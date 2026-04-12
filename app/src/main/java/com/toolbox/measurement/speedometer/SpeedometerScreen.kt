@@ -56,11 +56,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -102,8 +98,6 @@ private fun SpeedometerContent() {
     var isTripActive by remember { mutableStateOf(false) }
     var tripStartTime by remember { mutableLongStateOf(0L) }
     var selectedUnit by remember { mutableIntStateOf(0) } // 0=km/h, 1=mph, 2=m/s, 3=knots
-
-    val textMeasurer = rememberTextMeasurer()
 
     // GPS location listener
     DisposableEffect(Unit) {
@@ -192,39 +186,40 @@ private fun SpeedometerContent() {
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Speedometer gauge
+        // Speedometer gauge with speed value overlaid inside
         Box(
             contentAlignment = Alignment.BottomCenter,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
+                .height(220.dp),
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 drawSpeedGauge(
                     speed = displaySpeed,
                     maxSpeed = maxGaugeSpeed,
-                    textMeasurer = textMeasurer,
+                )
+            }
+            // Speed value overlaid inside the gauge
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(bottom = 16.dp),
+            ) {
+                Text(
+                    text = if (displaySpeed < 10f) String.format("%.1f", displaySpeed)
+                    else "${displaySpeed.toInt()}",
+                    style = MaterialTheme.typography.displayLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = unitLabels[selectedUnit].uppercase(),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.sp,
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Speed value
-        Text(
-            text = if (displaySpeed < 10f) String.format("%.1f", displaySpeed)
-            else "${displaySpeed.toInt()}",
-            style = MaterialTheme.typography.displayLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = unitLabels[selectedUnit].uppercase(),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 1.sp,
-        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -473,11 +468,10 @@ private fun SpeedStatCard(
 private fun DrawScope.drawSpeedGauge(
     speed: Float,
     maxSpeed: Float,
-    textMeasurer: TextMeasurer,
 ) {
     val centerX = size.width / 2
     val centerY = size.height
-    val radius = (size.width / 2 - 24f).coerceAtMost(size.height - 16f)
+    val radius = (size.width / 2 - 32f).coerceAtMost(size.height - 24f)
 
     val arcLeft = centerX - radius
     val arcTop = centerY - radius
@@ -485,7 +479,7 @@ private fun DrawScope.drawSpeedGauge(
 
     val startAngle = 180f
     val totalSweep = 180f
-    val strokeWidth = 18f
+    val strokeWidth = 30f
 
     // Background track
     drawArc(
@@ -498,7 +492,7 @@ private fun DrawScope.drawSpeedGauge(
         style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
     )
 
-    // Colored segments
+    // Colored segments with round caps for smooth, curvy look
     val segments = listOf(
         GaugeGreen to 0.25f,
         Color(0xFF8BC34A) to 0.15f,
@@ -517,36 +511,16 @@ private fun DrawScope.drawSpeedGauge(
             useCenter = false,
             topLeft = Offset(arcLeft, arcTop),
             size = arcSize,
-            style = Stroke(width = strokeWidth, cap = StrokeCap.Butt),
+            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
         )
         drawnSweep += segmentSweep
-    }
-
-    // Tick marks
-    for (i in 0..8) {
-        val angle = startAngle + (totalSweep * i / 8f)
-        val rad = Math.toRadians(angle.toDouble())
-        val outerR = radius + 4f
-        val innerR = radius - 8f
-        drawLine(
-            color = Color(0xFF757575),
-            start = Offset(
-                centerX + innerR * cos(rad).toFloat(),
-                centerY + innerR * sin(rad).toFloat(),
-            ),
-            end = Offset(
-                centerX + outerR * cos(rad).toFloat(),
-                centerY + outerR * sin(rad).toFloat(),
-            ),
-            strokeWidth = 2f,
-        )
     }
 
     // Needle
     val progress = (speed / maxSpeed).coerceIn(0f, 1f)
     val needleAngle = startAngle + totalSweep * progress
     val needleRad = Math.toRadians(needleAngle.toDouble())
-    val needleLength = radius - 28f
+    val needleLength = radius - 40f
 
     val needleTipX = centerX + needleLength * cos(needleRad).toFloat()
     val needleTipY = centerY + needleLength * sin(needleRad).toFloat()
@@ -573,13 +547,5 @@ private fun DrawScope.drawSpeedGauge(
         center = Offset(centerX, centerY),
     )
 
-    // "0" label left
-    val labelStyle = TextStyle(fontSize = 10.sp, color = Color(0xFF757575), fontWeight = FontWeight.Medium)
-    val zeroMeasured = textMeasurer.measure("0", labelStyle)
-    drawText(zeroMeasured, topLeft = Offset(arcLeft - 4f, centerY - zeroMeasured.size.height - 4f))
-
-    // Max label right
-    val maxLabel = "${maxSpeed.toInt()}"
-    val maxMeasured = textMeasurer.measure(maxLabel, labelStyle)
-    drawText(maxMeasured, topLeft = Offset(arcLeft + arcSize.width - maxMeasured.size.width + 4f, centerY - maxMeasured.size.height - 4f))
+    // No endpoint labels - matches design
 }

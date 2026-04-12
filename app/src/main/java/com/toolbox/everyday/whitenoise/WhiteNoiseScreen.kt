@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,7 +34,6 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Spa
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Water
 import androidx.compose.material.icons.filled.WaterDrop
@@ -39,7 +41,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -48,7 +49,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,10 +59,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import java.security.SecureRandom
-import kotlin.math.max
 
 private enum class NoiseType(
     val label: String,
@@ -72,18 +73,18 @@ private enum class NoiseType(
     Pink("Pink Noise", Icons.Default.Spa),
     Brown("Brown Noise", Icons.Default.FilterDrama),
     Rain("Rain", Icons.Default.WaterDrop),
-    Ocean("Ocean", Icons.Default.Water),
+    Ocean("Ocean Waves", Icons.Default.Water),
     Forest("Forest", Icons.Default.Forest),
     Fire("Campfire", Icons.Default.LocalFireDepartment),
-    Wind("Wind", Icons.Default.Air),
+    Wind("Fan", Icons.Default.Air),
 }
 
 private enum class SleepTimer(val label: String, val minutes: Int) {
+    Min15("15 Min", 15),
+    Min30("30 Min", 30),
+    Hr1("1 Hr", 60),
+    Hr2("2 Hr", 120),
     Off("Off", 0),
-    Min15("15 min", 15),
-    Min30("30 min", 30),
-    Hr1("1 hr", 60),
-    Hr2("2 hr", 120),
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -166,20 +167,17 @@ fun WhiteNoiseScreen() {
                             brownState.toInt().toShort()
                         }
                         NoiseType.Rain -> {
-                            // Rain-like: filtered white noise with random droplet impulses
                             val base = (random.nextGaussian() * 2000).toInt()
                             val droplet = if (random.nextInt(500) == 0) (random.nextInt(8000) - 4000) else 0
                             (base + droplet).coerceIn(-32000, 32000).toShort()
                         }
                         NoiseType.Ocean -> {
-                            // Ocean: modulated brown noise (slow wave-like)
                             brownState += random.nextGaussian() * 300
                             brownState = brownState.coerceIn(-32000.0, 32000.0) * 0.995
                             val mod = Math.sin(i.toDouble() / sampleRate * 0.15 * Math.PI * 2) * 0.4 + 0.6
                             (brownState * mod).toInt().toShort()
                         }
                         NoiseType.Forest -> {
-                            // Forest: gentle pink noise with occasional chirps
                             pinkIndex = (pinkIndex + 1) % 65536
                             var numChanged = 0
                             var temp = pinkIndex
@@ -198,14 +196,12 @@ fun WhiteNoiseScreen() {
                             (pinkRunningSum + chirp).coerceIn(-32000, 32000).toShort()
                         }
                         NoiseType.Fire -> {
-                            // Fire: brown noise with crackle bursts
                             brownState += random.nextGaussian() * 250
                             brownState = brownState.coerceIn(-32000.0, 32000.0) * 0.997
                             val crackle = if (random.nextInt(300) == 0) (random.nextInt(10000) - 5000) else 0
                             (brownState + crackle).toInt().coerceIn(-32000, 32000).toShort()
                         }
                         NoiseType.Wind -> {
-                            // Wind: heavily filtered noise with slow modulation
                             brownState += random.nextGaussian() * 150
                             brownState = brownState.coerceIn(-32000.0, 32000.0) * 0.999
                             val mod = Math.sin(i.toDouble() / sampleRate * 0.08 * Math.PI * 2) * 0.5 + 0.5
@@ -299,17 +295,26 @@ fun WhiteNoiseScreen() {
         // Timer display
         val minutes = elapsedSeconds / 60
         val seconds = elapsedSeconds % 60
-        Text(
-            text = "%02d:%02d".format(minutes, seconds),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "%02d:%02d".format(minutes, seconds),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "ELAPSED TIME",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 2.sp,
+            )
+        }
 
-        // Sound type card
+        // Sound type card - 2 column grid
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -320,66 +325,75 @@ fun WhiteNoiseScreen() {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    NoiseType.entries.forEach { noise ->
-                        val isSelected = noise.name == selectedNoise
-                        Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                                    else MaterialTheme.colorScheme.surfaceVariant,
-                                )
-                                .clickable {
-                                    selectedNoise = noise.name
+                // 2-column grid matching Stitch design
+                val noiseTypes = NoiseType.entries
+                for (rowIndex in 0 until (noiseTypes.size + 1) / 2) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        for (colIndex in 0 until 2) {
+                            val index = rowIndex * 2 + colIndex
+                            if (index < noiseTypes.size) {
+                                val noise = noiseTypes[index]
+                                val isSelected = noise.name == selectedNoise
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(
+                                            if (isSelected) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.surfaceVariant,
+                                        )
+                                        .clickable { selectedNoise = noise.name }
+                                        .padding(vertical = 14.dp, horizontal = 8.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                                    ) {
+                                        Icon(
+                                            imageVector = noise.icon,
+                                            contentDescription = null,
+                                            tint = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(24.dp),
+                                        )
+                                        Text(
+                                            text = noise.label.uppercase(),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            textAlign = TextAlign.Center,
+                                        )
+                                    }
                                 }
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                imageVector = noise.icon,
-                                contentDescription = null,
-                                tint = if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp),
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = noise.label,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            } else {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
                         }
+                    }
+                    if (rowIndex < (noiseTypes.size + 1) / 2 - 1) {
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }
         }
 
-        // Sleep timer & volume card
+        // Sleep timer card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Timer,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Sleep Timer",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
+                Text(
+                    text = "Sleep Timer",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
                 Spacer(modifier = Modifier.height(12.dp))
 
                 FlowRow(
@@ -403,7 +417,7 @@ fun WhiteNoiseScreen() {
                 ) {
                     Icon(
                         Icons.AutoMirrored.Filled.VolumeUp,
-                        contentDescription = null,
+                        contentDescription = "Volume",
                         tint = MaterialTheme.colorScheme.primary,
                     )
                     Spacer(modifier = Modifier.width(8.dp))

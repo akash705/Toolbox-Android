@@ -110,59 +110,66 @@ private fun StopwatchTab(viewModel: StopwatchViewModel) {
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Hero time display
-        Text(
-            text = formatTime(state.elapsedMs),
-            fontSize = 56.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            color = if (state.isRunning) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(vertical = 32.dp),
-        )
-
-        // Action buttons
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        // Hero time display + buttons centered in available space
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            // Secondary button: Lap or Reset
-            if (state.isRunning) {
-                OutlinedButton(
-                    onClick = viewModel::lap,
-                    modifier = Modifier.size(56.dp),
-                    shape = CircleShape,
-                ) {
-                    Icon(Icons.Default.Timer, contentDescription = "Lap")
-                }
-            } else if (state.elapsedMs > 0) {
-                OutlinedButton(
-                    onClick = viewModel::reset,
-                    modifier = Modifier.size(56.dp),
-                    shape = CircleShape,
-                ) {
-                    Icon(Icons.Default.RestartAlt, contentDescription = "Reset")
-                }
-            }
+            Text(
+                text = formatTime(state.elapsedMs),
+                fontSize = 64.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                color = if (state.isRunning) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurface,
+            )
 
-            // Primary button: Start/Pause
-            Button(
-                onClick = viewModel::startPause,
-                modifier = Modifier.size(72.dp),
-                shape = CircleShape,
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // Action buttons
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = if (state.isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (state.isRunning) "Pause" else "Start",
-                    modifier = Modifier.size(32.dp),
-                )
+                // Secondary button: Lap or Reset
+                if (state.isRunning) {
+                    OutlinedButton(
+                        onClick = viewModel::lap,
+                        modifier = Modifier.size(64.dp),
+                        shape = CircleShape,
+                    ) {
+                        Icon(Icons.Default.Timer, contentDescription = "Lap", modifier = Modifier.size(24.dp))
+                    }
+                } else if (state.elapsedMs > 0) {
+                    OutlinedButton(
+                        onClick = viewModel::reset,
+                        modifier = Modifier.size(64.dp),
+                        shape = CircleShape,
+                    ) {
+                        Icon(Icons.Default.RestartAlt, contentDescription = "Reset", modifier = Modifier.size(24.dp))
+                    }
+                }
+
+                // Primary button: Start/Pause
+                Button(
+                    onClick = viewModel::startPause,
+                    modifier = Modifier.size(80.dp),
+                    shape = CircleShape,
+                ) {
+                    Icon(
+                        imageVector = if (state.isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (state.isRunning) "Pause" else "Start",
+                        modifier = Modifier.size(36.dp),
+                    )
+                }
             }
         }
 
         // Lap list
         if (state.laps.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(24.dp))
-
             Text(
                 text = "Laps",
                 style = MaterialTheme.typography.labelLarge,
@@ -171,7 +178,7 @@ private fun StopwatchTab(viewModel: StopwatchViewModel) {
                     .padding(bottom = 8.dp),
             )
 
-            LazyColumn {
+            LazyColumn(modifier = Modifier.weight(1f)) {
                 itemsIndexed(state.laps.reversed()) { index, lapTotalMs ->
                     val lapNum = state.laps.size - index
                     val prevTotalMs = if (lapNum > 1) state.laps[lapNum - 2] else 0L

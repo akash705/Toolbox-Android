@@ -48,7 +48,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.toolbox.core.sensor.rememberAccelerometerData
@@ -57,7 +56,6 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
-import com.toolbox.core.sharing.ShareButton
 
 @Composable
 fun ProtractorScreen() {
@@ -107,6 +105,8 @@ fun ProtractorScreen() {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Spacer(modifier = Modifier.height(8.dp))
+
         // Circular gauge with angle in center
         Box(
             contentAlignment = Alignment.Center,
@@ -125,50 +125,97 @@ fun ProtractorScreen() {
             // Hero angle in center
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "%.1f".format(abs(animatedAngle)),
+                    text = "%.1f°".format(abs(animatedAngle)),
                     fontSize = 48.sp,
                     fontWeight = FontWeight.Bold,
-                    color = primaryColor,
+                    color = onSurface,
                 )
                 Text(
-                    text = "degrees",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = "ACTIVE TILT",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = primaryColor,
+                    letterSpacing = 1.sp,
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Measurement cards row
-        Row(
+        // Pitch & Roll combined card
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            ),
         ) {
-            MeasurementCard(
-                label = "Active Tilt",
-                value = "%.1f°".format(abs(animatedAngle)),
-                modifier = Modifier.weight(1f),
-                isPrimary = true,
-            )
-            MeasurementCard(
-                label = "Pitch",
-                value = "%.1f°".format(pitch),
-                modifier = Modifier.weight(1f),
-            )
-            MeasurementCard(
-                label = "Roll",
-                value = "%.1f°".format(roll),
-                modifier = Modifier.weight(1f),
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.RestartAlt,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "PITCH",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            letterSpacing = 1.sp,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "%.1f°".format(pitch),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.RestartAlt,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "ROLL",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            letterSpacing = 1.sp,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "%.1f°".format(roll),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Action buttons
-        Row(
+        // Action buttons - stacked vertically
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Button(
                 onClick = {
@@ -181,7 +228,7 @@ fun ProtractorScreen() {
                     isLocked = !isLocked
                 },
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
                     .height(56.dp),
             ) {
                 Icon(
@@ -190,7 +237,7 @@ fun ProtractorScreen() {
                     modifier = Modifier.size(20.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(if (isLocked) "Unlock" else "Lock Hold")
+                Text(if (isLocked) "Unlock" else "Lock / Hold")
             }
 
             OutlinedButton(
@@ -200,7 +247,7 @@ fun ProtractorScreen() {
                     isLocked = false
                 },
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.outlinedButtonColors(),
             ) {
@@ -210,65 +257,11 @@ fun ProtractorScreen() {
                     modifier = Modifier.size(20.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Reset Zero")
+                Text("Reset to Zero")
             }
-            ShareButton(
-                toolName = "Protractor",
-                value = "%.1f".format(angle),
-                unit = "°",
-                modifier = Modifier.height(56.dp),
-            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-    }
-}
-
-@Composable
-private fun MeasurementCard(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-    isPrimary: Boolean = false,
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = if (isPrimary) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant
-            },
-        ),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isPrimary) {
-                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                color = if (isPrimary) {
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
-            )
-        }
     }
 }
 
@@ -363,28 +356,31 @@ private fun DrawScope.drawCircularGauge(
         )
     }
 
-    // Needle indicator at the angle position
+    // Needle line from ring toward center + dot at the angle position
     val needleRad = Math.toRadians(angle.toDouble() - 90.0)
-    val needleInner = radius - strokeWidth
-    val needleOuter = radius + strokeWidth
+    val needleOuter = radius
+    val needleInner = radius - 40f
     drawLine(
         color = primaryColor,
         start = Offset(
-            center.x + needleInner * cos(needleRad).toFloat(),
-            center.y + needleInner * sin(needleRad).toFloat(),
-        ),
-        end = Offset(
             center.x + needleOuter * cos(needleRad).toFloat(),
             center.y + needleOuter * sin(needleRad).toFloat(),
         ),
-        strokeWidth = 3f,
+        end = Offset(
+            center.x + needleInner * cos(needleRad).toFloat(),
+            center.y + needleInner * sin(needleRad).toFloat(),
+        ),
+        strokeWidth = 2.5f,
         cap = StrokeCap.Round,
     )
-
-    // Center dot
+    // Dot on the ring
+    val dotCenter = Offset(
+        center.x + radius * cos(needleRad).toFloat(),
+        center.y + radius * sin(needleRad).toFloat(),
+    )
     drawCircle(
         color = primaryColor,
-        radius = 4f,
-        center = center,
+        radius = 7f,
+        center = dotCenter,
     )
 }

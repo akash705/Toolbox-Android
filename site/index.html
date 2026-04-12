@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toolbox - Precision Utility Tools for Android</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            background: #f8f9fc;
+            color: #1a1a2e;
+            line-height: 1.6;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 80px 24px 48px;
+            background: linear-gradient(135deg, #e8edf5 0%, #f8f9fc 100%);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: #555;
+            max-width: 520px;
+            margin: 0 auto 32px;
+        }
+
+        .badge-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: #e0e5f0;
+            color: #3a3f5c;
+        }
+
+        .screenshots {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        .screenshots h2 {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .gallery {
+            display: flex;
+            gap: 32px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding: 8px 0 24px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .gallery::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .gallery::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .gallery::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .screenshot-card {
+            flex: 0 0 auto;
+            scroll-snap-align: center;
+            text-align: center;
+        }
+
+        .screenshot-card img {
+            width: 260px;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .screenshot-card img:hover {
+            transform: translateY(-4px);
+        }
+
+        .screenshot-card .caption {
+            margin-top: 16px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        footer {
+            text-align: center;
+            padding: 32px 24px;
+            border-top: 1px solid #e5e7eb;
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: #5b6abf;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 56px 20px 36px;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .gallery {
+                gap: 20px;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .screenshot-card img {
+                width: 220px;
+                border-radius: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <h1>Toolbox</h1>
+        <p>A collection of high-performance utility tools designed for precision and privacy. Built for developers, designers, and artisans.</p>
+        <div class="badge-row">
+            <span class="badge">No data collected</span>
+            <span class="badge">No ads</span>
+            <span class="badge">Fully offline</span>
+        </div>
+    </section>
+
+    <section class="screenshots">
+        <h2>Screenshots</h2>
+        <div class="gallery">
+            <div class="screenshot-card">
+                <img src="screenshots/home.png" alt="Toolbox home screen showing all available tools">
+                <div class="caption">Dashboard</div>
+            </div>
+            <div class="screenshot-card">
+                <img src="screenshots/bubble-level.png" alt="Bubble Level tool showing pitch and roll readings">
+                <div class="caption">Bubble Level</div>
+            </div>
+            <div class="screenshot-card">
+                <img src="screenshots/compass.png" alt="Compass tool showing bearing and incline">
+                <div class="caption">Compass</div>
+            </div>
+            <div class="screenshot-card">
+                <img src="screenshots/favorites.png" alt="Favorites screen with pinned tools">
+                <div class="caption">Favorites</div>
+            </div>
+            <div class="screenshot-card">
+                <img src="screenshots/settings.png" alt="Settings screen with theme and privacy info">
+                <div class="caption">Settings</div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p><a href="PRIVACY_POLICY.md">Privacy Policy</a></p>
+    </footer>
+</body>
+</html>

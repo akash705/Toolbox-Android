@@ -70,3 +70,12 @@ import kotlinx.serialization.Serializable
 @Serializable object BmiCalculator
 @Serializable object AspectRatio
 @Serializable object PasswordGenerator
+
+// Batch 2 Tools
+@Serializable object EmiCalculator
+@Serializable object DeviceInfo
+@Serializable object NetworkInfo
+@Serializable object NfcToolkit
+@Serializable object ToneGenerator
+@Serializable object FormulaReference
+@Serializable object DocScanner

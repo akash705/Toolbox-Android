@@ -91,6 +91,13 @@ import com.toolbox.measurement.soundmeter.SoundMeterScreen
 import com.toolbox.measurement.speedometer.SpeedometerScreen
 import com.toolbox.measurement.spectrum.SpectrumScreen
 import com.toolbox.measurement.vibrometer.VibrometerScreen
+import com.toolbox.conversion.emi.EmiCalculatorScreen
+import com.toolbox.conversion.formula.FormulaScreen
+import com.toolbox.measurement.deviceinfo.DeviceInfoScreen
+import com.toolbox.measurement.networkinfo.NetworkInfoScreen
+import com.toolbox.everyday.nfc.NfcToolkitScreen
+import com.toolbox.everyday.tonegenerator.ToneGeneratorScreen
+import com.toolbox.everyday.docscanner.DocScannerScreen
 import com.toolbox.nav.AspectRatio
 import com.toolbox.nav.BmiCalculator
 import com.toolbox.nav.BreathingExercise
@@ -133,6 +140,13 @@ import com.toolbox.nav.StopwatchTimer
 import com.toolbox.nav.TipCalculator
 import com.toolbox.nav.UnitConverter
 import com.toolbox.nav.Vibrometer
+import com.toolbox.nav.EmiCalculator
+import com.toolbox.nav.DeviceInfo
+import com.toolbox.nav.NetworkInfo
+import com.toolbox.nav.NfcToolkit
+import com.toolbox.nav.ToneGenerator
+import com.toolbox.nav.FormulaReference
+import com.toolbox.nav.DocScanner
 import com.toolbox.settings.SettingsScreen
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -281,6 +295,15 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                     composable<ScreenFlash> { ToolScreen("Screen Flash", "screen_flash", navController, this@SharedTransitionLayout, this@composable) { ScreenFlashScreen() } }
                     composable<PlumbBob> { ToolScreen("Plumb Bob", "plumb_bob", navController, this@SharedTransitionLayout, this@composable) { PlumbBobScreen() } }
                     composable<WifiSignal> { ToolScreen("WiFi Signal", "wifi_signal", navController, this@SharedTransitionLayout, this@composable) { WifiSignalScreen() } }
+
+                    // Batch 2 Tools
+                    composable<EmiCalculator> { ToolScreen("Loan/EMI Calculator", "emi_calculator", navController, this@SharedTransitionLayout, this@composable) { EmiCalculatorScreen() } }
+                    composable<DeviceInfo> { ToolScreen("Device Info", "device_info", navController, this@SharedTransitionLayout, this@composable) { DeviceInfoScreen() } }
+                    composable<NetworkInfo> { ToolScreen("Network Info", "network_info", navController, this@SharedTransitionLayout, this@composable) { NetworkInfoScreen() } }
+                    composable<NfcToolkit> { ToolScreen("NFC Toolkit", "nfc_toolkit", navController, this@SharedTransitionLayout, this@composable) { NfcToolkitScreen() } }
+                    composable<ToneGenerator> { ToolScreen("Tone Generator", "tone_generator", navController, this@SharedTransitionLayout, this@composable) { ToneGeneratorScreen() } }
+                    composable<FormulaReference> { ToolScreen("Formulas", "formula_reference", navController, this@SharedTransitionLayout, this@composable) { FormulaScreen() } }
+                    composable<DocScanner> { ToolScreen("Document Scanner", "doc_scanner", navController, this@SharedTransitionLayout, this@composable) { DocScannerScreen() } }
                 }
             }
         }
@@ -397,5 +420,12 @@ private fun toolDestination(toolId: String): Any? = when (toolId) {
     "screen_flash" -> ScreenFlash
     "plumb_bob" -> PlumbBob
     "wifi_signal" -> WifiSignal
+    "emi_calculator" -> EmiCalculator
+    "device_info" -> DeviceInfo
+    "network_info" -> NetworkInfo
+    "nfc_toolkit" -> NfcToolkit
+    "tone_generator" -> ToneGenerator
+    "formula_reference" -> FormulaReference
+    "doc_scanner" -> DocScanner
     else -> null
 }

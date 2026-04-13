@@ -15,7 +15,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.toolbox"
+        applicationId = "com.vedtechnologies.toolbox"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

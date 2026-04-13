@@ -47,7 +47,6 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material.icons.filled.Functions
-import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -505,14 +504,5 @@ val allTools = listOf(
         category = ToolCategory.EverydayTools,
         description = "Generate continuous tones from 20 Hz to 20 kHz with sine, square, triangle, and sawtooth waveforms. Includes presets for standard tuning (440 Hz), musical notes, and high frequency. Visual waveform preview.",
         searchKeywords = listOf("tone", "frequency", "generator", "sine", "wave", "hertz", "hz", "audio", "sound"),
-    ),
-    ToolDefinition(
-        id = "doc_scanner",
-        name = "Doc Scanner",
-        icon = Icons.Default.DocumentScanner,
-        category = ToolCategory.EverydayTools,
-        description = "Scan documents with automatic edge detection and perspective correction. Adjust corners manually, apply image filters, and save as JPEG or multi-page PDF.",
-        requiresCamera = true,
-        searchKeywords = listOf("document", "scanner", "scan", "pdf", "camera", "crop", "photo"),
     ),
 )

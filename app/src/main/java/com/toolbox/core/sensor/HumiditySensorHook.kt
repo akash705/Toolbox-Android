@@ -32,16 +32,24 @@ fun rememberHumidityData(): State<Float?> {
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         }
 
+        fun registerSensor() {
+            sensorManager.registerListener(
+                listener, humiditySensor, SensorManager.SENSOR_DELAY_UI,
+            )
+        }
+
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME ->
-                    sensorManager.registerListener(listener, humiditySensor, SensorManager.SENSOR_DELAY_UI)
-                Lifecycle.Event.ON_PAUSE ->
-                    sensorManager.unregisterListener(listener)
+                Lifecycle.Event.ON_RESUME -> registerSensor()
+                Lifecycle.Event.ON_PAUSE -> sensorManager.unregisterListener(listener)
                 else -> {}
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
+
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            registerSensor()
+        }
 
         onDispose {
             sensorManager.unregisterListener(listener)
@@ -70,16 +78,24 @@ fun rememberTemperatureData(): State<Float?> {
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         }
 
+        fun registerSensor() {
+            sensorManager.registerListener(
+                listener, tempSensor, SensorManager.SENSOR_DELAY_UI,
+            )
+        }
+
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME ->
-                    sensorManager.registerListener(listener, tempSensor, SensorManager.SENSOR_DELAY_UI)
-                Lifecycle.Event.ON_PAUSE ->
-                    sensorManager.unregisterListener(listener)
+                Lifecycle.Event.ON_RESUME -> registerSensor()
+                Lifecycle.Event.ON_PAUSE -> sensorManager.unregisterListener(listener)
                 else -> {}
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
+
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            registerSensor()
+        }
 
         onDispose {
             sensorManager.unregisterListener(listener)

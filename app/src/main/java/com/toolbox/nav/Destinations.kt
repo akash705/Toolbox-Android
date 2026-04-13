@@ -78,4 +78,3 @@ import kotlinx.serialization.Serializable
 @Serializable object NfcToolkit
 @Serializable object ToneGenerator
 @Serializable object FormulaReference
-@Serializable object DocScanner

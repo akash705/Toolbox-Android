@@ -97,7 +97,6 @@ import com.toolbox.measurement.deviceinfo.DeviceInfoScreen
 import com.toolbox.measurement.networkinfo.NetworkInfoScreen
 import com.toolbox.everyday.nfc.NfcToolkitScreen
 import com.toolbox.everyday.tonegenerator.ToneGeneratorScreen
-import com.toolbox.everyday.docscanner.DocScannerScreen
 import com.toolbox.nav.AspectRatio
 import com.toolbox.nav.BmiCalculator
 import com.toolbox.nav.BreathingExercise
@@ -146,7 +145,6 @@ import com.toolbox.nav.NetworkInfo
 import com.toolbox.nav.NfcToolkit
 import com.toolbox.nav.ToneGenerator
 import com.toolbox.nav.FormulaReference
-import com.toolbox.nav.DocScanner
 import com.toolbox.settings.SettingsScreen
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -303,7 +301,6 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                     composable<NfcToolkit> { ToolScreen("NFC Toolkit", "nfc_toolkit", navController, this@SharedTransitionLayout, this@composable) { NfcToolkitScreen() } }
                     composable<ToneGenerator> { ToolScreen("Tone Generator", "tone_generator", navController, this@SharedTransitionLayout, this@composable) { ToneGeneratorScreen() } }
                     composable<FormulaReference> { ToolScreen("Formulas", "formula_reference", navController, this@SharedTransitionLayout, this@composable) { FormulaScreen() } }
-                    composable<DocScanner> { ToolScreen("Document Scanner", "doc_scanner", navController, this@SharedTransitionLayout, this@composable) { DocScannerScreen() } }
                 }
             }
         }
@@ -426,6 +423,5 @@ private fun toolDestination(toolId: String): Any? = when (toolId) {
     "nfc_toolkit" -> NfcToolkit
     "tone_generator" -> ToneGenerator
     "formula_reference" -> FormulaReference
-    "doc_scanner" -> DocScanner
     else -> null
 }

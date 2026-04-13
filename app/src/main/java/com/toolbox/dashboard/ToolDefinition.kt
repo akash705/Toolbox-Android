@@ -42,6 +42,11 @@ import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.ZoomIn
+import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.NetworkCheck
+import androidx.compose.material.icons.filled.Nfc
+import androidx.compose.material.icons.filled.Functions
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -445,5 +450,59 @@ val allTools = listOf(
         category = ToolCategory.MeasurementSensors,
         description = "Measure your altitude above sea level using GPS. Track elevation changes with total ascent and descent. Shows altitude chart, min/max readings, and GPS accuracy.",
         searchKeywords = listOf("altitude", "elevation", "gps", "height", "ascent", "descent"),
+    ),
+
+    // Batch 2 — Conversion & Calculation
+    ToolDefinition(
+        id = "emi_calculator",
+        name = "Loan/EMI",
+        icon = Icons.Default.AccountBalance,
+        category = ToolCategory.ConversionCalculation,
+        description = "Calculate monthly EMI, total interest, and total payment for loans. View principal vs. interest breakdown with pie chart and full amortization schedule. Supports reducing balance and flat-rate methods.",
+        searchKeywords = listOf("loan", "emi", "mortgage", "interest", "amortization", "calculator", "principal"),
+    ),
+    ToolDefinition(
+        id = "formula_reference",
+        name = "Formulas",
+        icon = Icons.Default.Functions,
+        category = ToolCategory.ConversionCalculation,
+        description = "Browse and solve formulas from Math, Physics, Chemistry, and Finance. Enter known values to solve for any unknown with step-by-step substitution. Search, browse by subject, and favorite formulas.",
+        searchKeywords = listOf("formula", "solver", "math", "physics", "chemistry", "finance", "equation", "reference"),
+    ),
+
+    // Batch 2 — Measurement & Sensors
+    ToolDefinition(
+        id = "device_info",
+        name = "Device Info",
+        icon = Icons.Default.PhoneAndroid,
+        category = ToolCategory.MeasurementSensors,
+        description = "View detailed device information: model, Android version, display specs, storage, RAM, CPU, battery health, and sensor list. All hardware details in one place.",
+        searchKeywords = listOf("device", "info", "phone", "specs", "hardware", "android", "battery", "cpu", "ram", "storage"),
+    ),
+    ToolDefinition(
+        id = "network_info",
+        name = "Network Info",
+        icon = Icons.Default.NetworkCheck,
+        category = ToolCategory.MeasurementSensors,
+        description = "View network connection details: Wi-Fi SSID, BSSID, signal strength, frequency, channel, IP addresses (local and public), and mobile carrier info. Copy any value to clipboard.",
+        searchKeywords = listOf("network", "ip", "address", "carrier", "wifi", "ssid", "bssid", "4g", "5g"),
+    ),
+
+    // Batch 2 — Everyday Tools
+    ToolDefinition(
+        id = "nfc_toolkit",
+        name = "NFC Toolkit",
+        icon = Icons.Default.Nfc,
+        category = ToolCategory.EverydayTools,
+        description = "Read, write, format, and erase NFC tags. View tag details including type, UID, memory size, and hex dump of raw data. Supports NDEF text, URL, and contact records.",
+        searchKeywords = listOf("nfc", "tag", "ndef", "read", "write", "rfid", "mifare", "contactless"),
+    ),
+    ToolDefinition(
+        id = "tone_generator",
+        name = "Tone Generator",
+        icon = Icons.Default.GraphicEq,
+        category = ToolCategory.EverydayTools,
+        description = "Generate continuous tones from 20 Hz to 20 kHz with sine, square, triangle, and sawtooth waveforms. Includes presets for standard tuning (440 Hz), musical notes, and high frequency. Visual waveform preview.",
+        searchKeywords = listOf("tone", "frequency", "generator", "sine", "wave", "hertz", "hz", "audio", "sound"),
     ),
 )

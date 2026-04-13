@@ -13,6 +13,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.sin
 
 private val CHAR_TO_MORSE = mapOf(
@@ -162,10 +164,10 @@ class MorseCodeViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    private fun signalOn(durationMs: Long) {
+    private suspend fun signalOn(durationMs: Long) {
         val s = _state.value
 
-        // Start flash before blocking tone
+        // Start flash and screen overlay
         if (s.flashEnabled) setFlash(true)
         if (s.screenFlashEnabled) _state.update { it.copy(screenFlashOn = true) }
 
@@ -178,9 +180,12 @@ class MorseCodeViewModel(application: Application) : AndroidViewModel(applicatio
             } catch (_: Exception) { }
         }
 
-        // Play tone (blocking) or just delay
-        if (s.soundEnabled) playTone(durationMs)
-        else Thread.sleep(durationMs)
+        // Play tone on background thread so main thread can recompose UI
+        if (s.soundEnabled) {
+            withContext(Dispatchers.IO) { playTone(durationMs) }
+        } else {
+            delay(durationMs)
+        }
 
         // Turn off flash/screen after element
         if (s.flashEnabled) setFlash(false)

@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -168,10 +169,10 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                 NavHost(
                     navController = navController,
                     startDestination = Dashboard,
-                    enterTransition = { fadeIn(tween(300)) + slideInHorizontally(tween(300)) { it / 4 } },
-                    exitTransition = { fadeOut(tween(300)) },
-                    popEnterTransition = { fadeIn(tween(300)) },
-                    popExitTransition = { fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { it / 4 } },
+                    enterTransition = { fadeIn(tween(220, easing = EaseOutCubic)) + slideInHorizontally(tween(220, easing = EaseOutCubic)) { it / 4 } },
+                    exitTransition = { fadeOut(tween(220, easing = EaseOutCubic)) },
+                    popEnterTransition = { fadeIn(tween(220, easing = EaseOutCubic)) },
+                    popExitTransition = { fadeOut(tween(220, easing = EaseOutCubic)) + slideOutHorizontally(tween(220, easing = EaseOutCubic)) { it / 4 } },
                 ) {
                     composable<Dashboard> {
                         var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -262,7 +263,7 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                     composable<TipCalculator> { ToolScreen("Tip Calculator", "tip_calculator", navController, this@SharedTransitionLayout, this@composable) { TipCalculatorScreen() } }
                     composable<NumberBase> { ToolScreen("Number Base", "number_base", navController, this@SharedTransitionLayout, this@composable) { NumberBaseScreen() } }
                     composable<Flashlight> { ToolScreen("Flashlight", "flashlight", navController, this@SharedTransitionLayout, this@composable) { FlashlightScreen() } }
-                    composable<QrScanner> { ToolScreen("QR Scanner", "qr_scanner", navController, this@SharedTransitionLayout, this@composable) { QrScannerScreen() } }
+                    composable<QrScanner> { ToolScreen("QR & Barcode", "qr_scanner", navController, this@SharedTransitionLayout, this@composable) { QrScannerScreen() } }
                     composable<Counter> { ToolScreen("Counter", "counter", navController, this@SharedTransitionLayout, this@composable) { CounterScreen() } }
                     composable<StopwatchTimer> { ToolScreen("Stopwatch & Timer", "stopwatch_timer", navController, this@SharedTransitionLayout, this@composable) { StopwatchTimerScreen() } }
                     composable<RandomGenerator> { ToolScreen("Random Generator", "random_generator", navController, this@SharedTransitionLayout, this@composable) { RandomScreen() } }

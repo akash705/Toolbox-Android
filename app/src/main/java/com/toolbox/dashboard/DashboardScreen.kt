@@ -3,6 +3,12 @@ package com.toolbox.dashboard
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -10,6 +16,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -36,6 +44,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -43,12 +53,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.toolbox.R
 import com.toolbox.core.sensor.SensorAvailability
+import com.toolbox.core.ui.components.EmptyState
+import com.toolbox.everyday.stopwatch.ActiveTimerState
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -60,8 +77,10 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val activeTimerRunning by ActiveTimerState.anyActive.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
 
     fun unavailableReason(tool: ToolDefinition): String {
         if (tool.requiredSensorType != null) {
@@ -114,10 +133,10 @@ fun DashboardScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = "No tools found",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                EmptyState(
+                    title = "No Tools Found",
+                    description = "Try a different search term",
+                    lottieRes = R.raw.anim_empty_search,
                 )
             }
         } else {
@@ -133,15 +152,31 @@ fun DashboardScreen(
                         key = category.name,
                         span = { GridItemSpan(maxLineSpan) },
                     ) {
-                        Text(
-                            text = category.label.uppercase(),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                letterSpacing = 0.8.sp,
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .animateItem()
+                                .padding(top = 12.dp, bottom = 4.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(3.dp)
+                                    .height(14.dp)
+                                    .background(
+                                        color = category.iconTint,
+                                        shape = RoundedCornerShape(2.dp),
+                                    ),
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = category.label.uppercase(),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    letterSpacing = 0.8.sp,
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                     items(
                         items = tools,
@@ -149,11 +184,14 @@ fun DashboardScreen(
                     ) { tool ->
                         val isDisabled = tool.id in state.disabledToolIds
                         val isFavorite = tool.id in state.favoriteToolIds
+                        val isActive = tool.id == "stopwatch_timer" &&
+                            activeTimerRunning
                         with(sharedTransitionScope) {
                             ToolTile(
                                 tool = tool,
                                 isDisabled = isDisabled,
                                 isFavorite = isFavorite,
+                                isActive = isActive,
                                 onClick = {
                                     if (isDisabled) {
                                         scope.launch {
@@ -164,12 +202,17 @@ fun DashboardScreen(
                                         onToolClick(tool)
                                     }
                                 },
-                                onLongClick = { viewModel.toggleFavorite(tool.id) },
-                                modifier = Modifier.sharedBounds(
-                                    rememberSharedContentState(key = "tool_${tool.id}"),
-                                    animatedVisibilityScope = animatedVisibilityScope,
-                                    resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
-                                ),
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    viewModel.toggleFavorite(tool.id)
+                                },
+                                modifier = Modifier
+                                    .animateItem()
+                                    .sharedBounds(
+                                        rememberSharedContentState(key = "tool_${tool.id}"),
+                                        animatedVisibilityScope = animatedVisibilityScope,
+                                        resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+                                    ),
                             )
                         }
                     }
@@ -190,6 +233,7 @@ private fun ToolTile(
     tool: ToolDefinition,
     isDisabled: Boolean,
     isFavorite: Boolean,
+    isActive: Boolean = false,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -205,10 +249,39 @@ private fun ToolTile(
         tool.category.tileColor
     }
 
+    // Pulse animation for active timer/stopwatch
+    val pulseAlpha = if (isActive) {
+        val infiniteTransition = rememberInfiniteTransition(label = "tile-pulse")
+        infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = 0.3f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(800),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "tile-pulse-alpha",
+        ).value
+    } else {
+        1f
+    }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1f,
+        label = "tile-press-scale",
+    )
+
     Column(
         modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.material3.ripple(),
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
@@ -219,6 +292,12 @@ private fun ToolTile(
             Box(
                 modifier = Modifier
                     .size(64.dp)
+                    .shadow(
+                        elevation = 2.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        ambientColor = iconTint.copy(alpha = 0.1f),
+                        spotColor = iconTint.copy(alpha = 0.1f),
+                    )
                     .background(
                         color = iconBg,
                         shape = RoundedCornerShape(16.dp),
@@ -228,7 +307,9 @@ private fun ToolTile(
                 Icon(
                     imageVector = tool.icon,
                     contentDescription = tool.name,
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier
+                        .size(28.dp)
+                        .graphicsLayer { alpha = pulseAlpha },
                     tint = iconTint,
                 )
             }

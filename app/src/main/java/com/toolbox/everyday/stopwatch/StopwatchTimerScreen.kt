@@ -82,6 +82,14 @@ fun StopwatchTimerScreen(
 ) {
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
 
+    // Auto-switch to the active tab on first open
+    LaunchedEffect(Unit) {
+        when {
+            ActiveTimerState.timerRunning.value -> tabIndex = 1
+            ActiveTimerState.stopwatchRunning.value -> tabIndex = 0
+        }
+    }
+
     // Request notification permission on Android 13+
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val context = LocalContext.current
@@ -395,14 +403,16 @@ private fun TimerTab() {
     )
 
     fun startTimerWithDuration(durationMs: Long) {
+        // Always promote to foreground so the service survives unbind on navigation back
+        val intent = Intent(context, TimerService::class.java)
+        context.startForegroundService(intent)
+
         val service = timerService
         if (service != null) {
             service.startTimer(durationMs)
         } else {
-            // Service not bound yet — store pending duration and start+bind
+            // Service not bound yet — store pending duration and bind
             pendingDurationMs = durationMs
-            val intent = Intent(context, TimerService::class.java)
-            context.startForegroundService(intent)
             context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
     }

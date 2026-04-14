@@ -10,6 +10,7 @@ import android.os.Build
 import android.telephony.TelephonyManager
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -45,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.toolbox.core.permission.PermissionGate
+import com.toolbox.core.ui.components.ShimmerBox
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.Inet4Address
@@ -190,12 +193,19 @@ private fun NetworkInfoContent() {
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
-                    Text(
-                        connectionType,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
+                    if (connectionType == "Checking...") {
+                        ShimmerBox(
+                            height = 28.dp,
+                            modifier = Modifier.width(140.dp).padding(top = 4.dp),
+                        )
+                    } else {
+                        Text(
+                            connectionType,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
                 }
                 IconButton(onClick = {
                     refreshNetworkInfo()
@@ -281,13 +291,22 @@ private fun InfoSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(0.35f),
                     )
-                    Text(
-                        value,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.weight(0.55f),
-                        textAlign = TextAlign.End,
-                    )
+                    if (value == "Fetching..." || value == "Checking...") {
+                        Box(modifier = Modifier.weight(0.55f), contentAlignment = Alignment.CenterEnd) {
+                            ShimmerBox(
+                                height = 14.dp,
+                                modifier = Modifier.width(100.dp),
+                            )
+                        }
+                    } else {
+                        Text(
+                            value,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(0.55f),
+                            textAlign = TextAlign.End,
+                        )
+                    }
                     IconButton(
                         onClick = { clipboardManager.setText(AnnotatedString(value)) },
                         modifier = Modifier.weight(0.1f),

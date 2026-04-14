@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +45,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.toolbox.core.sensor.rememberOrientationData
@@ -65,6 +68,17 @@ fun CompassScreen() {
     val bearing = ((rawAzimuth % 360) + 360) % 360
 
     var useMagneticNorth by remember { mutableStateOf(true) }
+    val haptic = LocalHapticFeedback.current
+
+    // Haptic tick when cardinal direction changes
+    val currentCardinal = getCardinalDirection(bearing)
+    var previousCardinal by remember { mutableStateOf(currentCardinal) }
+    LaunchedEffect(currentCardinal) {
+        if (currentCardinal != previousCardinal) {
+            previousCardinal = currentCardinal
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+    }
 
     val animatedBearing by animateFloatAsState(
         targetValue = -bearing,

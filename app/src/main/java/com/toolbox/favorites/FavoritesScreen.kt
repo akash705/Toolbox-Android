@@ -22,8 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.PushPin
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -45,7 +43,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.toolbox.R
 import com.toolbox.core.persistence.UserPreferencesRepository
+import com.toolbox.core.ui.components.EmptyState
 import com.toolbox.dashboard.ToolDefinition
 import com.toolbox.dashboard.allTools
 import kotlinx.coroutines.launch
@@ -66,45 +66,17 @@ fun FavoritesScreen(
     val unpinnedTools = favoriteTools.filter { it.id !in pinnedIds }
 
     if (favoriteTools.isEmpty()) {
-        // Empty state
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(48.dp),
-            ) {
-                Icon(
-                    Icons.Outlined.PushPin,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.outlineVariant,
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "No Favorites Yet",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Personalize your technical atelier. Long-press any tool on the dashboard to pin it here for instant access.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = onBrowseAll,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                    ),
-                    shape = RoundedCornerShape(24.dp),
-                ) {
-                    Text("Browse All Tools")
-                }
-            }
+            EmptyState(
+                title = "No Favorites Yet",
+                description = "Long-press any tool on the dashboard to pin it here for instant access.",
+                lottieRes = R.raw.anim_empty_favorites,
+                actionLabel = "Browse All Tools",
+                onAction = onBrowseAll,
+            )
         }
     } else {
         LazyColumn(

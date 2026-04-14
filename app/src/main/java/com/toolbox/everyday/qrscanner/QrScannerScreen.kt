@@ -52,6 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
@@ -64,7 +65,7 @@ import com.toolbox.core.permission.PermissionGate
 fun QrScannerScreen() {
     PermissionGate(
         permission = android.Manifest.permission.CAMERA,
-        rationale = "The QR scanner needs camera access to scan codes.",
+        rationale = "The scanner needs camera access to read QR codes and barcodes.",
     ) {
         QrScannerContent()
     }
@@ -73,7 +74,7 @@ fun QrScannerScreen() {
 @Composable
 private fun QrScannerContent() {
     val context = LocalContext.current
-    var scannedResult by remember { mutableStateOf<String?>(null) }
+    var scannedResult by remember { mutableStateOf<ScanResult?>(null) }
 
     val analyzer = remember {
         QrCodeAnalyzer { result ->
@@ -150,7 +151,8 @@ private fun QrScannerContent() {
 
         // Result card
         if (scannedResult != null) {
-            val result = scannedResult!!
+            val scan = scannedResult!!
+            val result = scan.text
             val isUrl = result.startsWith("http://") || result.startsWith("https://")
 
             Card(
@@ -164,7 +166,7 @@ private fun QrScannerContent() {
                     modifier = Modifier.padding(16.dp),
                 ) {
                     Text(
-                        text = if (isUrl) "DETECTED URL" else "SCANNED CONTENT",
+                        text = if (isUrl) "DETECTED URL" else formatLabel(scan.format).uppercase(),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.SemiBold,
@@ -252,8 +254,10 @@ private fun QrScannerContent() {
     }
 }
 
+private data class ScanResult(val text: String, val format: BarcodeFormat)
+
 private class QrCodeAnalyzer(
-    private val onResult: (String) -> Unit,
+    private val onResult: (ScanResult) -> Unit,
 ) : ImageAnalysis.Analyzer {
     private val reader = MultiFormatReader()
 
@@ -275,11 +279,28 @@ private class QrCodeAnalyzer(
 
         try {
             val result = reader.decode(bitmap)
-            onResult(result.text)
+            onResult(ScanResult(result.text, result.barcodeFormat))
         } catch (_: NotFoundException) {
-            // No QR code found in this frame
+            // No code found in this frame
         } finally {
             image.close()
         }
     }
+}
+
+private fun formatLabel(format: BarcodeFormat): String = when (format) {
+    BarcodeFormat.QR_CODE -> "QR Code"
+    BarcodeFormat.EAN_13 -> "EAN-13"
+    BarcodeFormat.EAN_8 -> "EAN-8"
+    BarcodeFormat.UPC_A -> "UPC-A"
+    BarcodeFormat.UPC_E -> "UPC-E"
+    BarcodeFormat.CODE_128 -> "Code 128"
+    BarcodeFormat.CODE_39 -> "Code 39"
+    BarcodeFormat.CODE_93 -> "Code 93"
+    BarcodeFormat.ITF -> "ITF"
+    BarcodeFormat.PDF_417 -> "PDF 417"
+    BarcodeFormat.DATA_MATRIX -> "Data Matrix"
+    BarcodeFormat.AZTEC -> "Aztec"
+    BarcodeFormat.CODABAR -> "Codabar"
+    else -> format.name
 }

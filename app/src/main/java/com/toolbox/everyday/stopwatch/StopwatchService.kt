@@ -67,6 +67,7 @@ class StopwatchService : Service() {
     fun startStopwatch() {
         startTimeNanos = System.nanoTime()
         _state.update { it.copy(isRunning = true) }
+        ActiveTimerState.setStopwatchRunning(true)
 
         tickJob?.cancel()
         tickJob = scope.launch {
@@ -88,6 +89,7 @@ class StopwatchService : Service() {
         val now = System.nanoTime()
         accumulatedMs += (now - startTimeNanos) / 1_000_000
         _state.update { it.copy(isRunning = false, elapsedMs = accumulatedMs) }
+        ActiveTimerState.setStopwatchRunning(false)
         updateNotification(accumulatedMs)
     }
 
@@ -99,6 +101,7 @@ class StopwatchService : Service() {
         tickJob?.cancel()
         accumulatedMs = 0L
         _state.value = StopwatchState()
+        ActiveTimerState.setStopwatchRunning(false)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -110,6 +113,7 @@ class StopwatchService : Service() {
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
             description = "Shows stopwatch elapsed time"
+            setShowBadge(true)
         }
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
@@ -127,6 +131,7 @@ class StopwatchService : Service() {
             .setContentIntent(contentIntent)
             .setOngoing(true)
             .setSilent(true)
+            .setNumber(1)
             .build()
     }
 

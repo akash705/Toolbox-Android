@@ -276,10 +276,10 @@ val allTools = listOf(
     // Everyday Tools
     ToolDefinition(
         id = "qr_scanner",
-        name = "QR Scanner",
+        name = "QR & Barcode",
         icon = Icons.Default.QrCodeScanner,
         category = ToolCategory.EverydayTools,
-        description = "Scan QR codes and barcodes using your camera. Instantly opens links, copies text, or shows encoded data. Can also generate QR codes from text or URLs.",
+        description = "Scan QR codes and barcodes (EAN, UPC, Code 128, etc.) using your camera. Instantly opens links, copies text, or shows encoded data.",
         requiresCamera = true,
         searchKeywords = listOf("qr", "barcode", "scan", "generate", "code"),
     ),

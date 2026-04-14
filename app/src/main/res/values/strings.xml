@@ -5,4 +5,8 @@
     <string name="shortcut_sound_meter">Sound Meter</string>
     <string name="counter_widget_description">Counter with +/- buttons on your home screen</string>
     <string name="quick_launch_widget_description">Quick access to your favorite tools</string>
+    <string name="flashlight_widget_description">Toggle flashlight on/off from your home screen</string>
+    <string name="stopwatch_widget_description">Stopwatch with start/stop/reset on your home screen</string>
+    <string name="unit_converter_widget_description">Quick unit conversions on your home screen</string>
+    <string name="date_countdown_widget_description">Countdown days to an event on your home screen</string>
 </resources>

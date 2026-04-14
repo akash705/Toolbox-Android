@@ -7,6 +7,6 @@
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:initialLayout="@layout/widget_loading"
-    android:description="@string/quick_launch_widget_description"
-    android:previewLayout="@layout/widget_preview_quick_launch"
+    android:description="@string/stopwatch_widget_description"
+    android:previewLayout="@layout/widget_preview_stopwatch"
     android:updatePeriodMillis="0" />

@@ -65,6 +65,7 @@ class TimerService : Service() {
         endTimeMs = System.currentTimeMillis() + durationMs
         _remainingMs.value = durationMs
         _isRunning.value = true
+        ActiveTimerState.setTimerRunning(true)
 
         // Schedule AlarmManager as backup for guaranteed completion
         scheduleAlarm(durationMs)
@@ -96,12 +97,14 @@ class TimerService : Service() {
         cancelAlarm()
         _remainingMs.value = 0
         _isRunning.value = false
+        ActiveTimerState.setTimerRunning(false)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
     private fun onTimerComplete() {
         cancelAlarm()
+        ActiveTimerState.setTimerRunning(false)
         val nm = getSystemService(NotificationManager::class.java)
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
@@ -148,6 +151,7 @@ class TimerService : Service() {
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
             description = "Shows timer countdown"
+            setShowBadge(true)
         }
         nm.createNotificationChannel(countdownChannel)
 
@@ -185,6 +189,7 @@ class TimerService : Service() {
             .setContentIntent(contentIntent)
             .setOngoing(true)
             .setSilent(true)
+            .setNumber(1)
             .build()
     }
 

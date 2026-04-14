@@ -9,4 +9,6 @@
     <string name="stopwatch_widget_description">Stopwatch with start/stop/reset on your home screen</string>
     <string name="unit_converter_widget_description">Quick unit conversions on your home screen</string>
     <string name="date_countdown_widget_description">Countdown days to an event on your home screen</string>
+    <string name="pedometer_widget_description">Track your daily steps on your home screen</string>
+    <string name="favorites_slider_widget_description">Swipe through your favorite tools on your home screen</string>
 </resources>

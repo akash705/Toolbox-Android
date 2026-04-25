@@ -63,6 +63,8 @@ import com.toolbox.everyday.colorpicker.ColorPickerScreen
 import com.toolbox.everyday.counter.CounterScreen
 import com.toolbox.everyday.magnifier.MagnifierScreen
 import com.toolbox.everyday.qrscanner.QrScannerScreen
+import com.toolbox.everyday.wifiqr.WifiQrShareScreen
+import com.toolbox.everyday.photocleanup.PhotoCleanupScreen
 import com.toolbox.lighting.FlashlightScreen
 import com.toolbox.everyday.random.RandomScreen
 import com.toolbox.everyday.stopwatch.StopwatchTimerScreen
@@ -133,6 +135,8 @@ import com.toolbox.nav.NumberBase
 import com.toolbox.nav.PercentageCalculator
 import com.toolbox.nav.Protractor
 import com.toolbox.nav.QrScanner
+import com.toolbox.nav.WifiQrShare
+import com.toolbox.nav.PhotoCleanup
 import com.toolbox.nav.RandomGenerator
 import com.toolbox.nav.Ruler
 import com.toolbox.nav.SoundMeter
@@ -302,6 +306,8 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                     composable<NfcToolkit> { ToolScreen("NFC Toolkit", "nfc_toolkit", navController, this@SharedTransitionLayout, this@composable) { NfcToolkitScreen() } }
                     composable<ToneGenerator> { ToolScreen("Tone Generator", "tone_generator", navController, this@SharedTransitionLayout, this@composable) { ToneGeneratorScreen() } }
                     composable<FormulaReference> { ToolScreen("Formulas", "formula_reference", navController, this@SharedTransitionLayout, this@composable) { FormulaScreen() } }
+                    composable<WifiQrShare> { ToolScreen("WiFi QR Share", "wifi_qr_share", navController, this@SharedTransitionLayout, this@composable) { WifiQrShareScreen() } }
+                    composable<PhotoCleanup> { ToolScreen("Photo Cleanup", "photo_cleanup", navController, this@SharedTransitionLayout, this@composable) { PhotoCleanupScreen() } }
                 }
             }
         }
@@ -424,5 +430,7 @@ private fun toolDestination(toolId: String): Any? = when (toolId) {
     "nfc_toolkit" -> NfcToolkit
     "tone_generator" -> ToneGenerator
     "formula_reference" -> FormulaReference
+    "wifi_qr_share" -> WifiQrShare
+    "photo_cleanup" -> PhotoCleanup
     else -> null
 }

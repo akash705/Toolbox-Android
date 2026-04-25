@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.Pin
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.DirectionsWalk
@@ -504,5 +505,23 @@ val allTools = listOf(
         category = ToolCategory.EverydayTools,
         description = "Generate continuous tones from 20 Hz to 20 kHz with sine, square, triangle, and sawtooth waveforms. Includes presets for standard tuning (440 Hz), musical notes, and high frequency. Visual waveform preview.",
         searchKeywords = listOf("tone", "frequency", "generator", "sine", "wave", "hertz", "hz", "audio", "sound"),
+    ),
+
+    // Batch 3 — Everyday Tools
+    ToolDefinition(
+        id = "wifi_qr_share",
+        name = "WiFi QR Share",
+        icon = Icons.Default.Wifi,
+        category = ToolCategory.EverydayTools,
+        description = "Generate a QR code from a WiFi network name and password so guests can scan and connect. Everything stays on device — nothing is sent anywhere.",
+        searchKeywords = listOf("wifi", "qr", "share", "guest", "network", "password", "ssid", "hotspot"),
+    ),
+    ToolDefinition(
+        id = "photo_cleanup",
+        name = "Photo Cleanup",
+        icon = Icons.Default.Photo,
+        category = ToolCategory.EverydayTools,
+        description = "Compress photos to save space, or strip EXIF metadata (location, device, timestamps) before sharing. Originals are never touched — results save to Pictures/Toolbox.",
+        searchKeywords = listOf("photo", "image", "compress", "resize", "exif", "metadata", "strip", "privacy", "shrink", "size"),
     ),
 )

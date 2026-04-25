@@ -82,3 +82,13 @@ import kotlinx.serialization.Serializable
 // Batch 3 Tools
 @Serializable object WifiQrShare
 @Serializable object PhotoCleanup
+
+// Phase 3 Backlog Tools
+@Serializable object WireGauge
+@Serializable object PaintCalculator
+@Serializable object ScrewBolt
+@Serializable object ScreenGrid
+@Serializable object TtsReader
+@Serializable object VibrationPatterns
+@Serializable object Ocr
+@Serializable object UnitCircle

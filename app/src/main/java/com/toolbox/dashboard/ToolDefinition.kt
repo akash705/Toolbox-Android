@@ -14,6 +14,14 @@ import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Brush
+import androidx.compose.material.icons.filled.ElectricalServices
+import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Hardware
+import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Photo
@@ -523,5 +531,75 @@ val allTools = listOf(
         category = ToolCategory.EverydayTools,
         description = "Compress photos to save space, or strip EXIF metadata (location, device, timestamps) before sharing. Originals are never touched — results save to Pictures/Toolbox.",
         searchKeywords = listOf("photo", "image", "compress", "resize", "exif", "metadata", "strip", "privacy", "shrink", "size"),
+    ),
+
+    // Phase 3 backlog — Conversion & Calculation
+    ToolDefinition(
+        id = "wire_gauge",
+        name = "Wire Gauge",
+        icon = Icons.Default.ElectricalServices,
+        category = ToolCategory.ConversionCalculation,
+        description = "AWG wire gauge reference table with metric (mm², diameter) equivalents and approximate ampacity for chassis and power-transmission use.",
+        searchKeywords = listOf("wire", "gauge", "awg", "ampacity", "amp", "current", "electrical", "cable", "mm2"),
+    ),
+    ToolDefinition(
+        id = "paint_calculator",
+        name = "Paint Calculator",
+        icon = Icons.Default.Brush,
+        category = ToolCategory.ConversionCalculation,
+        description = "Estimate paint needed for a room. Enter dimensions, doors, windows, and number of coats — get liters or gallons required.",
+        searchKeywords = listOf("paint", "wall", "coverage", "room", "gallon", "liter", "renovation"),
+    ),
+    ToolDefinition(
+        id = "screw_bolt",
+        name = "Screw & Bolt",
+        icon = Icons.Default.Hardware,
+        category = ToolCategory.ConversionCalculation,
+        description = "Reference table of metric (M3-M20) and imperial (UNC) fasteners with thread pitch, tap drill, clearance hole, and hex wrench size.",
+        searchKeywords = listOf("screw", "bolt", "thread", "metric", "imperial", "tap", "drill", "hex", "wrench", "fastener", "unc"),
+    ),
+
+    // Phase 3 backlog — Lighting
+    ToolDefinition(
+        id = "screen_grid",
+        name = "Screen Test Grid",
+        icon = Icons.Default.GridOn,
+        category = ToolCategory.Lighting,
+        description = "Full-screen color and grid pattern at maximum brightness. Inspect screen protectors for dust and scratches, or test for stuck pixels.",
+        searchKeywords = listOf("screen", "test", "grid", "dead", "pixel", "protector", "dust", "scratch", "display"),
+    ),
+
+    // Phase 3 backlog — Everyday Tools
+    ToolDefinition(
+        id = "tts_reader",
+        name = "TTS Reader",
+        icon = Icons.Default.RecordVoiceOver,
+        category = ToolCategory.EverydayTools,
+        description = "Paste any text and have your phone read it aloud. Adjust speech rate and pitch. Uses the device's built-in text-to-speech engine — no network needed.",
+        searchKeywords = listOf("tts", "text", "speech", "read", "voice", "speak", "accessibility", "narrate"),
+    ),
+    ToolDefinition(
+        id = "vibration_patterns",
+        name = "Vibration Patterns",
+        icon = Icons.Default.Waves,
+        category = ToolCategory.EverydayTools,
+        description = "Play predefined vibration patterns: tap, double-tap, heartbeat, pulse, wave, and SOS. Useful for testing the haptic motor or designing custom alerts.",
+        searchKeywords = listOf("vibration", "vibrate", "haptic", "pattern", "buzz", "pulse", "sos", "heartbeat"),
+    ),
+    ToolDefinition(
+        id = "ocr",
+        name = "Text Scanner",
+        icon = Icons.Default.TextFields,
+        category = ToolCategory.EverydayTools,
+        description = "Extract text from any photo using on-device ML Kit recognition. Pick a photo of a sign, receipt, business card, or document — copy or share the recognized text. No image leaves your device.",
+        searchKeywords = listOf("ocr", "text", "scanner", "recognize", "extract", "card", "receipt", "ml", "kit", "mlkit"),
+    ),
+    ToolDefinition(
+        id = "unit_circle",
+        name = "Unit Circle",
+        icon = Icons.Default.PieChart,
+        category = ToolCategory.ConversionCalculation,
+        description = "Interactive unit circle for visualizing trigonometric functions. Drag to set the angle and see sin, cos, and tan values along with degree and radian readouts.",
+        searchKeywords = listOf("unit", "circle", "trigonometry", "trig", "sin", "cos", "tan", "angle", "degree", "radian", "math"),
     ),
 )

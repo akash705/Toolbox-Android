@@ -65,6 +65,14 @@ import com.toolbox.everyday.magnifier.MagnifierScreen
 import com.toolbox.everyday.qrscanner.QrScannerScreen
 import com.toolbox.everyday.wifiqr.WifiQrShareScreen
 import com.toolbox.everyday.photocleanup.PhotoCleanupScreen
+import com.toolbox.conversion.wiregauge.WireGaugeScreen
+import com.toolbox.conversion.paint.PaintCalculatorScreen
+import com.toolbox.conversion.screwbolt.ScrewBoltScreen
+import com.toolbox.lighting.screengrid.ScreenGridScreen
+import com.toolbox.everyday.ttsreader.TtsReaderScreen
+import com.toolbox.everyday.vibration.VibrationPatternsScreen
+import com.toolbox.everyday.ocr.OcrScreen
+import com.toolbox.conversion.unitcircle.UnitCircleScreen
 import com.toolbox.lighting.FlashlightScreen
 import com.toolbox.everyday.random.RandomScreen
 import com.toolbox.everyday.stopwatch.StopwatchTimerScreen
@@ -137,6 +145,14 @@ import com.toolbox.nav.Protractor
 import com.toolbox.nav.QrScanner
 import com.toolbox.nav.WifiQrShare
 import com.toolbox.nav.PhotoCleanup
+import com.toolbox.nav.WireGauge
+import com.toolbox.nav.PaintCalculator
+import com.toolbox.nav.ScrewBolt
+import com.toolbox.nav.ScreenGrid
+import com.toolbox.nav.TtsReader
+import com.toolbox.nav.VibrationPatterns
+import com.toolbox.nav.Ocr
+import com.toolbox.nav.UnitCircle
 import com.toolbox.nav.RandomGenerator
 import com.toolbox.nav.Ruler
 import com.toolbox.nav.SoundMeter
@@ -308,6 +324,14 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                     composable<FormulaReference> { ToolScreen("Formulas", "formula_reference", navController, this@SharedTransitionLayout, this@composable) { FormulaScreen() } }
                     composable<WifiQrShare> { ToolScreen("WiFi QR Share", "wifi_qr_share", navController, this@SharedTransitionLayout, this@composable) { WifiQrShareScreen() } }
                     composable<PhotoCleanup> { ToolScreen("Photo Cleanup", "photo_cleanup", navController, this@SharedTransitionLayout, this@composable) { PhotoCleanupScreen() } }
+                    composable<WireGauge> { ToolScreen("Wire Gauge", "wire_gauge", navController, this@SharedTransitionLayout, this@composable) { WireGaugeScreen() } }
+                    composable<PaintCalculator> { ToolScreen("Paint Calculator", "paint_calculator", navController, this@SharedTransitionLayout, this@composable) { PaintCalculatorScreen() } }
+                    composable<ScrewBolt> { ToolScreen("Screw & Bolt", "screw_bolt", navController, this@SharedTransitionLayout, this@composable) { ScrewBoltScreen() } }
+                    composable<ScreenGrid> { ToolScreen("Screen Test Grid", "screen_grid", navController, this@SharedTransitionLayout, this@composable) { ScreenGridScreen() } }
+                    composable<TtsReader> { ToolScreen("TTS Reader", "tts_reader", navController, this@SharedTransitionLayout, this@composable) { TtsReaderScreen() } }
+                    composable<VibrationPatterns> { ToolScreen("Vibration Patterns", "vibration_patterns", navController, this@SharedTransitionLayout, this@composable) { VibrationPatternsScreen() } }
+                    composable<Ocr> { ToolScreen("Text Scanner", "ocr", navController, this@SharedTransitionLayout, this@composable) { OcrScreen() } }
+                    composable<UnitCircle> { ToolScreen("Unit Circle", "unit_circle", navController, this@SharedTransitionLayout, this@composable) { UnitCircleScreen() } }
                 }
             }
         }
@@ -432,5 +456,13 @@ private fun toolDestination(toolId: String): Any? = when (toolId) {
     "formula_reference" -> FormulaReference
     "wifi_qr_share" -> WifiQrShare
     "photo_cleanup" -> PhotoCleanup
+    "wire_gauge" -> WireGauge
+    "paint_calculator" -> PaintCalculator
+    "screw_bolt" -> ScrewBolt
+    "screen_grid" -> ScreenGrid
+    "tts_reader" -> TtsReader
+    "vibration_patterns" -> VibrationPatterns
+    "ocr" -> Ocr
+    "unit_circle" -> UnitCircle
     else -> null
 }

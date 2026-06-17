@@ -11,12 +11,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardReturn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -39,6 +43,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
 fun CalculatorScreen(
     viewModel: CalculatorViewModel = viewModel(),
+    onUseResult: ((String) -> Unit)? = null,
 ) {
     val state by viewModel.state.collectAsState()
     val haptic = LocalHapticFeedback.current
@@ -84,21 +89,39 @@ fun CalculatorScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // DEG / RAD toggle
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            SegmentedButton(
-                selected = state.useDegrees,
-                onClick = { if (!state.useDegrees) viewModel.toggleAngleMode() },
-                shape = SegmentedButtonDefaults.itemShape(0, 2),
-            ) {
-                Text("DEG")
+        // DEG / RAD toggle + optional "Use Result" button
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.weight(1f)) {
+                SegmentedButton(
+                    selected = state.useDegrees,
+                    onClick = { if (!state.useDegrees) viewModel.toggleAngleMode() },
+                    shape = SegmentedButtonDefaults.itemShape(0, 2),
+                ) {
+                    Text("DEG")
+                }
+                SegmentedButton(
+                    selected = !state.useDegrees,
+                    onClick = { if (state.useDegrees) viewModel.toggleAngleMode() },
+                    shape = SegmentedButtonDefaults.itemShape(1, 2),
+                ) {
+                    Text("RAD")
+                }
             }
-            SegmentedButton(
-                selected = !state.useDegrees,
-                onClick = { if (state.useDegrees) viewModel.toggleAngleMode() },
-                shape = SegmentedButtonDefaults.itemShape(1, 2),
-            ) {
-                Text("RAD")
+            if (onUseResult != null && state.result.isNotBlank() && state.result != "Error") {
+                OutlinedButton(
+                    onClick = { onUseResult(state.result) },
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardReturn,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 4.dp),
+                    )
+                    Text("Use", fontWeight = FontWeight.SemiBold)
+                }
             }
         }
 

@@ -22,7 +22,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             val themeMode by preferencesRepository.themeMode
                 .collectAsState(initial = ThemeMode.System)
-            ToolboxApp(themeMode = themeMode, launchToolId = launchToolId)
+            val defaultScreenId by preferencesRepository.defaultScreenId
+                .collectAsState(initial = null)
+
+            // Wait until the preference is loaded to avoid flashing the wrong screen
+            val resolvedDefault = defaultScreenId ?: return@setContent
+
+            ToolboxApp(
+                themeMode = themeMode,
+                launchToolId = launchToolId,
+                defaultScreenId = resolvedDefault,
+            )
         }
     }
 }

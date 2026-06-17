@@ -21,6 +21,7 @@ class UserPreferencesRepository(private val context: Context) {
         val FAVORITE_TOOLS = stringSetPreferencesKey("favorite_tools")
         val PINNED_TOOLS = stringSetPreferencesKey("pinned_tools")
         val FAVORITE_CONVERSIONS = stringSetPreferencesKey("favorite_conversions")
+        val DEFAULT_SCREEN = stringPreferencesKey("default_screen")
         const val MAX_PINNED = 3
     }
 
@@ -32,6 +33,16 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun setThemeMode(mode: ThemeMode) {
         context.dataStore.edit { prefs ->
             prefs[THEME_MODE] = mode.name
+        }
+    }
+
+    val defaultScreenId: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[DEFAULT_SCREEN] ?: "dashboard"
+    }
+
+    suspend fun setDefaultScreen(screenId: String) {
+        context.dataStore.edit { prefs ->
+            prefs[DEFAULT_SCREEN] = screenId
         }
     }
 

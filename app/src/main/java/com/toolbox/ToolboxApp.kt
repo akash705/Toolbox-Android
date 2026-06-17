@@ -170,11 +170,23 @@ import com.toolbox.settings.SettingsScreen
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
+fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null, defaultScreenId: String = "dashboard") {
     ToolboxTheme(themeMode = themeMode) {
         Surface(modifier = Modifier.fillMaxSize()) {
             val navController = rememberNavController()
 
+            // Determine start destination and initial Favorites tab state
+            val isDefaultTool = defaultScreenId != "dashboard" && defaultScreenId != "favorites"
+            val startDest: Any = if (isDefaultTool) {
+                toolDestination(defaultScreenId) ?: Dashboard
+            } else {
+                Dashboard
+            }
+            val initialTab = when {
+                isDefaultTool -> 0 // not used on Dashboard when starting on a tool
+                defaultScreenId == "favorites" -> 1
+                else -> 0
+            }
             // Handle deep-link from Quick Settings tile
             androidx.compose.runtime.LaunchedEffect(launchToolId) {
                 if (launchToolId != null) {
@@ -188,14 +200,14 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
             SharedTransitionLayout {
                 NavHost(
                     navController = navController,
-                    startDestination = Dashboard,
+                    startDestination = startDest,
                     enterTransition = { fadeIn(tween(220, easing = EaseOutCubic)) + slideInHorizontally(tween(220, easing = EaseOutCubic)) { it / 4 } },
                     exitTransition = { fadeOut(tween(220, easing = EaseOutCubic)) },
                     popEnterTransition = { fadeIn(tween(220, easing = EaseOutCubic)) },
                     popExitTransition = { fadeOut(tween(220, easing = EaseOutCubic)) + slideOutHorizontally(tween(220, easing = EaseOutCubic)) { it / 4 } },
                 ) {
                     composable<Dashboard> {
-                        var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+                        var selectedTab by rememberSaveable { mutableIntStateOf(initialTab) }
 
                         Scaffold(
                             topBar = {
@@ -272,66 +284,66 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null) {
                         }
                     }
 
-                    // Tool screens
-                    composable<Level> { ToolScreen("Bubble Level", "level", navController, this@SharedTransitionLayout, this@composable) { LevelScreen() } }
-                    composable<Compass> { ToolScreen("Compass", "compass", navController, this@SharedTransitionLayout, this@composable) { CompassScreen() } }
-                    composable<Protractor> { ToolScreen("Protractor", "protractor", navController, this@SharedTransitionLayout, this@composable) { ProtractorScreen() } }
-                    composable<SoundMeter> { ToolScreen("Sound Meter", "sound_meter", navController, this@SharedTransitionLayout, this@composable) { SoundMeterScreen() } }
-                    composable<Ruler> { ToolScreen("Ruler", "ruler", navController, this@SharedTransitionLayout, this@composable) { RulerScreen() } }
-                    composable<UnitConverter> { ToolScreen("Unit Converter", "unit_converter", navController, this@SharedTransitionLayout, this@composable) { UnitConverterScreen() } }
-                    composable<PercentageCalculator> { ToolScreen("Percentage", "percentage", navController, this@SharedTransitionLayout, this@composable) { PercentageScreen() } }
-                    composable<TipCalculator> { ToolScreen("Tip Calculator", "tip_calculator", navController, this@SharedTransitionLayout, this@composable) { TipCalculatorScreen() } }
-                    composable<NumberBase> { ToolScreen("Number Base", "number_base", navController, this@SharedTransitionLayout, this@composable) { NumberBaseScreen() } }
-                    composable<Flashlight> { ToolScreen("Flashlight", "flashlight", navController, this@SharedTransitionLayout, this@composable) { FlashlightScreen() } }
-                    composable<QrScanner> { ToolScreen("QR & Barcode", "qr_scanner", navController, this@SharedTransitionLayout, this@composable) { QrScannerScreen() } }
-                    composable<Counter> { ToolScreen("Counter", "counter", navController, this@SharedTransitionLayout, this@composable) { CounterScreen() } }
-                    composable<StopwatchTimer> { ToolScreen("Stopwatch & Timer", "stopwatch_timer", navController, this@SharedTransitionLayout, this@composable) { StopwatchTimerScreen() } }
-                    composable<RandomGenerator> { ToolScreen("Random Generator", "random_generator", navController, this@SharedTransitionLayout, this@composable) { RandomScreen() } }
-                    composable<ColorPicker> { ToolScreen("Color Picker", "color_picker", navController, this@SharedTransitionLayout, this@composable) { ColorPickerScreen() } }
-                    composable<Magnifier> { ToolScreen("Magnifier", "magnifier", navController, this@SharedTransitionLayout, this@composable) { MagnifierScreen() } }
-                    composable<Mirror> { ToolScreen("Mirror", "mirror", navController, this@SharedTransitionLayout, this@composable) { MirrorScreen() } }
-                    composable<Vibrometer> { ToolScreen("Vibrometer", "vibrometer", navController, this@SharedTransitionLayout, this@composable) { VibrometerScreen() } }
-                    composable<LightMeter> { ToolScreen("Light Meter", "light_meter", navController, this@SharedTransitionLayout, this@composable) { LightMeterScreen() } }
-                    composable<MetalDetector> { ToolScreen("Metal Detector", "metal_detector", navController, this@SharedTransitionLayout, this@composable) { MetalDetectorScreen() } }
-                    composable<Barometer> { ToolScreen("Barometer", "barometer", navController, this@SharedTransitionLayout, this@composable) { BarometerScreen() } }
-                    composable<Humidity> { ToolScreen("Humidity", "humidity", navController, this@SharedTransitionLayout, this@composable) { HumidityScreen() } }
-                    composable<Pedometer> { ToolScreen("Pedometer", "pedometer", navController, this@SharedTransitionLayout, this@composable) { PedometerScreen() } }
-                    composable<Gyroscope> { ToolScreen("Gyroscope", "gyroscope", navController, this@SharedTransitionLayout, this@composable) { GyroscopeScreen() } }
-                    composable<HeartRate> { ToolScreen("Heart Rate", "heart_rate", navController, this@SharedTransitionLayout, this@composable) { HeartRateScreen() } }
-                    composable<SpectrumAnalyzer> { ToolScreen("Spectrum Analyzer", "spectrum_analyzer", navController, this@SharedTransitionLayout, this@composable) { SpectrumScreen() } }
-                    composable<Speedometer> { ToolScreen("Speedometer", "speedometer", navController, this@SharedTransitionLayout, this@composable) { SpeedometerScreen() } }
-                    composable<Altitude> { ToolScreen("Altitude", "altitude", navController, this@SharedTransitionLayout, this@composable) { AltitudeScreen() } }
-                    composable<BreathingExercise> { ToolScreen("Breathing Exercise", "breathing_exercise", navController, this@SharedTransitionLayout, this@composable) { BreathingExerciseScreen() } }
-                    composable<ScientificCalculator> { ToolScreen("Calculator", "scientific_calculator", navController, this@SharedTransitionLayout, this@composable) { CalculatorScreen() } }
-                    composable<MorseCode> { ToolScreen("Morse Code", "morse_code", navController, this@SharedTransitionLayout, this@composable) { MorseCodeScreen() } }
-                    composable<DateCalculator> { ToolScreen("Date/Age Calculator", "date_calculator", navController, this@SharedTransitionLayout, this@composable) { DateCalculatorScreen() } }
-                    composable<BmiCalculator> { ToolScreen("BMI Calculator", "bmi_calculator", navController, this@SharedTransitionLayout, this@composable) { BmiCalculatorScreen() } }
-                    composable<AspectRatio> { ToolScreen("Aspect Ratio", "aspect_ratio", navController, this@SharedTransitionLayout, this@composable) { AspectRatioScreen() } }
-                    composable<PasswordGenerator> { ToolScreen("Password Generator", "password_generator", navController, this@SharedTransitionLayout, this@composable) { PasswordGeneratorScreen() } }
-                    composable<WhiteNoise> { ToolScreen("Ambient Sounds", "white_noise", navController, this@SharedTransitionLayout, this@composable) { WhiteNoiseScreen() } }
-                    composable<Metronome> { ToolScreen("Metronome", "metronome", navController, this@SharedTransitionLayout, this@composable) { MetronomeScreen() } }
-                    composable<PitchTuner> { ToolScreen("Pitch Tuner", "pitch_tuner", navController, this@SharedTransitionLayout, this@composable) { PitchTunerScreen() } }
-                    composable<ScreenFlash> { ToolScreen("Screen Flash", "screen_flash", navController, this@SharedTransitionLayout, this@composable) { ScreenFlashScreen() } }
-                    composable<PlumbBob> { ToolScreen("Plumb Bob", "plumb_bob", navController, this@SharedTransitionLayout, this@composable) { PlumbBobScreen() } }
-                    composable<WifiSignal> { ToolScreen("WiFi Signal", "wifi_signal", navController, this@SharedTransitionLayout, this@composable) { WifiSignalScreen() } }
+                    // Tool screens — when launched as the app root (default screen), back goes to Dashboard
+                    composable<Level> { ToolScreen("Bubble Level", "level", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Level) { LevelScreen() } }
+                    composable<Compass> { ToolScreen("Compass", "compass", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Compass) { CompassScreen() } }
+                    composable<Protractor> { ToolScreen("Protractor", "protractor", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Protractor) { ProtractorScreen() } }
+                    composable<SoundMeter> { ToolScreen("Sound Meter", "sound_meter", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is SoundMeter) { SoundMeterScreen() } }
+                    composable<Ruler> { ToolScreen("Ruler", "ruler", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Ruler) { RulerScreen() } }
+                    composable<UnitConverter> { ToolScreen("Unit Converter", "unit_converter", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is UnitConverter) { UnitConverterScreen() } }
+                    composable<PercentageCalculator> { ToolScreen("Percentage", "percentage", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is PercentageCalculator) { PercentageScreen() } }
+                    composable<TipCalculator> { ToolScreen("Tip Calculator", "tip_calculator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is TipCalculator) { TipCalculatorScreen() } }
+                    composable<NumberBase> { ToolScreen("Number Base", "number_base", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is NumberBase) { NumberBaseScreen() } }
+                    composable<Flashlight> { ToolScreen("Flashlight", "flashlight", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Flashlight) { FlashlightScreen() } }
+                    composable<QrScanner> { ToolScreen("QR & Barcode", "qr_scanner", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is QrScanner) { QrScannerScreen() } }
+                    composable<Counter> { ToolScreen("Counter", "counter", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Counter) { CounterScreen() } }
+                    composable<StopwatchTimer> { ToolScreen("Stopwatch & Timer", "stopwatch_timer", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is StopwatchTimer) { StopwatchTimerScreen() } }
+                    composable<RandomGenerator> { ToolScreen("Random Generator", "random_generator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is RandomGenerator) { RandomScreen() } }
+                    composable<ColorPicker> { ToolScreen("Color Picker", "color_picker", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ColorPicker) { ColorPickerScreen() } }
+                    composable<Magnifier> { ToolScreen("Magnifier", "magnifier", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Magnifier) { MagnifierScreen() } }
+                    composable<Mirror> { ToolScreen("Mirror", "mirror", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Mirror) { MirrorScreen() } }
+                    composable<Vibrometer> { ToolScreen("Vibrometer", "vibrometer", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Vibrometer) { VibrometerScreen() } }
+                    composable<LightMeter> { ToolScreen("Light Meter", "light_meter", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is LightMeter) { LightMeterScreen() } }
+                    composable<MetalDetector> { ToolScreen("Metal Detector", "metal_detector", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is MetalDetector) { MetalDetectorScreen() } }
+                    composable<Barometer> { ToolScreen("Barometer", "barometer", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Barometer) { BarometerScreen() } }
+                    composable<Humidity> { ToolScreen("Humidity", "humidity", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Humidity) { HumidityScreen() } }
+                    composable<Pedometer> { ToolScreen("Pedometer", "pedometer", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Pedometer) { PedometerScreen() } }
+                    composable<Gyroscope> { ToolScreen("Gyroscope", "gyroscope", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Gyroscope) { GyroscopeScreen() } }
+                    composable<HeartRate> { ToolScreen("Heart Rate", "heart_rate", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is HeartRate) { HeartRateScreen() } }
+                    composable<SpectrumAnalyzer> { ToolScreen("Spectrum Analyzer", "spectrum_analyzer", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is SpectrumAnalyzer) { SpectrumScreen() } }
+                    composable<Speedometer> { ToolScreen("Speedometer", "speedometer", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Speedometer) { SpeedometerScreen() } }
+                    composable<Altitude> { ToolScreen("Altitude", "altitude", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Altitude) { AltitudeScreen() } }
+                    composable<BreathingExercise> { ToolScreen("Breathing Exercise", "breathing_exercise", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is BreathingExercise) { BreathingExerciseScreen() } }
+                    composable<ScientificCalculator> { ToolScreen("Calculator", "scientific_calculator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ScientificCalculator) { CalculatorScreen() } }
+                    composable<MorseCode> { ToolScreen("Morse Code", "morse_code", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is MorseCode) { MorseCodeScreen() } }
+                    composable<DateCalculator> { ToolScreen("Date/Age Calculator", "date_calculator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is DateCalculator) { DateCalculatorScreen() } }
+                    composable<BmiCalculator> { ToolScreen("BMI Calculator", "bmi_calculator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is BmiCalculator) { BmiCalculatorScreen() } }
+                    composable<AspectRatio> { ToolScreen("Aspect Ratio", "aspect_ratio", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is AspectRatio) { AspectRatioScreen() } }
+                    composable<PasswordGenerator> { ToolScreen("Password Generator", "password_generator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is PasswordGenerator) { PasswordGeneratorScreen() } }
+                    composable<WhiteNoise> { ToolScreen("Ambient Sounds", "white_noise", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is WhiteNoise) { WhiteNoiseScreen() } }
+                    composable<Metronome> { ToolScreen("Metronome", "metronome", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Metronome) { MetronomeScreen() } }
+                    composable<PitchTuner> { ToolScreen("Pitch Tuner", "pitch_tuner", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is PitchTuner) { PitchTunerScreen() } }
+                    composable<ScreenFlash> { ToolScreen("Screen Flash", "screen_flash", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ScreenFlash) { ScreenFlashScreen() } }
+                    composable<PlumbBob> { ToolScreen("Plumb Bob", "plumb_bob", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is PlumbBob) { PlumbBobScreen() } }
+                    composable<WifiSignal> { ToolScreen("WiFi Signal", "wifi_signal", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is WifiSignal) { WifiSignalScreen() } }
 
                     // Batch 2 Tools
-                    composable<EmiCalculator> { ToolScreen("Loan/EMI Calculator", "emi_calculator", navController, this@SharedTransitionLayout, this@composable) { EmiCalculatorScreen() } }
-                    composable<DeviceInfo> { ToolScreen("Device Info", "device_info", navController, this@SharedTransitionLayout, this@composable) { DeviceInfoScreen() } }
-                    composable<NetworkInfo> { ToolScreen("Network Info", "network_info", navController, this@SharedTransitionLayout, this@composable) { NetworkInfoScreen() } }
-                    composable<NfcToolkit> { ToolScreen("NFC Toolkit", "nfc_toolkit", navController, this@SharedTransitionLayout, this@composable) { NfcToolkitScreen() } }
-                    composable<ToneGenerator> { ToolScreen("Tone Generator", "tone_generator", navController, this@SharedTransitionLayout, this@composable) { ToneGeneratorScreen() } }
-                    composable<FormulaReference> { ToolScreen("Formulas", "formula_reference", navController, this@SharedTransitionLayout, this@composable) { FormulaScreen() } }
-                    composable<WifiQrShare> { ToolScreen("WiFi QR Share", "wifi_qr_share", navController, this@SharedTransitionLayout, this@composable) { WifiQrShareScreen() } }
-                    composable<PhotoCleanup> { ToolScreen("Photo Cleanup", "photo_cleanup", navController, this@SharedTransitionLayout, this@composable) { PhotoCleanupScreen() } }
-                    composable<WireGauge> { ToolScreen("Wire Gauge", "wire_gauge", navController, this@SharedTransitionLayout, this@composable) { WireGaugeScreen() } }
-                    composable<PaintCalculator> { ToolScreen("Paint Calculator", "paint_calculator", navController, this@SharedTransitionLayout, this@composable) { PaintCalculatorScreen() } }
-                    composable<ScrewBolt> { ToolScreen("Screw & Bolt", "screw_bolt", navController, this@SharedTransitionLayout, this@composable) { ScrewBoltScreen() } }
-                    composable<ScreenGrid> { ToolScreen("Screen Test Grid", "screen_grid", navController, this@SharedTransitionLayout, this@composable) { ScreenGridScreen() } }
-                    composable<TtsReader> { ToolScreen("TTS Reader", "tts_reader", navController, this@SharedTransitionLayout, this@composable) { TtsReaderScreen() } }
-                    composable<VibrationPatterns> { ToolScreen("Vibration Patterns", "vibration_patterns", navController, this@SharedTransitionLayout, this@composable) { VibrationPatternsScreen() } }
-                    composable<Ocr> { ToolScreen("Text Scanner", "ocr", navController, this@SharedTransitionLayout, this@composable) { OcrScreen() } }
-                    composable<UnitCircle> { ToolScreen("Unit Circle", "unit_circle", navController, this@SharedTransitionLayout, this@composable) { UnitCircleScreen() } }
+                    composable<EmiCalculator> { ToolScreen("Loan/EMI Calculator", "emi_calculator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is EmiCalculator) { EmiCalculatorScreen() } }
+                    composable<DeviceInfo> { ToolScreen("Device Info", "device_info", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is DeviceInfo) { DeviceInfoScreen() } }
+                    composable<NetworkInfo> { ToolScreen("Network Info", "network_info", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is NetworkInfo) { NetworkInfoScreen() } }
+                    composable<NfcToolkit> { ToolScreen("NFC Toolkit", "nfc_toolkit", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is NfcToolkit) { NfcToolkitScreen() } }
+                    composable<ToneGenerator> { ToolScreen("Tone Generator", "tone_generator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ToneGenerator) { ToneGeneratorScreen() } }
+                    composable<FormulaReference> { ToolScreen("Formulas", "formula_reference", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is FormulaReference) { FormulaScreen() } }
+                    composable<WifiQrShare> { ToolScreen("WiFi QR Share", "wifi_qr_share", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is WifiQrShare) { WifiQrShareScreen() } }
+                    composable<PhotoCleanup> { ToolScreen("Photo Cleanup", "photo_cleanup", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is PhotoCleanup) { PhotoCleanupScreen() } }
+                    composable<WireGauge> { ToolScreen("Wire Gauge", "wire_gauge", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is WireGauge) { WireGaugeScreen() } }
+                    composable<PaintCalculator> { ToolScreen("Paint Calculator", "paint_calculator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is PaintCalculator) { PaintCalculatorScreen() } }
+                    composable<ScrewBolt> { ToolScreen("Screw & Bolt", "screw_bolt", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ScrewBolt) { ScrewBoltScreen() } }
+                    composable<ScreenGrid> { ToolScreen("Screen Test Grid", "screen_grid", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ScreenGrid) { ScreenGridScreen() } }
+                    composable<TtsReader> { ToolScreen("TTS Reader", "tts_reader", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is TtsReader) { TtsReaderScreen() } }
+                    composable<VibrationPatterns> { ToolScreen("Vibration Patterns", "vibration_patterns", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is VibrationPatterns) { VibrationPatternsScreen() } }
+                    composable<Ocr> { ToolScreen("Text Scanner", "ocr", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Ocr) { OcrScreen() } }
+                    composable<UnitCircle> { ToolScreen("Unit Circle", "unit_circle", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is UnitCircle) { UnitCircleScreen() } }
                 }
             }
         }
@@ -346,6 +358,7 @@ private fun ToolScreen(
     navController: NavController,
     sharedTransitionScope: SharedTransitionScope? = null,
     animatedVisibilityScope: AnimatedVisibilityScope? = null,
+    isDefaultRoot: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -353,6 +366,18 @@ private fun ToolScreen(
     val favoriteIds by repository.favoriteToolIds.collectAsState(initial = emptySet())
     val isFavorite = toolId in favoriteIds
     val scope = androidx.compose.runtime.rememberCoroutineScope()
+
+    // When this tool is the root (default screen), back should go to Dashboard not exit
+    val onBack: () -> Unit = if (isDefaultRoot && !navController.previousBackStackEntry?.destination?.route.isNullOrEmpty() == false) {
+        {
+            navController.navigate(Dashboard) {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    } else {
+        { navController.popBackStack() }
+    }
 
     val helpText = remember(toolId) { allTools.find { it.id == toolId }?.description?.takeIf { it.isNotBlank() } }
 
@@ -372,7 +397,7 @@ private fun ToolScreen(
 
     ToolScaffold(
         title = title,
-        onBack = { navController.popBackStack() },
+        onBack = onBack,
         modifier = sharedModifier,
         helpText = helpText,
         actions = {

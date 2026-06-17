@@ -26,7 +26,10 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Construction
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShieldMoon
@@ -38,10 +41,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,14 +61,21 @@ import androidx.compose.ui.unit.sp
 import com.toolbox.core.export.MeasurementLog
 import com.toolbox.core.persistence.ThemeMode
 import com.toolbox.core.persistence.UserPreferencesRepository
+import com.toolbox.dashboard.allTools
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun SettingsScreen() {
     val context = LocalContext.current
     val repository = UserPreferencesRepository(context)
     val themeMode by repository.themeMode.collectAsState(initial = ThemeMode.System)
+    val defaultScreenId by repository.defaultScreenId.collectAsState(initial = "dashboard")
     val scope = rememberCoroutineScope()
+    var showDefaultScreenDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -69,6 +83,65 @@ fun SettingsScreen() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
     ) {
+        // Startup section
+        SectionHeader("Startup")
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            // Determine display name for current default
+            val defaultScreenLabel = when (defaultScreenId) {
+                "dashboard" -> "Dashboard"
+                "favorites" -> "Favorites"
+                else -> allTools.find { it.id == defaultScreenId }?.name ?: "Dashboard"
+            }
+            val defaultScreenIcon: ImageVector = when (defaultScreenId) {
+                "dashboard" -> Icons.Default.Dashboard
+                "favorites" -> Icons.Default.Favorite
+                else -> allTools.find { it.id == defaultScreenId }?.icon ?: Icons.Default.Home
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showDefaultScreenDialog = true }
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    defaultScreenIcon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Default Screen",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = defaultScreenLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Icon(
+                    Icons.Default.Dashboard,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         // Appearance section
         SectionHeader("Appearance")
 
@@ -273,6 +346,81 @@ fun SettingsScreen() {
         )
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    // Default Screen Selection Dialog
+    if (showDefaultScreenDialog) {
+        data class ScreenOption(val id: String, val name: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
+
+        val fixedOptions = listOf(
+            ScreenOption("dashboard", "Dashboard", Icons.Default.Dashboard),
+            ScreenOption("favorites", "Favorites", Icons.Default.Favorite),
+        )
+        val toolOptions = allTools
+            .sortedBy { it.name }
+            .map { ScreenOption(it.id, it.name, it.icon) }
+        val allOptions = fixedOptions + toolOptions
+
+        AlertDialog(
+            onDismissRequest = { showDefaultScreenDialog = false },
+            title = {
+                Text(
+                    text = "Default Screen",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            },
+            text = {
+                LazyColumn {
+                    items(allOptions) { option ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    scope.launch { repository.setDefaultScreen(option.id) }
+                                    showDefaultScreenDialog = false
+                                }
+                                .padding(vertical = 10.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                option.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(22.dp),
+                                tint = if (defaultScreenId == option.id)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Text(
+                                text = option.name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (defaultScreenId == option.id) FontWeight.SemiBold else FontWeight.Normal,
+                                color = if (defaultScreenId == option.id)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (defaultScreenId == option.id) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = "Selected",
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDefaultScreenDialog = false }) {
+                    Text("Done")
+                }
+            },
+        )
     }
 }
 

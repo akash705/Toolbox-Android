@@ -1,5 +1,6 @@
 package com.toolbox
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -367,8 +368,17 @@ private fun ToolScreen(
     val isFavorite = toolId in favoriteIds
     val scope = androidx.compose.runtime.rememberCoroutineScope()
 
-    // When this tool is the root (default screen), back should go to Dashboard not exit
-    val onBack: () -> Unit = if (isDefaultRoot && !navController.previousBackStackEntry?.destination?.route.isNullOrEmpty() == false) {
+    // When this tool IS the default root and has no previous back stack entry (i.e. the user
+    // launched the app directly into this tool), intercept BOTH the system back gesture and the
+    // scaffold back button so they navigate to Dashboard instead of exiting the app.
+    val isAtRoot = isDefaultRoot && navController.previousBackStackEntry == null
+    BackHandler(enabled = isAtRoot) {
+        navController.navigate(Dashboard) {
+            popUpTo(0) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+    val onBack: () -> Unit = if (isAtRoot) {
         {
             navController.navigate(Dashboard) {
                 popUpTo(0) { inclusive = true }

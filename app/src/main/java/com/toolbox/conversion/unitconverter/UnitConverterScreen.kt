@@ -53,6 +53,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.toolbox.conversion.calculator.CalculatorScreen
+import com.toolbox.conversion.calculator.CalculatorViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,6 +67,9 @@ fun UnitConverterScreen(
     var showCalculatorSheet by remember { mutableStateOf(false) }
     val calculatorSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+    // Hoist the ViewModel outside the `if` so the calculator state (expression, result)
+    // survives sheet dismiss and is restored when the sheet is reopened.
+    val calculatorViewModel: CalculatorViewModel = viewModel()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -204,6 +208,7 @@ fun UnitConverterScreen(
             sheetState = calculatorSheetState,
         ) {
             CalculatorScreen(
+                viewModel = calculatorViewModel,
                 onUseResult = { result ->
                     viewModel.onFromValueChanged(result)
                     scope.launch {

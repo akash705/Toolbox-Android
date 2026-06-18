@@ -1,7 +1,9 @@
 package com.toolbox.widgets
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+
 import android.content.Context
-import android.graphics.Color
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import androidx.compose.ui.unit.sp
@@ -48,9 +50,9 @@ class FlashlightWidget : GlanceAppWidget() {
                 Column(
                     modifier = GlanceModifier
                         .fillMaxSize()
-                        .background(if (isOn) Color.parseColor("#FFF9C4") else Color.WHITE)
-                        .cornerRadius(16)
-                        .padding(8)
+                        .background(ColorProvider(if (isOn) Color(0xFFFFF9C4) else Color(0xFFFFFFFF)))
+                        .cornerRadius(16.dp)
+                        .padding(8.dp)
                         .clickable(actionRunCallback<ToggleFlashlightAction>()),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -59,14 +61,14 @@ class FlashlightWidget : GlanceAppWidget() {
                         text = if (isOn) "\uD83D\uDD26" else "\uD83D\uDD26",
                         style = TextStyle(fontSize = 32.sp),
                     )
-                    Spacer(modifier = GlanceModifier.height(4))
+                    Spacer(modifier = GlanceModifier.height(4.dp))
                     Text(
                         text = if (isOn) "ON" else "OFF",
                         style = TextStyle(
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = ColorProvider(
-                                if (isOn) Color.parseColor("#F57F17") else Color.GRAY
+                                if (isOn) Color(0xFFF57F17) else Color(0xFF888888)
                             ),
                             textAlign = TextAlign.Center,
                         ),

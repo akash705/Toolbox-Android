@@ -1,7 +1,9 @@
 package com.toolbox.widgets
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+
 import android.content.Context
-import android.graphics.Color
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -70,9 +72,9 @@ class StopwatchWidget : GlanceAppWidget() {
                 Column(
                     modifier = GlanceModifier
                         .fillMaxSize()
-                        .background(Color.WHITE)
-                        .cornerRadius(16)
-                        .padding(12)
+                        .background(ColorProvider(Color(0xFFFFFFFF)))
+                        .cornerRadius(16.dp)
+                        .padding(12.dp)
                         .clickable(actionStartActivity<MainActivity>(
                             actionParametersOf(ActionParameters.Key<String>("tool_id") to "stopwatch_timer")
                         )),
@@ -83,23 +85,23 @@ class StopwatchWidget : GlanceAppWidget() {
                         text = "Stopwatch",
                         style = TextStyle(
                             fontSize = 12.sp,
-                            color = ColorProvider(Color.GRAY),
+                            color = ColorProvider(Color(0xFF888888)),
                         ),
                         maxLines = 1,
                     )
-                    Spacer(modifier = GlanceModifier.height(4))
+                    Spacer(modifier = GlanceModifier.height(4.dp))
                     Text(
                         text = timeText,
                         style = TextStyle(
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
                             color = ColorProvider(
-                                if (state.isRunning) Color.parseColor("#2E7D32") else Color.BLACK
+                                if (state.isRunning) Color(0xFF2E7D32) else Color(0xFF000000)
                             ),
                             textAlign = TextAlign.Center,
                         ),
                     )
-                    Spacer(modifier = GlanceModifier.height(8))
+                    Spacer(modifier = GlanceModifier.height(8.dp))
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -108,35 +110,35 @@ class StopwatchWidget : GlanceAppWidget() {
                         Text(
                             text = if (state.isRunning) " ⏸ " else " ▶ ",
                             modifier = GlanceModifier
-                                .background(
-                                    if (state.isRunning) Color.parseColor("#FFF3E0")
-                                    else Color.parseColor("#E8F5E9")
-                                )
-                                .cornerRadius(8)
-                                .padding(horizontal = 14, vertical = 6)
+                                .background(ColorProvider(
+                                    if (state.isRunning) Color(0xFFFFF3E0)
+                                    else Color(0xFFE8F5E9)
+                                ))
+                                .cornerRadius(8.dp)
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
                                 .clickable(actionRunCallback<StopwatchStartPauseAction>()),
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ColorProvider(
-                                    if (state.isRunning) Color.parseColor("#E65100")
-                                    else Color.parseColor("#2E7D32")
+                                    if (state.isRunning) Color(0xFFE65100)
+                                    else Color(0xFF2E7D32)
                                 ),
                             ),
                         )
-                        Spacer(modifier = GlanceModifier.width(10))
+                        Spacer(modifier = GlanceModifier.width(10.dp))
                         // Reset button
                         Text(
                             text = " ↺ ",
                             modifier = GlanceModifier
-                                .background(Color.parseColor("#F0F0F0"))
-                                .cornerRadius(8)
-                                .padding(horizontal = 14, vertical = 6)
+                                .background(ColorProvider(Color(0xFFF0F0F0)))
+                                .cornerRadius(8.dp)
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
                                 .clickable(actionRunCallback<StopwatchResetAction>()),
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ColorProvider(Color.GRAY),
+                                color = ColorProvider(Color(0xFF888888)),
                             ),
                         )
                     }

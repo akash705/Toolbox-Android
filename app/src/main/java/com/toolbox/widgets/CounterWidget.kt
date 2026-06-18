@@ -1,5 +1,8 @@
 package com.toolbox.widgets
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+
 import android.content.Context
 import android.content.Intent
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -33,7 +36,6 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.compose.ui.unit.sp
 import androidx.glance.unit.ColorProvider
-import android.graphics.Color
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
@@ -58,9 +60,9 @@ class CounterWidget : GlanceAppWidget() {
                 Column(
                     modifier = GlanceModifier
                         .fillMaxSize()
-                        .background(Color.WHITE)
-                        .cornerRadius(16)
-                        .padding(12)
+                        .background(ColorProvider(Color(0xFFFFFFFF)))
+                        .cornerRadius(16.dp)
+                        .padding(12.dp)
                         .clickable(actionStartActivity<MainActivity>(
                             actionParametersOf(ActionParameters.Key<String>("tool_id") to "counter")
                         )),
@@ -71,21 +73,21 @@ class CounterWidget : GlanceAppWidget() {
                         text = counter.name,
                         style = TextStyle(
                             fontSize = 12.sp,
-                            color = ColorProvider(Color.GRAY),
+                            color = ColorProvider(Color(0xFF888888)),
                         ),
                         maxLines = 1,
                     )
-                    Spacer(modifier = GlanceModifier.height(4))
+                    Spacer(modifier = GlanceModifier.height(4.dp))
                     Text(
                         text = "${counter.value}",
                         style = TextStyle(
                             fontSize = 36.sp,
                             fontWeight = FontWeight.Bold,
-                            color = ColorProvider(Color.BLACK),
+                            color = ColorProvider(Color(0xFF000000)),
                             textAlign = TextAlign.Center,
                         ),
                     )
-                    Spacer(modifier = GlanceModifier.height(8))
+                    Spacer(modifier = GlanceModifier.height(8.dp))
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -93,28 +95,28 @@ class CounterWidget : GlanceAppWidget() {
                         Text(
                             text = "  −  ",
                             modifier = GlanceModifier
-                                .background(Color.parseColor("#F0F0F0"))
-                                .cornerRadius(8)
-                                .padding(horizontal = 16, vertical = 6)
+                                .background(ColorProvider(Color(0xFFF0F0F0)))
+                                .cornerRadius(8.dp)
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
                                 .clickable(actionRunCallback<DecrementAction>()),
                             style = TextStyle(
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ColorProvider(Color.parseColor("#EF5350")),
+                                color = ColorProvider(Color(0xFFEF5350)),
                             ),
                         )
-                        Spacer(modifier = GlanceModifier.width(12))
+                        Spacer(modifier = GlanceModifier.width(12.dp))
                         Text(
                             text = "  +  ",
                             modifier = GlanceModifier
-                                .background(Color.parseColor("#F0F0F0"))
-                                .cornerRadius(8)
-                                .padding(horizontal = 16, vertical = 6)
+                                .background(ColorProvider(Color(0xFFF0F0F0)))
+                                .cornerRadius(8.dp)
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
                                 .clickable(actionRunCallback<IncrementAction>()),
                             style = TextStyle(
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ColorProvider(Color.parseColor("#66BB6A")),
+                                color = ColorProvider(Color(0xFF66BB6A)),
                             ),
                         )
                     }

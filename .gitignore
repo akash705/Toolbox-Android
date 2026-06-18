@@ -10,4 +10,6 @@
 .externalNativeBuild
 .cxx
 *.hprof
-backup/
+backup/*.txt
+logcat*.txt
+live_logcat.txt

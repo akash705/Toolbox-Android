@@ -1,7 +1,9 @@
 package com.toolbox.widgets
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+
 import android.content.Context
-import android.graphics.Color
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -96,9 +98,9 @@ class UnitConverterWidget : GlanceAppWidget() {
                 Column(
                     modifier = GlanceModifier
                         .fillMaxSize()
-                        .background(Color.WHITE)
-                        .cornerRadius(16)
-                        .padding(12)
+                        .background(ColorProvider(Color(0xFFFFFFFF)))
+                        .cornerRadius(16.dp)
+                        .padding(12.dp)
                         .clickable(actionStartActivity<MainActivity>(
                             actionParametersOf(ActionParameters.Key<String>("tool_id") to "unit_converter")
                         )),
@@ -116,27 +118,27 @@ class UnitConverterWidget : GlanceAppWidget() {
                             style = TextStyle(
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ColorProvider(Color.BLACK),
+                                color = ColorProvider(Color(0xFF000000)),
                             ),
                         )
-                        Spacer(modifier = GlanceModifier.width(4))
+                        Spacer(modifier = GlanceModifier.width(4.dp))
                         Text(
                             text = pair.fromSymbol,
                             style = TextStyle(
                                 fontSize = 16.sp,
-                                color = ColorProvider(Color.GRAY),
+                                color = ColorProvider(Color(0xFF888888)),
                             ),
                         )
                     }
-                    Spacer(modifier = GlanceModifier.height(2))
+                    Spacer(modifier = GlanceModifier.height(2.dp))
                     Text(
                         text = "=",
                         style = TextStyle(
                             fontSize = 14.sp,
-                            color = ColorProvider(Color.GRAY),
+                            color = ColorProvider(Color(0xFF888888)),
                         ),
                     )
-                    Spacer(modifier = GlanceModifier.height(2))
+                    Spacer(modifier = GlanceModifier.height(2.dp))
                     // Result row
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
@@ -148,19 +150,19 @@ class UnitConverterWidget : GlanceAppWidget() {
                             style = TextStyle(
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ColorProvider(Color.parseColor("#1565C0")),
+                                color = ColorProvider(Color(0xFF1565C0)),
                             ),
                         )
-                        Spacer(modifier = GlanceModifier.width(4))
+                        Spacer(modifier = GlanceModifier.width(4.dp))
                         Text(
                             text = pair.toSymbol,
                             style = TextStyle(
                                 fontSize = 16.sp,
-                                color = ColorProvider(Color.GRAY),
+                                color = ColorProvider(Color(0xFF888888)),
                             ),
                         )
                     }
-                    Spacer(modifier = GlanceModifier.height(8))
+                    Spacer(modifier = GlanceModifier.height(8.dp))
                     // Controls: cycle pair, increment value
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
@@ -169,42 +171,42 @@ class UnitConverterWidget : GlanceAppWidget() {
                         Text(
                             text = " ⇄ ",
                             modifier = GlanceModifier
-                                .background(Color.parseColor("#E3F2FD"))
-                                .cornerRadius(8)
-                                .padding(horizontal = 12, vertical = 4)
+                                .background(ColorProvider(Color(0xFFE3F2FD)))
+                                .cornerRadius(8.dp)
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
                                 .clickable(actionRunCallback<CyclePairAction>()),
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ColorProvider(Color.parseColor("#1565C0")),
+                                color = ColorProvider(Color(0xFF1565C0)),
                             ),
                         )
-                        Spacer(modifier = GlanceModifier.width(6))
+                        Spacer(modifier = GlanceModifier.width(6.dp))
                         Text(
                             text = " − ",
                             modifier = GlanceModifier
-                                .background(Color.parseColor("#F0F0F0"))
-                                .cornerRadius(8)
-                                .padding(horizontal = 12, vertical = 4)
+                                .background(ColorProvider(Color(0xFFF0F0F0)))
+                                .cornerRadius(8.dp)
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
                                 .clickable(actionRunCallback<DecrementValueAction>()),
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ColorProvider(Color.parseColor("#EF5350")),
+                                color = ColorProvider(Color(0xFFEF5350)),
                             ),
                         )
-                        Spacer(modifier = GlanceModifier.width(6))
+                        Spacer(modifier = GlanceModifier.width(6.dp))
                         Text(
                             text = " + ",
                             modifier = GlanceModifier
-                                .background(Color.parseColor("#F0F0F0"))
-                                .cornerRadius(8)
-                                .padding(horizontal = 12, vertical = 4)
+                                .background(ColorProvider(Color(0xFFF0F0F0)))
+                                .cornerRadius(8.dp)
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
                                 .clickable(actionRunCallback<IncrementValueAction>()),
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ColorProvider(Color.parseColor("#66BB6A")),
+                                color = ColorProvider(Color(0xFF66BB6A)),
                             ),
                         )
                     }

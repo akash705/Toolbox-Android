@@ -1,7 +1,9 @@
 package com.toolbox.widgets
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+
 import android.content.Context
-import android.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -40,9 +42,9 @@ class QuickLaunchWidget : GlanceAppWidget() {
                 Column(
                     modifier = GlanceModifier
                         .fillMaxSize()
-                        .background(Color.WHITE)
-                        .cornerRadius(16)
-                        .padding(8),
+                        .background(ColorProvider(Color(0xFFFFFFFF)))
+                        .cornerRadius(16.dp)
+                        .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
@@ -51,34 +53,34 @@ class QuickLaunchWidget : GlanceAppWidget() {
                         style = TextStyle(
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = ColorProvider(Color.parseColor("#1B5E20")),
+                            color = ColorProvider(Color(0xFF1B5E20)),
                             textAlign = TextAlign.Center,
                         ),
                     )
-                    Spacer(modifier = GlanceModifier.height(8))
+                    Spacer(modifier = GlanceModifier.height(8.dp))
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         ToolButton("\uD83D\uDD26", "flashlight")
-                        Spacer(modifier = GlanceModifier.width(6))
+                        Spacer(modifier = GlanceModifier.width(6.dp))
                         ToolButton("\uD83D\uDCD0", "level")
-                        Spacer(modifier = GlanceModifier.width(6))
+                        Spacer(modifier = GlanceModifier.width(6.dp))
                         ToolButton("\uD83E\uDDED", "compass")
-                        Spacer(modifier = GlanceModifier.width(6))
+                        Spacer(modifier = GlanceModifier.width(6.dp))
                         ToolButton("\u23F1\uFE0F", "stopwatch_timer")
                     }
-                    Spacer(modifier = GlanceModifier.height(6))
+                    Spacer(modifier = GlanceModifier.height(6.dp))
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         ToolButton("\uD83D\uDCCF", "ruler")
-                        Spacer(modifier = GlanceModifier.width(6))
+                        Spacer(modifier = GlanceModifier.width(6.dp))
                         ToolButton("\uD83D\uDD0A", "sound_meter")
-                        Spacer(modifier = GlanceModifier.width(6))
+                        Spacer(modifier = GlanceModifier.width(6.dp))
                         ToolButton("\uD83C\uDFB2", "random")
-                        Spacer(modifier = GlanceModifier.width(6))
+                        Spacer(modifier = GlanceModifier.width(6.dp))
                         ToolButton("\uD83D\uDCF7", "qr_scanner")
                     }
                 }
@@ -92,9 +94,9 @@ private fun ToolButton(emoji: String, toolId: String) {
     Text(
         text = emoji,
         modifier = GlanceModifier
-            .background(Color.parseColor("#F5F5F5"))
-            .cornerRadius(12)
-            .padding(10)
+            .background(ColorProvider(Color(0xFFF5F5F5)))
+            .cornerRadius(12.dp)
+            .padding(10.dp)
             .clickable(
                 actionStartActivity<MainActivity>(
                     actionParametersOf(ActionParameters.Key<String>("tool_id") to toolId)

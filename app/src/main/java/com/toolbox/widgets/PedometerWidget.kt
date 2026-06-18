@@ -1,7 +1,9 @@
 package com.toolbox.widgets
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+
 import android.content.Context
-import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -103,9 +105,9 @@ class PedometerWidget : GlanceAppWidget() {
                 Column(
                     modifier = GlanceModifier
                         .fillMaxSize()
-                        .background(Color.WHITE)
-                        .cornerRadius(16)
-                        .padding(12)
+                        .background(ColorProvider(Color(0xFFFFFFFF)))
+                        .cornerRadius(16.dp)
+                        .padding(12.dp)
                         .clickable(actionStartActivity<MainActivity>(
                             actionParametersOf(
                                 ActionParameters.Key<String>("tool_id") to "pedometer"
@@ -119,11 +121,11 @@ class PedometerWidget : GlanceAppWidget() {
                         text = "Pedometer",
                         style = TextStyle(
                             fontSize = 12.sp,
-                            color = ColorProvider(Color.GRAY),
+                            color = ColorProvider(Color(0xFF888888)),
                         ),
                         maxLines = 1,
                     )
-                    Spacer(modifier = GlanceModifier.height(4))
+                    Spacer(modifier = GlanceModifier.height(4.dp))
 
                     // Step count
                     Text(
@@ -131,7 +133,7 @@ class PedometerWidget : GlanceAppWidget() {
                         style = TextStyle(
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold,
-                            color = ColorProvider(Color.BLACK),
+                            color = ColorProvider(Color(0xFF000000)),
                             textAlign = TextAlign.Center,
                         ),
                     )
@@ -139,24 +141,24 @@ class PedometerWidget : GlanceAppWidget() {
                         text = "steps today",
                         style = TextStyle(
                             fontSize = 11.sp,
-                            color = ColorProvider(Color.parseColor("#2E7D32")),
+                            color = ColorProvider(Color(0xFF2E7D32)),
                         ),
                     )
 
                     // Session info (when active)
                     if (state.sessionActive) {
-                        Spacer(modifier = GlanceModifier.height(4))
+                        Spacer(modifier = GlanceModifier.height(4.dp))
                         Text(
                             text = "${numberFormat.format(state.sessionSteps)} session · ${formatDuration(state.sessionDurationMs)}",
                             style = TextStyle(
                                 fontSize = 11.sp,
-                                color = ColorProvider(Color.parseColor("#1565C0")),
+                                color = ColorProvider(Color(0xFF1565C0)),
                             ),
                             maxLines = 1,
                         )
                     }
 
-                    Spacer(modifier = GlanceModifier.height(8))
+                    Spacer(modifier = GlanceModifier.height(8.dp))
 
                     // Buttons row
                     Row(
@@ -167,34 +169,34 @@ class PedometerWidget : GlanceAppWidget() {
                         Text(
                             text = " ↻ ",
                             modifier = GlanceModifier
-                                .background(Color.parseColor("#F0F0F0"))
-                                .cornerRadius(8)
-                                .padding(horizontal = 12, vertical = 6)
+                                .background(ColorProvider(Color(0xFFF0F0F0)))
+                                .cornerRadius(8.dp)
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
                                 .clickable(actionRunCallback<PedometerRefreshAction>()),
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ColorProvider(Color.GRAY),
+                                color = ColorProvider(Color(0xFF888888)),
                             ),
                         )
-                        Spacer(modifier = GlanceModifier.width(8))
+                        Spacer(modifier = GlanceModifier.width(8.dp))
                         // Session start/stop button
                         Text(
                             text = if (state.sessionActive) " ⏹ " else " ▶ ",
                             modifier = GlanceModifier
-                                .background(
-                                    if (state.sessionActive) Color.parseColor("#FFEBEE")
-                                    else Color.parseColor("#E8F5E9")
-                                )
-                                .cornerRadius(8)
-                                .padding(horizontal = 12, vertical = 6)
+                                .background(ColorProvider(
+                                    if (state.sessionActive) Color(0xFFFFEBEE)
+                                    else Color(0xFFE8F5E9)
+                                ))
+                                .cornerRadius(8.dp)
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
                                 .clickable(actionRunCallback<PedometerSessionAction>()),
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ColorProvider(
-                                    if (state.sessionActive) Color.parseColor("#C62828")
-                                    else Color.parseColor("#2E7D32")
+                                    if (state.sessionActive) Color(0xFFC62828)
+                                    else Color(0xFF2E7D32)
                                 ),
                             ),
                         )

@@ -2,6 +2,7 @@ package com.toolbox.conversion.unitconverter
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.SwapVert
@@ -30,15 +32,19 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +52,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.toolbox.conversion.calculator.CalculatorScreen
+import com.toolbox.conversion.calculator.CalculatorViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,112 +63,160 @@ fun UnitConverterScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val units = unitsByCategory[state.category] ?: emptyList()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-    ) {
-        // Category chips with icons
-        Row(
+
+    var showCalculatorSheet by remember { mutableStateOf(false) }
+    val calculatorSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    // Hoist the ViewModel outside the `if` so the calculator state (expression, result)
+    // survives sheet dismiss and is restored when the sheet is reopened.
+    val calculatorViewModel: CalculatorViewModel = viewModel()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
         ) {
-            UnitCategory.entries.forEach { category ->
-                FilterChip(
-                    selected = state.category == category,
-                    onClick = { viewModel.onCategoryChanged(category) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = category.icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    },
-                    label = { Text(category.label) },
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // From card
-        ConversionCard(
-            label = "From",
-            selectedUnit = state.fromUnit,
-            units = units,
-            onUnitSelected = viewModel::onFromUnitChanged,
-            value = state.fromValue,
-            onValueChanged = viewModel::onFromValueChanged,
-            placeholder = "Enter value",
-        )
-
-        // Swap + favorite row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = viewModel::swapUnits) {
-                Icon(
-                    Icons.Default.SwapVert,
-                    contentDescription = "Swap units",
-                    modifier = Modifier.size(28.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            IconButton(onClick = viewModel::toggleCurrentFavorite) {
-                Icon(
-                    imageVector = if (state.isCurrentFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = if (state.isCurrentFavorite) "Remove from favorites" else "Add to favorites",
-                    modifier = Modifier.size(24.dp),
-                    tint = if (state.isCurrentFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-
-        // To card
-        ConversionCard(
-            label = "To",
-            selectedUnit = state.toUnit,
-            units = units,
-            onUnitSelected = viewModel::onToUnitChanged,
-            value = state.toValue,
-            onValueChanged = viewModel::onToValueChanged,
-            placeholder = "Result",
-        )
-
-        // Favorite conversion pairs (global, across all categories)
-        if (state.favoriteConversions.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = "Favorites",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
+            // Category chips with icons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                state.favoriteConversions.forEach { key ->
-                    val label = key.substringAfter(":")
-                    SuggestionChip(
-                        onClick = { viewModel.applyFavorite(key) },
-                        label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                UnitCategory.entries.forEach { category ->
+                    FilterChip(
+                        selected = state.category == category,
+                        onClick = { viewModel.onCategoryChanged(category) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = category.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        },
+                        label = { Text(category.label) },
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // From card
+            ConversionCard(
+                label = "From",
+                selectedUnit = state.fromUnit,
+                units = units,
+                onUnitSelected = viewModel::onFromUnitChanged,
+                value = state.fromValue,
+                onValueChanged = viewModel::onFromValueChanged,
+                placeholder = "Enter value",
+            )
+
+            // Swap + favorite row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = viewModel::swapUnits) {
+                    Icon(
+                        Icons.Default.SwapVert,
+                        contentDescription = "Swap units",
+                        modifier = Modifier.size(28.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(onClick = viewModel::toggleCurrentFavorite) {
+                    Icon(
+                        imageVector = if (state.isCurrentFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = if (state.isCurrentFavorite) "Remove from favorites" else "Add to favorites",
+                        modifier = Modifier.size(24.dp),
+                        tint = if (state.isCurrentFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            // To card
+            ConversionCard(
+                label = "To",
+                selectedUnit = state.toUnit,
+                units = units,
+                onUnitSelected = viewModel::onToUnitChanged,
+                value = state.toValue,
+                onValueChanged = viewModel::onToValueChanged,
+                placeholder = "Result",
+            )
+
+            // Favorite conversion pairs (global, across all categories)
+            if (state.favoriteConversions.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = "Favorites",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    state.favoriteConversions.forEach { key ->
+                        val label = key.substringAfter(":")
+                        SuggestionChip(
+                            onClick = { viewModel.applyFavorite(key) },
+                            label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                        )
+                    }
+                }
+            }
+
+            // Extra bottom padding so the FAB doesn't overlap last content
+            Spacer(modifier = Modifier.height(72.dp))
+        }
+
+        // Floating calculator button pinned to bottom-right
+        SmallFloatingActionButton(
+            onClick = { showCalculatorSheet = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Calculate,
+                contentDescription = "Open Calculator",
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+
+    // Calculator bottom sheet
+    if (showCalculatorSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showCalculatorSheet = false },
+            sheetState = calculatorSheetState,
+        ) {
+            CalculatorScreen(
+                viewModel = calculatorViewModel,
+                onUseResult = { result ->
+                    viewModel.onFromValueChanged(result)
+                    scope.launch {
+                        calculatorSheetState.hide()
+                        showCalculatorSheet = false
+                    }
+                },
+            )
         }
     }
 }

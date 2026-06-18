@@ -1,7 +1,9 @@
 package com.toolbox.widgets
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+
 import android.content.Context
-import android.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.edit
@@ -121,9 +123,9 @@ private fun EmptyFavoritesContent() {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(Color.WHITE)
-            .cornerRadius(16)
-            .padding(16)
+            .background(ColorProvider(Color(0xFFFFFFFF)))
+            .cornerRadius(16.dp)
+            .padding(16.dp)
             .clickable(actionStartActivity<MainActivity>()),
         verticalAlignment = Alignment.CenterVertically,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -132,22 +134,22 @@ private fun EmptyFavoritesContent() {
             text = "\u2B50",
             style = TextStyle(fontSize = 28.sp),
         )
-        Spacer(modifier = GlanceModifier.height(8))
+        Spacer(modifier = GlanceModifier.height(8.dp))
         Text(
             text = "No favorites yet",
             style = TextStyle(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = ColorProvider(Color.GRAY),
+                color = ColorProvider(Color(0xFF888888)),
                 textAlign = TextAlign.Center,
             ),
         )
-        Spacer(modifier = GlanceModifier.height(4))
+        Spacer(modifier = GlanceModifier.height(4.dp))
         Text(
             text = "Long-press any tool to favorite it",
             style = TextStyle(
                 fontSize = 11.sp,
-                color = ColorProvider(Color.LTGRAY),
+                color = ColorProvider(Color(0xFFCCCCCC)),
                 textAlign = TextAlign.Center,
             ),
         )
@@ -166,9 +168,9 @@ private fun SliderContent(favorites: List<String>, pageIndex: Int) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(Color.WHITE)
-            .cornerRadius(16)
-            .padding(8),
+            .background(ColorProvider(Color(0xFFFFFFFF)))
+            .cornerRadius(16.dp)
+            .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -183,7 +185,7 @@ private fun SliderContent(favorites: List<String>, pageIndex: Int) {
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ColorProvider(Color.parseColor("#A67C00")),
+                    color = ColorProvider(Color(0xFFA67C00)),
                 ),
             )
             if (totalPages > 1) {
@@ -191,12 +193,12 @@ private fun SliderContent(favorites: List<String>, pageIndex: Int) {
                     text = "  ${safePageIndex + 1}/$totalPages",
                     style = TextStyle(
                         fontSize = 10.sp,
-                        color = ColorProvider(Color.GRAY),
+                        color = ColorProvider(Color(0xFF888888)),
                     ),
                 )
             }
         }
-        Spacer(modifier = GlanceModifier.height(6))
+        Spacer(modifier = GlanceModifier.height(6.dp))
 
         // Slider row: [<] [tool] [tool] [tool] [tool] [>]
         Row(
@@ -208,8 +210,8 @@ private fun SliderContent(favorites: List<String>, pageIndex: Int) {
             Text(
                 text = " ◀ ",
                 modifier = GlanceModifier
-                    .cornerRadius(8)
-                    .padding(vertical = 8, horizontal = 4)
+                    .cornerRadius(8.dp)
+                    .padding(vertical = 8.dp, horizontal = 4.dp)
                     .clickable(
                         if (hasPrev) actionRunCallback<FavSliderPrevAction>()
                         else actionRunCallback<FavSliderNoOpAction>()
@@ -217,7 +219,7 @@ private fun SliderContent(favorites: List<String>, pageIndex: Int) {
                 style = TextStyle(
                     fontSize = 14.sp,
                     color = ColorProvider(
-                        if (hasPrev) Color.parseColor("#333333") else Color.parseColor("#DDDDDD")
+                        if (hasPrev) Color(0xFF333333) else Color(0xFFDDDDDD)
                     ),
                 ),
             )
@@ -225,22 +227,22 @@ private fun SliderContent(favorites: List<String>, pageIndex: Int) {
             // Tool items
             for (toolId in pageItems) {
                 val (emoji, name) = toolEmojiMap[toolId] ?: ("\uD83D\uDD27" to toolId)
-                Spacer(modifier = GlanceModifier.width(4))
+                Spacer(modifier = GlanceModifier.width(4.dp))
                 FavoriteToolItem(emoji, name, toolId)
             }
             // Fill remaining slots with spacers if less than ITEMS_PER_PAGE
             repeat(ITEMS_PER_PAGE - pageItems.size) {
-                Spacer(modifier = GlanceModifier.width(4))
-                Spacer(modifier = GlanceModifier.width(52))
+                Spacer(modifier = GlanceModifier.width(4.dp))
+                Spacer(modifier = GlanceModifier.width(52.dp))
             }
 
-            Spacer(modifier = GlanceModifier.width(4))
+            Spacer(modifier = GlanceModifier.width(4.dp))
             // Right arrow
             Text(
                 text = " ▶ ",
                 modifier = GlanceModifier
-                    .cornerRadius(8)
-                    .padding(vertical = 8, horizontal = 4)
+                    .cornerRadius(8.dp)
+                    .padding(vertical = 8.dp, horizontal = 4.dp)
                     .clickable(
                         if (hasNext) actionRunCallback<FavSliderNextAction>()
                         else actionRunCallback<FavSliderNoOpAction>()
@@ -248,7 +250,7 @@ private fun SliderContent(favorites: List<String>, pageIndex: Int) {
                 style = TextStyle(
                     fontSize = 14.sp,
                     color = ColorProvider(
-                        if (hasNext) Color.parseColor("#333333") else Color.parseColor("#DDDDDD")
+                        if (hasNext) Color(0xFF333333) else Color(0xFFDDDDDD)
                     ),
                 ),
             )
@@ -260,9 +262,9 @@ private fun SliderContent(favorites: List<String>, pageIndex: Int) {
 private fun FavoriteToolItem(emoji: String, name: String, toolId: String) {
     Column(
         modifier = GlanceModifier
-            .background(Color.parseColor("#F5F5F5"))
-            .cornerRadius(12)
-            .padding(6)
+            .background(ColorProvider(Color(0xFFF5F5F5)))
+            .cornerRadius(12.dp)
+            .padding(6.dp)
             .clickable(
                 actionStartActivity<MainActivity>(
                     actionParametersOf(ActionParameters.Key<String>("tool_id") to toolId)
@@ -274,12 +276,12 @@ private fun FavoriteToolItem(emoji: String, name: String, toolId: String) {
             text = emoji,
             style = TextStyle(fontSize = 22.sp),
         )
-        Spacer(modifier = GlanceModifier.height(2))
+        Spacer(modifier = GlanceModifier.height(2.dp))
         Text(
             text = name,
             style = TextStyle(
                 fontSize = 9.sp,
-                color = ColorProvider(Color.parseColor("#555555")),
+                color = ColorProvider(Color(0xFF555555)),
                 textAlign = TextAlign.Center,
             ),
             maxLines = 1,

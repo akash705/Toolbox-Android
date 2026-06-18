@@ -2,7 +2,6 @@ package com.toolbox.widgets
 
 import android.app.Activity
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -29,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -100,8 +100,8 @@ class DateCountdownWidget : GlanceAppWidget() {
                     GlanceColumn(
                         modifier = GlanceModifier
                             .glanceFillMaxSize()
-                            .background(Color.WHITE)
-                            .cornerRadius(16)
+                            .background(ColorProvider(Color(0xFFFFFFFF)))
+                            .cornerRadius(16.dp)
                             .glancePadding(12)
                             .clickable(actionStartActivity<CountdownConfigActivity>()),
                         verticalAlignment = GlanceAlignment.CenterVertically,
@@ -116,7 +116,7 @@ class DateCountdownWidget : GlanceAppWidget() {
                             text = "Tap to set\ncountdown",
                             style = TextStyle(
                                 fontSize = 12.sp,
-                                color = ColorProvider(Color.GRAY),
+                                color = ColorProvider(Color(0xFF888888)),
                                 textAlign = TextAlign.Center,
                             ),
                         )
@@ -124,23 +124,23 @@ class DateCountdownWidget : GlanceAppWidget() {
                 } else {
                     val days = state.daysRemaining()
                     val bgColor = when {
-                        days < 0 -> Color.parseColor("#FFEBEE") // past
-                        days == 0L -> Color.parseColor("#FFF3E0") // today
-                        days <= 7 -> Color.parseColor("#FFF8E1") // soon
-                        else -> Color.WHITE
+                        days < 0 -> Color(0xFFFFEBEE) // past
+                        days == 0L -> Color(0xFFFFF3E0) // today
+                        days <= 7 -> Color(0xFFFFF8E1) // soon
+                        else -> Color(0xFFFFFFFF)
                     }
                     val daysColor = when {
-                        days < 0 -> Color.parseColor("#C62828")
-                        days == 0L -> Color.parseColor("#E65100")
-                        days <= 7 -> Color.parseColor("#F57F17")
-                        else -> Color.parseColor("#1565C0")
+                        days < 0 -> Color(0xFFC62828)
+                        days == 0L -> Color(0xFFE65100)
+                        days <= 7 -> Color(0xFFF57F17)
+                        else -> Color(0xFF1565C0)
                     }
 
                     GlanceColumn(
                         modifier = GlanceModifier
                             .glanceFillMaxSize()
-                            .background(bgColor)
-                            .cornerRadius(16)
+                            .background(ColorProvider(bgColor))
+                            .cornerRadius(16.dp)
                             .glancePadding(12)
                             .clickable(actionStartActivity<MainActivity>(
                                 actionParametersOf(ActionParameters.Key<String>("tool_id") to "date_calculator")
@@ -153,7 +153,7 @@ class DateCountdownWidget : GlanceAppWidget() {
                                 text = state.label,
                                 style = TextStyle(
                                     fontSize = 12.sp,
-                                    color = ColorProvider(Color.GRAY),
+                                    color = ColorProvider(Color(0xFF888888)),
                                 ),
                                 maxLines = 1,
                             )
@@ -177,7 +177,7 @@ class DateCountdownWidget : GlanceAppWidget() {
                                 text = if (days < 0) "days ago" else if (days == 1L) "day left" else "days left",
                                 style = TextStyle(
                                     fontSize = 12.sp,
-                                    color = ColorProvider(Color.GRAY),
+                                    color = ColorProvider(Color(0xFF888888)),
                                 ),
                             )
                         }
@@ -186,7 +186,7 @@ class DateCountdownWidget : GlanceAppWidget() {
                             text = state.targetDateFormatted(),
                             style = TextStyle(
                                 fontSize = 10.sp,
-                                color = ColorProvider(Color.LTGRAY),
+                                color = ColorProvider(Color(0xFFCCCCCC)),
                             ),
                         )
                     }

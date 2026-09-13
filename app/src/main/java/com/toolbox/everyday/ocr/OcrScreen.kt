@@ -272,7 +272,13 @@ private fun ResultCard(
 private data class OcrText(val fullText: String, val blockCount: Int)
 
 private suspend fun recognizeText(context: Context, uri: Uri): OcrText {
-    val image = InputImage.fromFilePath(context, uri)
+    val image = try {
+        InputImage.fromFilePath(context, uri)
+    } catch (e: Exception) {
+        val bitmap = decodePreview(context, uri) ?: throw Exception("Failed to load image for OCR")
+        InputImage.fromBitmap(bitmap, 0)
+    }
+    
     val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
     return suspendCancellableCoroutine { cont ->
         recognizer.process(image)

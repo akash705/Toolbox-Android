@@ -282,11 +282,15 @@ private suspend fun recognizeText(context: Context, uri: Uri): OcrText {
     val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
     return suspendCancellableCoroutine { cont ->
         recognizer.process(image)
-            .addOnSuccessListener { result ->
-                cont.resume(OcrText(fullText = result.text, blockCount = result.textBlocks.size))
+            .addOnSuccessListener { result: com.google.mlkit.vision.text.Text? ->
+                if (result != null) {
+                    cont.resume(OcrText(fullText = result.text, blockCount = result.textBlocks.size))
+                } else {
+                    cont.resumeWithException(Exception("ML Kit returned a null result."))
+                }
             }
-            .addOnFailureListener { e ->
-                cont.resumeWithException(e)
+            .addOnFailureListener { e: Exception? ->
+                cont.resumeWithException(e ?: Exception("Unknown ML Kit failure."))
             }
         cont.invokeOnCancellation { recognizer.close() }
     }

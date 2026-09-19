@@ -1,5 +1,6 @@
 package com.toolbox.everyday.eyetest
 
+import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,14 +15,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -66,16 +72,104 @@ fun EyeTestScreen() {
     }
 }
 
+// ISO/IEC 7810 ID-1 card (credit/debit/most national ID cards) is exactly 85.6 mm wide.
+private const val CARD_WIDTH_MM = 85.6f
+private const val CARD_ASPECT = 85.6f / 53.98f // ID-1 width / height
+// At a 40 cm near-test distance a 20/20 optotype's overall height is ~0.58 mm; each Snellen line
+// scales linearly with its denominator. Monospace cap height is ~0.7 of the em, so we upsize the
+// font by 1/0.7 to hit the target physical letter height.
+private const val MM_PER_SNELLEN_DENOM = 0.582f / 20f
+private const val CAP_HEIGHT_RATIO = 0.7f
+
 @Composable
 private fun AcuityChart() {
-    val rows = listOf("E" to 60.sp, "F P" to 44.sp, "T O Z" to 32.sp, "L P E D" to 24.sp, "P E C F D" to 18.sp, "E D F C Z P" to 13.sp)
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("eyetest", Context.MODE_PRIVATE) }
+    var pxPerMm by remember {
+        mutableStateOf(prefs.getFloat("px_per_mm", 0f).takeIf { it > 0f })
+    }
+
+    val calibrated = pxPerMm
+    if (calibrated == null) {
+        CalibrationCard(onCalibrated = { v ->
+            prefs.edit().putFloat("px_per_mm", v).apply()
+            pxPerMm = v
+        })
+    } else {
+        CalibratedAcuity(pxPerMm = calibrated, onRecalibrate = { pxPerMm = null })
+    }
+}
+
+@Composable
+private fun CalibrationCard(onCalibrated: (Float) -> Unit) {
+    val density = LocalDensity.current
+    var widthDp by remember { mutableFloatStateOf(260f) }
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-        Text("Hold the phone about 2 m (6.5 ft) away, cover one eye, read down.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(16.dp))
-        rows.forEach { (letters, size) ->
-            Text(letters, fontSize = size, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 4.sp)
-            Spacer(Modifier.height(12.dp))
+        Text(
+            "One-time calibration: hold a bank card or ID card flat against the screen and drag the slider until the outline matches the card's width exactly.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(20.dp))
+        Box(
+            modifier = Modifier
+                .width(widthDp.dp)
+                .height((widthDp / CARD_ASPECT).dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("Match a real card", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
         }
+        Spacer(Modifier.height(20.dp))
+        Slider(value = widthDp, onValueChange = { widthDp = it }, valueRange = 150f..380f)
+        Spacer(Modifier.height(8.dp))
+        androidx.compose.material3.Button(
+            onClick = {
+                val widthPx = with(density) { widthDp.dp.toPx() }
+                onCalibrated(widthPx / CARD_WIDTH_MM)
+            },
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+        ) { Text("This matches my card") }
+    }
+}
+
+@Composable
+private fun CalibratedAcuity(pxPerMm: Float, onRecalibrate: () -> Unit) {
+    val density = LocalDensity.current
+    // (letters, Snellen denominator) — 20/denom at a 40 cm hold.
+    val rows = listOf(
+        "E" to 200, "F P" to 100, "T O Z" to 63, "L P E D" to 40,
+        "P E C F D" to 32, "E D F C Z P" to 25, "F E L O P Z D" to 20,
+    )
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        Text(
+            "Hold the phone about 40 cm (16 in) away, cover one eye, and read down. The lowest row you can read cleanly is your rough acuity.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(16.dp))
+        rows.forEach { (letters, denom) ->
+            val heightPx = denom * MM_PER_SNELLEN_DENOM * pxPerMm
+            // Neutralise both density and the user's font-scale so the size is truly physical.
+            val fontSp = (heightPx / CAP_HEIGHT_RATIO / (density.density * density.fontScale)).sp
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 6.dp)) {
+                Text(
+                    "20/$denom",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.width(48.dp),
+                )
+                Text(letters, fontSize = fontSp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 2.sp)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        Text(
+            "Recalibrate card",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.clickable { onRecalibrate() }.padding(8.dp),
+        )
     }
 }
 

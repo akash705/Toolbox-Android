@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -86,17 +87,25 @@ fun PdfToolkitScreen() {
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             FilterChip(tab == 0, onClick = { tab = 0; status = Status.Idle }, label = { Text("Merge") })
             FilterChip(tab == 1, onClick = { tab = 1; status = Status.Idle }, label = { Text("Rotate") })
             FilterChip(tab == 2, onClick = { tab = 2; status = Status.Idle }, label = { Text("Extract") })
+            FilterChip(tab == 4, onClick = { tab = 4; status = Status.Idle }, label = { Text("Reorder") })
             FilterChip(tab == 3, onClick = { tab = 3; status = Status.Idle }, label = { Text("Sign") })
         }
 
-        // The Sign tab must NOT be inside a verticalScroll — its draw pad and drag-to-place
-        // gestures would be stolen by the scroll. It manages its own layout.
+        // The Sign and Reorder tabs must NOT be inside a verticalScroll — their gesture/draw pad
+        // and thumbnail list would fight the scroll. Each manages its own layout.
         if (tab == 3) {
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) { PdfSignSection() }
+            return@Column
+        }
+        if (tab == 4) {
+            Box(modifier = Modifier.fillMaxWidth().weight(1f)) { PdfReorderSection() }
             return@Column
         }
 

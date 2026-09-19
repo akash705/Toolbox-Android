@@ -61,6 +61,8 @@ class ScreenRecordService : Service() {
         val data: Intent? = intent?.getParcelableExtra(EXTRA_DATA)
         if (data == null) { stopSelf(); return START_NOT_STICKY }
 
+        val withAudio = intent?.getBooleanExtra(EXTRA_AUDIO, false) ?: false
+
         val mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         val proj = mpm.getMediaProjection(code, data) ?: run { stopSelf(); return START_NOT_STICKY }
         proj.registerCallback(object : MediaProjection.Callback() {
@@ -68,12 +70,12 @@ class ScreenRecordService : Service() {
         }, null)
         projection = proj
 
-        startRecording(proj)
+        startRecording(proj, withAudio)
         ScreenRecordState.set(true)
         return START_NOT_STICKY
     }
 
-    private fun startRecording(proj: MediaProjection) {
+    private fun startRecording(proj: MediaProjection, withAudio: Boolean) {
         val metrics = resources.displayMetrics
         val width = (metrics.widthPixels / 2) * 2   // even dimensions for the encoder
         val height = (metrics.heightPixels / 2) * 2
@@ -85,8 +87,16 @@ class ScreenRecordService : Service() {
 
         val rec = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) MediaRecorder(this) else @Suppress("DEPRECATION") MediaRecorder()
         rec.apply {
+            // MediaRecorder requires audio source before output format, and the audio
+            // encoder after it. Video source/encoder are set alongside.
+            if (withAudio) setAudioSource(MediaRecorder.AudioSource.MIC)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            if (withAudio) {
+                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                setAudioEncodingBitRate(128_000)
+                setAudioSamplingRate(44_100)
+            }
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)
             setVideoSize(width, height)
             setVideoFrameRate(30)
@@ -140,6 +150,7 @@ class ScreenRecordService : Service() {
         const val ACTION_STOP = "com.toolbox.screenrecord.STOP"
         const val EXTRA_CODE = "code"
         const val EXTRA_DATA = "data"
+        const val EXTRA_AUDIO = "audio"
         const val CHANNEL_ID = "screen_record_channel"
         const val NOTIF_ID = 1010
     }

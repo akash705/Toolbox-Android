@@ -1,11 +1,15 @@
 package com.toolbox.everyday.screenrecorder
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +24,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
@@ -29,6 +34,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,17 +61,25 @@ fun ScreenRecorderScreen() {
     val recording by ScreenRecordState.recording.collectAsState()
     val dir = remember { File(context.filesDir, "screen_recordings").apply { mkdirs() } }
     var files by remember { mutableStateOf(listFiles(dir)) }
+    var micEnabled by remember { mutableStateOf(false) }
 
     LaunchedEffect(recording) { files = listFiles(dir) }
 
     val projectionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
         if (res.resultCode == Activity.RESULT_OK && res.data != null) {
+            val withAudio = micEnabled && hasAudioPermission(context)
             val intent = Intent(context, ScreenRecordService::class.java).apply {
                 putExtra(ScreenRecordService.EXTRA_CODE, res.resultCode)
                 putExtra(ScreenRecordService.EXTRA_DATA, res.data)
+                putExtra(ScreenRecordService.EXTRA_AUDIO, withAudio)
             }
             context.startForegroundService(intent)
         }
+    }
+
+    val audioPermLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        micEnabled = granted
+        if (!granted) Toast.makeText(context, "Microphone denied — recording without audio", Toast.LENGTH_SHORT).show()
     }
 
     fun startRecording() {
@@ -92,6 +106,28 @@ fun ScreenRecorderScreen() {
                 Text("Record screen")
             }
         }
+        Row(
+            Modifier.fillMaxWidth().padding(top = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Default.Mic, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Text(
+                "Record microphone audio",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f).padding(start = 12.dp),
+            )
+            Switch(
+                enabled = !recording,
+                checked = micEnabled,
+                onCheckedChange = { want ->
+                    if (want && !hasAudioPermission(context)) {
+                        audioPermLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    } else {
+                        micEnabled = want
+                    }
+                },
+            )
+        }
         Text(
             "Android will ask permission to capture your screen. Recording keeps going while you use other apps.",
             style = MaterialTheme.typography.bodySmall,
@@ -116,6 +152,9 @@ fun ScreenRecorderScreen() {
         }
     }
 }
+
+private fun hasAudioPermission(context: Context): Boolean =
+    ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
 
 private fun listFiles(dir: File): List<File> =
     dir.listFiles { f -> f.extension == "mp4" }?.sortedByDescending { it.lastModified() } ?: emptyList()

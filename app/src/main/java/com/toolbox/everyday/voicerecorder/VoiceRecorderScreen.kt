@@ -39,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -64,59 +65,28 @@ fun VoiceRecorderScreen() {
     val context = LocalContext.current
     val dir = remember { File(context.filesDir, "recordings").apply { mkdirs() } }
 
-    var recording by remember { mutableStateOf(false) }
-    var elapsed by remember { mutableIntStateOf(0) }
-    var recorder by remember { mutableStateOf<MediaRecorder?>(null) }
-    var currentFile by remember { mutableStateOf<File?>(null) }
+    val recording by VoiceRecordState.recording.collectAsState()
+    val elapsed by VoiceRecordState.elapsedSec.collectAsState()
     var files by remember { mutableStateOf(listFiles(dir)) }
     var player by remember { mutableStateOf<MediaPlayer?>(null) }
 
-    fun startRecording() {
-        val file = File(dir, "rec_${System.currentTimeMillis()}.m4a")
-        val rec = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) MediaRecorder(context) else @Suppress("DEPRECATION") MediaRecorder()
-        rec.apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setOutputFile(file.absolutePath)
-            prepare()
-            start()
-        }
-        recorder = rec
-        currentFile = file
-        elapsed = 0
-        recording = true
-    }
-
-    fun stopRecording() {
-        runCatching { recorder?.stop() }
-        runCatching { recorder?.release() }
-        recorder = null
-        recording = false
-        files = listFiles(dir)
-    }
-
     val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) startRecording()
+        if (granted) VoiceRecordService.start(context)
     }
 
     fun onMicTap() {
         if (recording) {
-            stopRecording()
+            VoiceRecordService.stop(context)
         } else {
             val granted = context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-            if (granted) startRecording() else micPermission.launch(Manifest.permission.RECORD_AUDIO)
+            if (granted) VoiceRecordService.start(context) else micPermission.launch(Manifest.permission.RECORD_AUDIO)
         }
     }
 
-    LaunchedEffect(recording) {
-        while (recording) { delay(1000); elapsed += 1 }
-    }
+    // Refresh the recordings list whenever a recording finishes.
+    LaunchedEffect(recording) { if (!recording) files = listFiles(dir) }
     DisposableEffect(Unit) {
-        onDispose {
-            runCatching { recorder?.release() }
-            runCatching { player?.release() }
-        }
+        onDispose { runCatching { player?.release() } }
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {

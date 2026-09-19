@@ -31,6 +31,14 @@
 -keep class androidx.compose.runtime.** { *; }
 -dontwarn androidx.compose.runtime.**
 
+# ML Kit text recognition — recognizer impl and bundled OCR model are loaded
+# reflectively by class name. R8 (full mode) strips/renames them, so ML Kit gets
+# a null impl and crashes with "getClass() on a null object reference" in release.
+-keep class com.google.mlkit.** { *; }
+-keep class com.google.android.gms.internal.mlkit_vision_text_common.** { *; }
+-keep class com.google.android.gms.internal.mlkit_vision_text_bundled_common.** { *; }
+-dontwarn com.google.mlkit.**
+
 # WorkManager + Room — Glance transitively depends on WorkManager which uses Room.
 # R8 strips Room-generated _Impl classes causing WorkDatabase instantiation failure.
 -keep class androidx.work.** { *; }

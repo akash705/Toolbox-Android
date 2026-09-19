@@ -92,6 +92,32 @@ object PdfOps {
         doc.close()
     }
 
+    /** Build a PDF from a list of image uris, one page per image (a document scanner export). */
+    fun imagesToPdf(context: Context, uris: List<Uri>, out: File) {
+        val doc = PdfDocument()
+        uris.forEachIndexed { index, uri ->
+            val bmp = decodeSampled(context, uri, 2000) ?: return@forEachIndexed
+            // Fit the page to the image aspect, capped so page dimensions stay reasonable (points).
+            val maxPt = 1000f
+            val s = maxPt / maxOf(bmp.width, bmp.height).toFloat()
+            val wPt = (bmp.width * s).toInt().coerceAtLeast(1)
+            val hPt = (bmp.height * s).toInt().coerceAtLeast(1)
+            writePage(doc, bmp, wPt, hPt, index)
+            bmp.recycle()
+        }
+        doc.writeTo(FileOutputStream(out))
+        doc.close()
+    }
+
+    private fun decodeSampled(context: Context, uri: Uri, maxPx: Int): Bitmap? {
+        val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        context.contentResolver.openInputStream(uri)?.use { android.graphics.BitmapFactory.decodeStream(it, null, bounds) }
+        var sample = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / sample > maxPx) sample *= 2
+        val opts = android.graphics.BitmapFactory.Options().apply { inSampleSize = sample }
+        return context.contentResolver.openInputStream(uri)?.use { android.graphics.BitmapFactory.decodeStream(it, null, opts) }
+    }
+
     /** Total page count for a PDF uri. */
     fun pageCount(context: Context, uri: Uri): Int {
         openFd(context, uri)?.use { fd ->

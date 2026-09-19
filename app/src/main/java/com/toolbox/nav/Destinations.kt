@@ -109,3 +109,9 @@ import kotlinx.serialization.Serializable
 @Serializable object EyeTest
 @Serializable object VoiceRecorder
 @Serializable object PdfToolkit
+
+// Batch 6 Tools
+@Serializable object ScreenshotStitcher
+@Serializable object DocumentScanner
+@Serializable object ScreenRecorder
+@Serializable object StatusSaver

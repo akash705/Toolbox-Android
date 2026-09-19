@@ -39,6 +39,10 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.ScreenRotation
@@ -721,5 +725,39 @@ val allTools = listOf(
         category = ToolCategory.EverydayTools,
         description = "Merge, rotate, extract pages, and add your signature to PDF files. Runs fully offline on your device.",
         searchKeywords = listOf("pdf", "merge", "combine", "rotate", "split", "extract", "sign", "signature", "document"),
+    ),
+
+    // Batch 6 Tools
+    ToolDefinition(
+        id = "document_scanner",
+        name = "Document Scanner",
+        icon = Icons.Default.DocumentScanner,
+        category = ToolCategory.EverydayTools,
+        description = "Capture or pick photos of documents and combine them into a single PDF. Fully offline.",
+        searchKeywords = listOf("scan", "scanner", "document", "pdf", "camera", "photo to pdf"),
+    ),
+    ToolDefinition(
+        id = "screenshot_stitcher",
+        name = "Screenshot Stitcher",
+        icon = Icons.Default.Dashboard,
+        category = ToolCategory.EverydayTools,
+        description = "Combine several screenshots into one long image, then save or share it.",
+        searchKeywords = listOf("screenshot", "stitch", "combine", "long", "image", "merge"),
+    ),
+    ToolDefinition(
+        id = "screen_recorder",
+        name = "Screen Recorder",
+        icon = Icons.Default.Videocam,
+        category = ToolCategory.EverydayTools,
+        description = "Record your screen to a video file, then play back or share it. Keeps recording while you use other apps.",
+        searchKeywords = listOf("screen", "recorder", "record", "video", "capture", "screencast"),
+    ),
+    ToolDefinition(
+        id = "status_saver",
+        name = "Status Saver",
+        icon = Icons.Default.Download,
+        category = ToolCategory.EverydayTools,
+        description = "Save photos and videos from WhatsApp statuses you've viewed, before they disappear. Grant access to the statuses folder to begin.",
+        searchKeywords = listOf("status", "saver", "whatsapp", "download", "save", "story"),
     ),
 )

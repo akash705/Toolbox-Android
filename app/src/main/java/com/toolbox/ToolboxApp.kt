@@ -86,6 +86,14 @@ import com.toolbox.everyday.habits.HabitTrackerScreen
 import com.toolbox.everyday.eyetest.EyeTestScreen
 import com.toolbox.everyday.voicerecorder.VoiceRecorderScreen
 import com.toolbox.everyday.pdftoolkit.PdfToolkitScreen
+import com.toolbox.everyday.stitcher.ScreenshotStitcherScreen
+import com.toolbox.everyday.docscanner.DocumentScannerScreen
+import com.toolbox.everyday.screenrecorder.ScreenRecorderScreen
+import com.toolbox.everyday.statussaver.StatusSaverScreen
+import com.toolbox.nav.ScreenshotStitcher
+import com.toolbox.nav.DocumentScanner
+import com.toolbox.nav.ScreenRecorder
+import com.toolbox.nav.StatusSaver
 import com.toolbox.conversion.unitcircle.UnitCircleScreen
 import com.toolbox.lighting.FlashlightScreen
 import com.toolbox.everyday.random.RandomScreen
@@ -387,6 +395,10 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null, defaultScreen
                     composable<EyeTest> { ToolScreen("Eye Test", "eye_test", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is EyeTest) { EyeTestScreen() } }
                     composable<VoiceRecorder> { ToolScreen("Voice Recorder", "voice_recorder", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is VoiceRecorder) { VoiceRecorderScreen() } }
                     composable<PdfToolkit> { ToolScreen("PDF Toolkit", "pdf_toolkit", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is PdfToolkit) { PdfToolkitScreen() } }
+                    composable<ScreenshotStitcher> { ToolScreen("Screenshot Stitcher", "screenshot_stitcher", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ScreenshotStitcher) { ScreenshotStitcherScreen() } }
+                    composable<DocumentScanner> { ToolScreen("Document Scanner", "document_scanner", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is DocumentScanner) { DocumentScannerScreen() } }
+                    composable<ScreenRecorder> { ToolScreen("Screen Recorder", "screen_recorder", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ScreenRecorder) { ScreenRecorderScreen() } }
+                    composable<StatusSaver> { ToolScreen("Status Saver", "status_saver", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is StatusSaver) { StatusSaverScreen() } }
                 }
             }
         }
@@ -554,5 +566,9 @@ private fun toolDestination(toolId: String): Any? = when (toolId) {
     "eye_test" -> EyeTest
     "voice_recorder" -> VoiceRecorder
     "pdf_toolkit" -> PdfToolkit
+    "screenshot_stitcher" -> ScreenshotStitcher
+    "document_scanner" -> DocumentScanner
+    "screen_recorder" -> ScreenRecorder
+    "status_saver" -> StatusSaver
     else -> null
 }

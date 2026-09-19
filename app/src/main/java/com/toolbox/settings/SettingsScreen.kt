@@ -33,6 +33,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShieldMoon
+import androidx.compose.material.icons.filled.Star
+import com.toolbox.core.rate.PlayStoreLauncher
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -230,6 +232,39 @@ fun SettingsScreen() {
                             Text("Clear")
                         }
                     }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Support section
+        SectionHeader("Support")
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Card(
+            modifier = Modifier.clickable { PlayStoreLauncher.open(context) },
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text("Rate us on Play Store", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "A quick rating helps a lot",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }

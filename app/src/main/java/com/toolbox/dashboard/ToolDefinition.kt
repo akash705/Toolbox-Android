@@ -27,6 +27,18 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.Pin
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.QrCode2
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.ScreenRotation
@@ -601,5 +613,113 @@ val allTools = listOf(
         category = ToolCategory.ConversionCalculation,
         description = "Interactive unit circle for visualizing trigonometric functions. Drag to set the angle and see sin, cos, and tan values along with degree and radian readouts.",
         searchKeywords = listOf("unit", "circle", "trigonometry", "trig", "sin", "cos", "tan", "angle", "degree", "radian", "math"),
+    ),
+
+    // Batch 4 Tools
+    ToolDefinition(
+        id = "qr_generator",
+        name = "QR Generator",
+        icon = Icons.Default.QrCode2,
+        category = ToolCategory.EverydayTools,
+        description = "Generate QR codes for text, links, contacts, email, phone, SMS, and locations. Live preview, share as an image, or save to your gallery. Fully offline.",
+        searchKeywords = listOf("qr", "generate", "generator", "vcard", "contact", "url", "link", "code", "barcode"),
+    ),
+    ToolDefinition(
+        id = "notepad",
+        name = "Notepad",
+        icon = Icons.Default.EditNote,
+        category = ToolCategory.EverydayTools,
+        description = "A quick local scratchpad for notes. Autosaves as you type, works offline, and never leaves your device.",
+        searchKeywords = listOf("notepad", "notes", "note", "memo", "scratchpad", "text", "write"),
+    ),
+    ToolDefinition(
+        id = "focus_timer",
+        name = "Focus Timer",
+        icon = Icons.Default.Timelapse,
+        category = ToolCategory.EverydayTools,
+        description = "A Pomodoro focus timer with work and break cycles. Runs in the background so your session keeps counting with the screen off.",
+        searchKeywords = listOf("focus", "pomodoro", "timer", "productivity", "study", "work", "break"),
+    ),
+
+    // Batch 5 Tools
+    ToolDefinition(
+        id = "text_utilities",
+        name = "Text Utilities",
+        icon = Icons.Default.TextFields,
+        category = ToolCategory.EverydayTools,
+        description = "Transform and inspect text: change case, count words and characters, trim spaces, remove line breaks, slugify, and reverse.",
+        searchKeywords = listOf("text", "case", "uppercase", "lowercase", "word count", "character count", "slug", "trim"),
+    ),
+    ToolDefinition(
+        id = "hash_encode",
+        name = "Hash & Encode",
+        icon = Icons.Default.Tag,
+        category = ToolCategory.EverydayTools,
+        description = "Generate MD5, SHA-1 and SHA-256 hashes, plus Base64 and URL encoding for any text. Tap a result to copy.",
+        searchKeywords = listOf("hash", "md5", "sha", "sha256", "base64", "url encode", "checksum", "encode"),
+    ),
+    ToolDefinition(
+        id = "unit_price",
+        name = "Unit Price",
+        icon = Icons.Default.ShoppingCart,
+        category = ToolCategory.ConversionCalculation,
+        description = "Compare two products by price per unit to find the better value while shopping.",
+        searchKeywords = listOf("unit price", "compare", "cheaper", "per unit", "shopping", "grocery", "value"),
+    ),
+    ToolDefinition(
+        id = "bill_split",
+        name = "Bill Split",
+        icon = Icons.Default.Groups,
+        category = ToolCategory.ConversionCalculation,
+        description = "Split a bill across people with an optional tip, and see the per-person amount.",
+        searchKeywords = listOf("bill", "split", "tip", "restaurant", "share", "per person", "divide"),
+    ),
+    ToolDefinition(
+        id = "world_clock",
+        name = "World Clock",
+        icon = Icons.Default.Public,
+        category = ToolCategory.EverydayTools,
+        description = "See the current time in cities around the world at a glance. Add and remove cities; everything stays on your device.",
+        searchKeywords = listOf("world", "clock", "time", "timezone", "zone", "city", "utc", "gmt"),
+    ),
+    ToolDefinition(
+        id = "sleep_timer",
+        name = "Sleep Timer",
+        icon = Icons.Default.Bedtime,
+        category = ToolCategory.EverydayTools,
+        description = "Play gentle ambient sound for a set time to fall asleep to; it stops automatically when the timer ends.",
+        searchKeywords = listOf("sleep", "timer", "nap", "white noise", "ambient", "bedtime", "relax"),
+    ),
+    ToolDefinition(
+        id = "habit_tracker",
+        name = "Habit Tracker",
+        icon = Icons.Default.CheckCircle,
+        category = ToolCategory.EverydayTools,
+        description = "Track daily habits and build streaks. Mark each habit done every day and watch your streak grow.",
+        searchKeywords = listOf("habit", "tracker", "streak", "daily", "routine", "goal", "check"),
+    ),
+    ToolDefinition(
+        id = "eye_test",
+        name = "Eye Test",
+        icon = Icons.Default.Visibility,
+        category = ToolCategory.EverydayTools,
+        description = "Quick self-checks: a visual-acuity chart, an astigmatism fan, and a color-discrimination game. Not a medical diagnosis.",
+        searchKeywords = listOf("eye", "test", "vision", "acuity", "snellen", "astigmatism", "color blind", "sight"),
+    ),
+    ToolDefinition(
+        id = "voice_recorder",
+        name = "Voice Recorder",
+        icon = Icons.Default.Mic,
+        category = ToolCategory.EverydayTools,
+        description = "Record voice memos, play them back, share, and delete. Recordings stay on your device.",
+        searchKeywords = listOf("voice", "recorder", "record", "audio", "memo", "dictaphone", "sound"),
+    ),
+    ToolDefinition(
+        id = "pdf_toolkit",
+        name = "PDF Toolkit",
+        icon = Icons.Default.PictureAsPdf,
+        category = ToolCategory.EverydayTools,
+        description = "Merge, rotate, extract pages, and add your signature to PDF files. Runs fully offline on your device.",
+        searchKeywords = listOf("pdf", "merge", "combine", "rotate", "split", "extract", "sign", "signature", "document"),
     ),
 )

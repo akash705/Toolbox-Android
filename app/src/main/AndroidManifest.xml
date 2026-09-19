@@ -82,6 +82,19 @@
             android:name=".everyday.stopwatch.TimerAlarmReceiver"
             android:exported="false" />
 
+        <service
+            android:name=".everyday.focustimer.FocusTimerService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="timer_countdown" />
+        </service>
+
+        <receiver
+            android:name=".everyday.focustimer.FocusTimerAlarmReceiver"
+            android:exported="false" />
+
         <!-- FileProvider for sharing measurement cards -->
         <provider
             android:name="androidx.core.content.FileProvider"

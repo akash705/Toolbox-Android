@@ -73,6 +73,19 @@ import com.toolbox.lighting.screengrid.ScreenGridScreen
 import com.toolbox.everyday.ttsreader.TtsReaderScreen
 import com.toolbox.everyday.vibration.VibrationPatternsScreen
 import com.toolbox.everyday.ocr.OcrScreen
+import com.toolbox.everyday.qrgen.QrGeneratorScreen
+import com.toolbox.everyday.notepad.NotepadScreen
+import com.toolbox.everyday.focustimer.FocusTimerScreen
+import com.toolbox.everyday.textutils.TextUtilsScreen
+import com.toolbox.conversion.unitprice.UnitPriceScreen
+import com.toolbox.conversion.billsplit.BillSplitScreen
+import com.toolbox.everyday.hashencode.HashEncodeScreen
+import com.toolbox.everyday.worldclock.WorldClockScreen
+import com.toolbox.everyday.sleeptimer.SleepTimerScreen
+import com.toolbox.everyday.habits.HabitTrackerScreen
+import com.toolbox.everyday.eyetest.EyeTestScreen
+import com.toolbox.everyday.voicerecorder.VoiceRecorderScreen
+import com.toolbox.everyday.pdftoolkit.PdfToolkitScreen
 import com.toolbox.conversion.unitcircle.UnitCircleScreen
 import com.toolbox.lighting.FlashlightScreen
 import com.toolbox.everyday.random.RandomScreen
@@ -154,6 +167,19 @@ import com.toolbox.nav.TtsReader
 import com.toolbox.nav.VibrationPatterns
 import com.toolbox.nav.Ocr
 import com.toolbox.nav.UnitCircle
+import com.toolbox.nav.QrGenerator
+import com.toolbox.nav.Notepad
+import com.toolbox.nav.FocusTimer
+import com.toolbox.nav.TextUtils
+import com.toolbox.nav.UnitPrice
+import com.toolbox.nav.BillSplit
+import com.toolbox.nav.HashEncode
+import com.toolbox.nav.WorldClock
+import com.toolbox.nav.SleepTimer
+import com.toolbox.nav.HabitTracker
+import com.toolbox.nav.EyeTest
+import com.toolbox.nav.VoiceRecorder
+import com.toolbox.nav.PdfToolkit
 import com.toolbox.nav.RandomGenerator
 import com.toolbox.nav.Ruler
 import com.toolbox.nav.SoundMeter
@@ -175,6 +201,9 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null, defaultScreen
     ToolboxTheme(themeMode = themeMode) {
         Surface(modifier = Modifier.fillMaxSize()) {
             val navController = rememberNavController()
+
+            // Root-hosted "Rate us" prompt (renders as its own dialog window when eligible).
+            com.toolbox.core.rate.RatePrompt()
 
             // Determine start destination and initial Favorites tab state
             val isDefaultTool = defaultScreenId != "dashboard" && defaultScreenId != "favorites"
@@ -345,6 +374,19 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null, defaultScreen
                     composable<VibrationPatterns> { ToolScreen("Vibration Patterns", "vibration_patterns", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is VibrationPatterns) { VibrationPatternsScreen() } }
                     composable<Ocr> { ToolScreen("Text Scanner", "ocr", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Ocr) { OcrScreen() } }
                     composable<UnitCircle> { ToolScreen("Unit Circle", "unit_circle", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is UnitCircle) { UnitCircleScreen() } }
+                    composable<QrGenerator> { ToolScreen("QR Generator", "qr_generator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is QrGenerator) { QrGeneratorScreen() } }
+                    composable<Notepad> { ToolScreen("Notepad", "notepad", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Notepad) { NotepadScreen() } }
+                    composable<FocusTimer> { ToolScreen("Focus Timer", "focus_timer", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is FocusTimer) { FocusTimerScreen() } }
+                    composable<TextUtils> { ToolScreen("Text Utilities", "text_utilities", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is TextUtils) { TextUtilsScreen() } }
+                    composable<UnitPrice> { ToolScreen("Unit Price", "unit_price", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is UnitPrice) { UnitPriceScreen() } }
+                    composable<BillSplit> { ToolScreen("Bill Split", "bill_split", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is BillSplit) { BillSplitScreen() } }
+                    composable<HashEncode> { ToolScreen("Hash & Encode", "hash_encode", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is HashEncode) { HashEncodeScreen() } }
+                    composable<WorldClock> { ToolScreen("World Clock", "world_clock", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is WorldClock) { WorldClockScreen() } }
+                    composable<SleepTimer> { ToolScreen("Sleep Timer", "sleep_timer", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is SleepTimer) { SleepTimerScreen() } }
+                    composable<HabitTracker> { ToolScreen("Habit Tracker", "habit_tracker", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is HabitTracker) { HabitTrackerScreen() } }
+                    composable<EyeTest> { ToolScreen("Eye Test", "eye_test", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is EyeTest) { EyeTestScreen() } }
+                    composable<VoiceRecorder> { ToolScreen("Voice Recorder", "voice_recorder", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is VoiceRecorder) { VoiceRecorderScreen() } }
+                    composable<PdfToolkit> { ToolScreen("PDF Toolkit", "pdf_toolkit", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is PdfToolkit) { PdfToolkitScreen() } }
                 }
             }
         }
@@ -499,5 +541,18 @@ private fun toolDestination(toolId: String): Any? = when (toolId) {
     "vibration_patterns" -> VibrationPatterns
     "ocr" -> Ocr
     "unit_circle" -> UnitCircle
+    "qr_generator" -> QrGenerator
+    "notepad" -> Notepad
+    "focus_timer" -> FocusTimer
+    "text_utilities" -> TextUtils
+    "unit_price" -> UnitPrice
+    "bill_split" -> BillSplit
+    "hash_encode" -> HashEncode
+    "world_clock" -> WorldClock
+    "sleep_timer" -> SleepTimer
+    "habit_tracker" -> HabitTracker
+    "eye_test" -> EyeTest
+    "voice_recorder" -> VoiceRecorder
+    "pdf_toolkit" -> PdfToolkit
     else -> null
 }

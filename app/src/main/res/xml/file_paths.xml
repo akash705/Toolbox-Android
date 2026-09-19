@@ -2,4 +2,6 @@
 <paths>
     <cache-path name="shared_cards" path="shared_cards/" />
     <external-files-path name="mirror_captures" path="Pictures/" />
+    <files-path name="recordings" path="recordings/" />
+    <cache-path name="pdf_out" path="pdf_out/" />
 </paths>

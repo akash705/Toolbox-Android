@@ -92,3 +92,20 @@ import kotlinx.serialization.Serializable
 @Serializable object VibrationPatterns
 @Serializable object Ocr
 @Serializable object UnitCircle
+
+// Batch 4 Tools
+@Serializable object QrGenerator
+@Serializable object Notepad
+@Serializable object FocusTimer
+
+// Batch 5 Tools
+@Serializable object TextUtils
+@Serializable object UnitPrice
+@Serializable object BillSplit
+@Serializable object HashEncode
+@Serializable object WorldClock
+@Serializable object SleepTimer
+@Serializable object HabitTracker
+@Serializable object EyeTest
+@Serializable object VoiceRecorder
+@Serializable object PdfToolkit

@@ -24,9 +24,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -57,18 +59,42 @@ private enum class FlashMode(val label: String) {
     Strobe("Strobe"),
 }
 
+// Safety + hardware ceiling: setTorchMode cannot reliably toggle faster than this, and staying
+// below the 3-30 Hz photosensitive-seizure band keeps the strobe safer.
+private const val STROBE_MAX_HZ = 10f
+
 @Composable
 fun FlashlightScreen() {
     val context = LocalContext.current
     var isOn by remember { mutableStateOf(false) }
     var mode by remember { mutableStateOf(FlashMode.Steady) }
     var brightness by remember { mutableFloatStateOf(0.85f) }
+    var strobeHz by remember { mutableFloatStateOf(5f) }
+    var torchError by remember { mutableStateOf<String?>(null) }
+
+    val prefs = remember { context.getSharedPreferences("flashlight", Context.MODE_PRIVATE) }
+    var strobeAcknowledged by remember { mutableStateOf(prefs.getBoolean("strobe_ack", false)) }
+    var showStrobeCaution by remember { mutableStateOf(false) }
 
     val cameraManager = remember { context.getSystemService(Context.CAMERA_SERVICE) as CameraManager }
     val cameraId = remember {
         cameraManager.cameraIdList.firstOrNull { id ->
             cameraManager.getCameraCharacteristics(id)
                 .get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+        }
+    }
+
+    // Toggles the LED, distinguishing "no flash hardware" from "flash present but busy"
+    // (held by the camera/another app), so R22 can show the right message + screen fallback.
+    fun safeTorch(on: Boolean) {
+        if (cameraId == null) return
+        try {
+            cameraManager.setTorchMode(cameraId, on)
+            torchError = null
+        } catch (_: android.hardware.camera2.CameraAccessException) {
+            torchError = "The flashlight is in use by another app. Close it, or use Screen Flash instead."
+        } catch (_: Exception) {
+            torchError = "Couldn't control the flashlight right now."
         }
     }
 
@@ -83,18 +109,18 @@ fun FlashlightScreen() {
         }
     }
 
-    // Torch control with mode patterns
-    LaunchedEffect(isOn, mode) {
+    // Torch control with mode patterns. SOS/Strobe run inside this LaunchedEffect, whose scope
+    // survives the Activity's onStop — so they intentionally continue with the screen off. The
+    // torch is released on nav-away/exit by the DisposableEffect above (R23).
+    LaunchedEffect(isOn, mode, strobeHz, strobeAcknowledged) {
         if (cameraId == null) return@LaunchedEffect
         if (!isOn) {
-            try { cameraManager.setTorchMode(cameraId, false) } catch (_: Exception) {}
+            safeTorch(false)
             return@LaunchedEffect
         }
 
         when (mode) {
-            FlashMode.Steady -> {
-                try { cameraManager.setTorchMode(cameraId, true) } catch (_: Exception) {}
-            }
+            FlashMode.Steady -> safeTorch(true)
             FlashMode.SOS -> {
                 val dot = 200L
                 val dash = 600L
@@ -103,29 +129,23 @@ fun FlashlightScreen() {
                 val wordGap = 1400L
                 while (true) {
                     // S: ...
-                    repeat(3) {
-                        cameraManager.setTorchMode(cameraId, true); delay(dot)
-                        cameraManager.setTorchMode(cameraId, false); delay(gap)
-                    }
+                    repeat(3) { safeTorch(true); delay(dot); safeTorch(false); delay(gap) }
                     delay(letterGap)
                     // O: ---
-                    repeat(3) {
-                        cameraManager.setTorchMode(cameraId, true); delay(dash)
-                        cameraManager.setTorchMode(cameraId, false); delay(gap)
-                    }
+                    repeat(3) { safeTorch(true); delay(dash); safeTorch(false); delay(gap) }
                     delay(letterGap)
                     // S: ...
-                    repeat(3) {
-                        cameraManager.setTorchMode(cameraId, true); delay(dot)
-                        cameraManager.setTorchMode(cameraId, false); delay(gap)
-                    }
+                    repeat(3) { safeTorch(true); delay(dot); safeTorch(false); delay(gap) }
                     delay(wordGap)
                 }
             }
             FlashMode.Strobe -> {
+                // Gate strobe behind the one-time photosensitivity acknowledgement (R21).
+                if (!strobeAcknowledged) return@LaunchedEffect
+                val halfPeriod = (1000f / (2f * strobeHz.coerceIn(1f, STROBE_MAX_HZ))).toLong()
                 while (true) {
-                    cameraManager.setTorchMode(cameraId, true); delay(100)
-                    cameraManager.setTorchMode(cameraId, false); delay(100)
+                    safeTorch(true); delay(halfPeriod)
+                    safeTorch(false); delay(halfPeriod)
                 }
             }
         }
@@ -202,7 +222,12 @@ fun FlashlightScreen() {
                 FlashMode.entries.forEach { flashMode ->
                     FilterChip(
                         selected = mode == flashMode,
-                        onClick = { mode = flashMode },
+                        onClick = {
+                            mode = flashMode
+                            if (flashMode == FlashMode.Strobe && !strobeAcknowledged) {
+                                showStrobeCaution = true
+                            }
+                        },
                         label = { Text(flashMode.label) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -253,6 +278,43 @@ fun FlashlightScreen() {
                 }
             }
 
+            // Strobe rate slider + safety note (only in Strobe mode).
+            if (mode == FlashMode.Strobe) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Strobe rate", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                            Text("${strobeHz.toInt()} Hz", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        }
+                        Slider(
+                            value = strobeHz,
+                            onValueChange = { strobeHz = it },
+                            valueRange = 1f..STROBE_MAX_HZ,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text(
+                            "Caution: flashing light may affect people with photosensitive epilepsy.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+            }
+
+            torchError?.let {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Footer text
@@ -264,6 +326,36 @@ fun FlashlightScreen() {
             )
 
             Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        if (showStrobeCaution) {
+            AlertDialog(
+                onDismissRequest = {
+                    showStrobeCaution = false
+                    if (!strobeAcknowledged) mode = FlashMode.Steady
+                },
+                title = { Text("Photosensitivity warning") },
+                text = {
+                    Text(
+                        "Strobe mode flashes the light rapidly. This may trigger seizures in people " +
+                            "with photosensitive epilepsy. Point it away from faces and stop if anyone " +
+                            "feels unwell.",
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        strobeAcknowledged = true
+                        prefs.edit().putBoolean("strobe_ack", true).apply()
+                        showStrobeCaution = false
+                    }) { Text("I understand") }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showStrobeCaution = false
+                        mode = FlashMode.Steady
+                    }) { Text("Cancel") }
+                },
+            )
         }
     }
 }

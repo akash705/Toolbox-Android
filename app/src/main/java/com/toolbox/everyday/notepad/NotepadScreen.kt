@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
@@ -47,6 +49,7 @@ fun NotepadScreen(viewModel: NotepadViewModel = viewModel()) {
         NoteEditor(
             body = editor!!.body,
             onBodyChange = viewModel::onBodyChange,
+            onSave = viewModel::closeEditor,
         )
     } else {
         NoteList(
@@ -127,10 +130,19 @@ private fun NoteRow(note: Note, onOpen: () -> Unit, onDelete: () -> Unit) {
 }
 
 @Composable
-private fun NoteEditor(body: String, onBodyChange: (String) -> Unit) {
+private fun NoteEditor(body: String, onBodyChange: (String) -> Unit, onSave: () -> Unit) {
     val context = LocalContext.current
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Button(onClick = onSave) {
+                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Save")
+            }
             IconButton(
                 onClick = {
                     if (body.isNotBlank()) {

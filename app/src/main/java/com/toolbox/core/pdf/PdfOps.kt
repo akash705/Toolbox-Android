@@ -64,10 +64,10 @@ object PdfOps {
      * Stamp [signature] onto one page at a normalized rect (0..1 in page space), rebuilding the
      * whole PDF. Other pages are copied through the same raster path unchanged.
      */
-    fun signPage(
+    fun signPages(
         context: Context,
         uri: Uri,
-        pageIndex: Int,
+        pages: Set<Int>,
         signature: Bitmap,
         normLeft: Float,
         normTop: Float,
@@ -78,7 +78,7 @@ object PdfOps {
         val doc = PdfDocument()
         var i = 0
         forEachPage(context, uri) { bitmap, wPt, hPt ->
-            if (i == pageIndex) {
+            if (i in pages) {
                 val left = normLeft * bitmap.width
                 val top = normTop * bitmap.height
                 val right = (normLeft + normWidth) * bitmap.width

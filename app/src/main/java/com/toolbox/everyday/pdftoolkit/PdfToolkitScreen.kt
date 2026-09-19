@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -84,7 +85,7 @@ fun PdfToolkitScreen() {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(tab == 0, onClick = { tab = 0; status = Status.Idle }, label = { Text("Merge") })
             FilterChip(tab == 1, onClick = { tab = 1; status = Status.Idle }, label = { Text("Rotate") })
@@ -92,11 +93,17 @@ fun PdfToolkitScreen() {
             FilterChip(tab == 3, onClick = { tab = 3; status = Status.Idle }, label = { Text("Sign") })
         }
 
+        // The Sign tab must NOT be inside a verticalScroll — its draw pad and drag-to-place
+        // gestures would be stolen by the scroll. It manages its own layout.
         if (tab == 3) {
-            PdfSignSection()
+            Box(modifier = Modifier.fillMaxWidth().weight(1f)) { PdfSignSection() }
             return@Column
         }
 
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
         when (tab) {
             0 -> {
                 OutlinedButton(onClick = { pickMultiple.launch(arrayOf("application/pdf")) }, modifier = Modifier.fillMaxWidth()) {
@@ -166,6 +173,7 @@ fun PdfToolkitScreen() {
             "Output is rasterized (pages re-rendered as images), so text is not selectable. Fully offline.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        }
     }
 }
 

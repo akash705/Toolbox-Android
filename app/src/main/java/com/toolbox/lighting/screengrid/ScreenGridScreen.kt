@@ -2,6 +2,7 @@ package com.toolbox.lighting.screengrid
 
 import android.app.Activity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,6 +38,10 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Canvas
@@ -51,6 +59,7 @@ private enum class GridColor(val label: String, val fill: Color, val line: Color
 fun ScreenGridScreen() {
     var color by rememberSaveable { mutableStateOf(GridColor.WHITE) }
     var showGrid by rememberSaveable { mutableStateOf(true) }
+    var fullscreen by rememberSaveable { mutableStateOf(false) }
 
     // Keep the screen at full brightness while the tool is open so dust/scratches show clearly.
     val context = LocalContext.current
@@ -88,7 +97,10 @@ fun ScreenGridScreen() {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Background", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.padding(top = 4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                ) {
                     GridColor.entries.forEach { c ->
                         FilterChip(
                             selected = color == c,
@@ -98,8 +110,7 @@ fun ScreenGridScreen() {
                                     Box(
                                         modifier = Modifier
                                             .padding(end = 6.dp)
-                                            .width(12.dp)
-                                            .fillMaxHeight()
+                                            .size(14.dp)
                                             .clip(CircleShape)
                                             .background(c.fill),
                                     )
@@ -110,11 +121,18 @@ fun ScreenGridScreen() {
                     }
                 }
                 Spacer(Modifier.padding(top = 8.dp))
-                FilterChip(
-                    selected = showGrid,
-                    onClick = { showGrid = !showGrid },
-                    label = { Text(if (showGrid) "Grid: on" else "Grid: off") },
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = showGrid,
+                        onClick = { showGrid = !showGrid },
+                        label = { Text(if (showGrid) "Grid: on" else "Grid: off") },
+                    )
+                    FilterChip(
+                        selected = false,
+                        onClick = { fullscreen = true },
+                        label = { Text("Full screen") },
+                    )
+                }
                 Spacer(Modifier.padding(top = 8.dp))
                 Text(
                     "Hold the device close to the screen at an angle. Switch backgrounds to surface dust on light areas, scratches on dark, and pixel issues with red/green/blue.",
@@ -123,6 +141,48 @@ fun ScreenGridScreen() {
                     fontWeight = FontWeight.Normal,
                 )
             }
+        }
+    }
+
+    if (fullscreen) {
+        FullscreenGrid(color = color, showGrid = showGrid, onExit = { fullscreen = false })
+    }
+}
+
+@Composable
+private fun FullscreenGrid(color: GridColor, showGrid: Boolean, onExit: () -> Unit) {
+    Dialog(
+        onDismissRequest = onExit,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        val view = LocalView.current
+        DisposableEffect(Unit) {
+            val window = (view.parent as? DialogWindowProvider)?.window
+            window?.let { w ->
+                w.setLayout(
+                    android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                    android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                )
+                w.attributes = w.attributes.apply { screenBrightness = 1f }
+                androidx.core.view.WindowCompat.setDecorFitsSystemWindows(w, false)
+                val controller = androidx.core.view.WindowInsetsControllerCompat(w, view)
+                controller.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+                controller.systemBarsBehavior =
+                    androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+            onDispose { }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color.fill)
+                .clickable(
+                    interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                    indication = null,
+                    onClick = onExit,
+                ),
+        ) {
+            if (showGrid) GridOverlay(color.line)
         }
     }
 }

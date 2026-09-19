@@ -73,6 +73,27 @@ import com.toolbox.lighting.screengrid.ScreenGridScreen
 import com.toolbox.everyday.ttsreader.TtsReaderScreen
 import com.toolbox.everyday.vibration.VibrationPatternsScreen
 import com.toolbox.everyday.ocr.OcrScreen
+import com.toolbox.everyday.qrgen.QrGeneratorScreen
+import com.toolbox.everyday.notepad.NotepadScreen
+import com.toolbox.everyday.focustimer.FocusTimerScreen
+import com.toolbox.everyday.textutils.TextUtilsScreen
+import com.toolbox.conversion.unitprice.UnitPriceScreen
+import com.toolbox.conversion.billsplit.BillSplitScreen
+import com.toolbox.everyday.hashencode.HashEncodeScreen
+import com.toolbox.everyday.worldclock.WorldClockScreen
+import com.toolbox.everyday.sleeptimer.SleepTimerScreen
+import com.toolbox.everyday.habits.HabitTrackerScreen
+import com.toolbox.everyday.eyetest.EyeTestScreen
+import com.toolbox.everyday.voicerecorder.VoiceRecorderScreen
+import com.toolbox.everyday.pdftoolkit.PdfToolkitScreen
+import com.toolbox.everyday.stitcher.ScreenshotStitcherScreen
+import com.toolbox.everyday.docscanner.DocumentScannerScreen
+import com.toolbox.everyday.screenrecorder.ScreenRecorderScreen
+import com.toolbox.everyday.statussaver.StatusSaverScreen
+import com.toolbox.nav.ScreenshotStitcher
+import com.toolbox.nav.DocumentScanner
+import com.toolbox.nav.ScreenRecorder
+import com.toolbox.nav.StatusSaver
 import com.toolbox.conversion.unitcircle.UnitCircleScreen
 import com.toolbox.lighting.FlashlightScreen
 import com.toolbox.everyday.random.RandomScreen
@@ -154,6 +175,19 @@ import com.toolbox.nav.TtsReader
 import com.toolbox.nav.VibrationPatterns
 import com.toolbox.nav.Ocr
 import com.toolbox.nav.UnitCircle
+import com.toolbox.nav.QrGenerator
+import com.toolbox.nav.Notepad
+import com.toolbox.nav.FocusTimer
+import com.toolbox.nav.TextUtils
+import com.toolbox.nav.UnitPrice
+import com.toolbox.nav.BillSplit
+import com.toolbox.nav.HashEncode
+import com.toolbox.nav.WorldClock
+import com.toolbox.nav.SleepTimer
+import com.toolbox.nav.HabitTracker
+import com.toolbox.nav.EyeTest
+import com.toolbox.nav.VoiceRecorder
+import com.toolbox.nav.PdfToolkit
 import com.toolbox.nav.RandomGenerator
 import com.toolbox.nav.Ruler
 import com.toolbox.nav.SoundMeter
@@ -175,6 +209,9 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null, defaultScreen
     ToolboxTheme(themeMode = themeMode) {
         Surface(modifier = Modifier.fillMaxSize()) {
             val navController = rememberNavController()
+
+            // Root-hosted "Rate us" prompt (renders as its own dialog window when eligible).
+            com.toolbox.core.rate.RatePrompt()
 
             // Determine start destination and initial Favorites tab state
             val isDefaultTool = defaultScreenId != "dashboard" && defaultScreenId != "favorites"
@@ -345,6 +382,23 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null, defaultScreen
                     composable<VibrationPatterns> { ToolScreen("Vibration Patterns", "vibration_patterns", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is VibrationPatterns) { VibrationPatternsScreen() } }
                     composable<Ocr> { ToolScreen("Text Scanner", "ocr", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Ocr) { OcrScreen() } }
                     composable<UnitCircle> { ToolScreen("Unit Circle", "unit_circle", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is UnitCircle) { UnitCircleScreen() } }
+                    composable<QrGenerator> { ToolScreen("QR Generator", "qr_generator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is QrGenerator, accent = androidx.compose.ui.graphics.Color(0xFF00897B)) { QrGeneratorScreen() } }
+                    composable<Notepad> { ToolScreen("Notepad", "notepad", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is Notepad, accent = androidx.compose.ui.graphics.Color(0xFFF9A825)) { NotepadScreen() } }
+                    composable<FocusTimer> { ToolScreen("Focus Timer", "focus_timer", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is FocusTimer) { FocusTimerScreen() } }
+                    composable<TextUtils> { ToolScreen("Text Utilities", "text_utilities", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is TextUtils, accent = androidx.compose.ui.graphics.Color(0xFF3949AB)) { TextUtilsScreen() } }
+                    composable<UnitPrice> { ToolScreen("Unit Price", "unit_price", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is UnitPrice, accent = androidx.compose.ui.graphics.Color(0xFF2E7D32)) { UnitPriceScreen() } }
+                    composable<BillSplit> { ToolScreen("Bill Split", "bill_split", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is BillSplit, accent = androidx.compose.ui.graphics.Color(0xFF43A047)) { BillSplitScreen() } }
+                    composable<HashEncode> { ToolScreen("Hash & Encode", "hash_encode", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is HashEncode, accent = androidx.compose.ui.graphics.Color(0xFF5E35B1)) { HashEncodeScreen() } }
+                    composable<WorldClock> { ToolScreen("World Clock", "world_clock", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is WorldClock, accent = androidx.compose.ui.graphics.Color(0xFF1E88E5)) { WorldClockScreen() } }
+                    composable<SleepTimer> { ToolScreen("Sleep Timer", "sleep_timer", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is SleepTimer, accent = androidx.compose.ui.graphics.Color(0xFF3F51B5)) { SleepTimerScreen() } }
+                    composable<HabitTracker> { ToolScreen("Habit Tracker", "habit_tracker", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is HabitTracker, accent = androidx.compose.ui.graphics.Color(0xFFEF6C00)) { HabitTrackerScreen() } }
+                    composable<EyeTest> { ToolScreen("Eye Test", "eye_test", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is EyeTest, accent = androidx.compose.ui.graphics.Color(0xFF00ACC1)) { EyeTestScreen() } }
+                    composable<VoiceRecorder> { ToolScreen("Voice Recorder", "voice_recorder", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is VoiceRecorder, accent = androidx.compose.ui.graphics.Color(0xFFD81B60)) { VoiceRecorderScreen() } }
+                    composable<PdfToolkit> { ToolScreen("PDF Toolkit", "pdf_toolkit", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is PdfToolkit, accent = androidx.compose.ui.graphics.Color(0xFFE53935)) { PdfToolkitScreen() } }
+                    composable<ScreenshotStitcher> { ToolScreen("Screenshot Stitcher", "screenshot_stitcher", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ScreenshotStitcher, accent = androidx.compose.ui.graphics.Color(0xFF8E24AA)) { ScreenshotStitcherScreen() } }
+                    composable<DocumentScanner> { ToolScreen("Document Scanner", "document_scanner", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is DocumentScanner, accent = androidx.compose.ui.graphics.Color(0xFF039BE5)) { DocumentScannerScreen() } }
+                    composable<ScreenRecorder> { ToolScreen("Screen Recorder", "screen_recorder", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ScreenRecorder, accent = androidx.compose.ui.graphics.Color(0xFFC62828)) { ScreenRecorderScreen() } }
+                    composable<StatusSaver> { ToolScreen("Status Saver", "status_saver", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is StatusSaver, accent = androidx.compose.ui.graphics.Color(0xFF2E7D32)) { StatusSaverScreen() } }
                 }
             }
         }
@@ -360,6 +414,7 @@ private fun ToolScreen(
     sharedTransitionScope: SharedTransitionScope? = null,
     animatedVisibilityScope: AnimatedVisibilityScope? = null,
     isDefaultRoot: Boolean = false,
+    accent: androidx.compose.ui.graphics.Color? = null,
     content: @Composable () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -421,7 +476,36 @@ private fun ToolScreen(
         },
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
-            content()
+            if (accent != null) {
+                androidx.compose.runtime.CompositionLocalProvider(
+                    com.toolbox.core.ui.LocalAccent provides accent,
+                ) {
+                    // Recolor the tool's content so buttons, result numbers, chips and sliders
+                    // pick up the tool's vivid accent automatically.
+                    MaterialTheme(
+                        colorScheme = MaterialTheme.colorScheme.copy(
+                            primary = accent,
+                            onPrimary = androidx.compose.ui.graphics.Color.White,
+                            outline = accent,
+                            outlineVariant = accent.copy(alpha = 0.5f),
+                        ),
+                        typography = MaterialTheme.typography,
+                        shapes = MaterialTheme.shapes,
+                    ) {
+                        com.toolbox.core.ui.PlayfulEntrance {
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                val toolIcon = allTools.find { it.id == toolId }?.icon
+                                if (toolIcon != null) {
+                                    com.toolbox.core.ui.ToolIntro(icon = toolIcon, title = title, subtitle = helpText)
+                                }
+                                Box(modifier = Modifier.weight(1f).fillMaxWidth()) { content() }
+                            }
+                        }
+                    }
+                }
+            } else {
+                content()
+            }
         }
     }
 }
@@ -499,5 +583,22 @@ private fun toolDestination(toolId: String): Any? = when (toolId) {
     "vibration_patterns" -> VibrationPatterns
     "ocr" -> Ocr
     "unit_circle" -> UnitCircle
+    "qr_generator" -> QrGenerator
+    "notepad" -> Notepad
+    "focus_timer" -> FocusTimer
+    "text_utilities" -> TextUtils
+    "unit_price" -> UnitPrice
+    "bill_split" -> BillSplit
+    "hash_encode" -> HashEncode
+    "world_clock" -> WorldClock
+    "sleep_timer" -> SleepTimer
+    "habit_tracker" -> HabitTracker
+    "eye_test" -> EyeTest
+    "voice_recorder" -> VoiceRecorder
+    "pdf_toolkit" -> PdfToolkit
+    "screenshot_stitcher" -> ScreenshotStitcher
+    "document_scanner" -> DocumentScanner
+    "screen_recorder" -> ScreenRecorder
+    "status_saver" -> StatusSaver
     else -> null
 }

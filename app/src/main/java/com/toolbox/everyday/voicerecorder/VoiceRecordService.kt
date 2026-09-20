@@ -90,6 +90,7 @@ class VoiceRecordService : Service() {
         }.isSuccess
         if (!started) {
             runCatching { rec.release() }
+            runCatching { file.delete() } // don't leave a 0-byte/corrupt orphan behind
             stopRecording()
             return START_NOT_STICKY
         }

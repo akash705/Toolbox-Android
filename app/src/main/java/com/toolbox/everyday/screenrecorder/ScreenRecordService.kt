@@ -54,14 +54,21 @@ class ScreenRecordService : Service() {
             stopRecording()
             return START_NOT_STICKY
         }
-        ServiceCompat.startForeground(this, NOTIF_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+
+        val withAudio = intent?.getBooleanExtra(EXTRA_AUDIO, false) ?: false
+        // On Android 14+ a FGS that captures the mic must ALSO declare the microphone type,
+        // otherwise the mic is muted once the app leaves the foreground (the whole point here).
+        val fgsType = if (withAudio) {
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+        } else {
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+        }
+        ServiceCompat.startForeground(this, NOTIF_ID, buildNotification(), fgsType)
 
         val code = intent?.getIntExtra(EXTRA_CODE, 0) ?: 0
         @Suppress("DEPRECATION")
         val data: Intent? = intent?.getParcelableExtra(EXTRA_DATA)
         if (data == null) { stopSelf(); return START_NOT_STICKY }
-
-        val withAudio = intent?.getBooleanExtra(EXTRA_AUDIO, false) ?: false
 
         val mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         val proj = mpm.getMediaProjection(code, data) ?: run { stopSelf(); return START_NOT_STICKY }
@@ -70,7 +77,10 @@ class ScreenRecordService : Service() {
         }, null)
         projection = proj
 
-        startRecording(proj, withAudio)
+        // Encoder config (bitrate/fps/resolution) can be rejected by some devices' encoders;
+        // fail gracefully instead of crashing the process and orphaning the projection.
+        val started = runCatching { startRecording(proj, withAudio) }.isSuccess
+        if (!started) { stopRecording(); return START_NOT_STICKY }
         ScreenRecordState.set(true)
         return START_NOT_STICKY
     }

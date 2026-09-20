@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -120,8 +121,11 @@ fun VoiceRecorderScreen() {
                     file = file,
                     onPlay = {
                         runCatching { player?.release() }
-                        player = MediaPlayer().apply {
-                            setDataSource(file.absolutePath); prepare(); start()
+                        player = runCatching {
+                            MediaPlayer().apply { setDataSource(file.absolutePath); prepare(); start() }
+                        }.getOrElse {
+                            Toast.makeText(context, "This recording is damaged and can't be played", Toast.LENGTH_SHORT).show()
+                            null
                         }
                     },
                     onShare = { shareFile(context, file) },
@@ -149,7 +153,10 @@ private fun RecordingRow(file: File, onPlay: () -> Unit, onShare: () -> Unit, on
 }
 
 private fun listFiles(dir: File): List<File> =
-    dir.listFiles { f -> f.extension == "m4a" }?.sortedByDescending { it.lastModified() } ?: emptyList()
+    dir.listFiles { f -> f.extension == "m4a" }
+        ?.onEach { if (it.length() == 0L) it.delete() } // purge orphaned/failed recordings
+        ?.filter { it.length() > 0L }
+        ?.sortedByDescending { it.lastModified() } ?: emptyList()
 
 private fun shareFile(context: Context, file: File) {
     val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)

@@ -32,6 +32,8 @@
 
     <!-- Duplicate Photo Finder reads the image library (requested lazily when the tool opens). -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Android 14+ "Select photos" partial grant; the tool detects it and asks for full access. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
     <!-- Pre-API-33 equivalent, also used by Storage Analyzer's API 26-29 fallback. -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -112,7 +114,7 @@
 
         <service
             android:name=".everyday.screenrecorder.ScreenRecordService"
-            android:foregroundServiceType="mediaProjection"
+            android:foregroundServiceType="mediaProjection|microphone"
             android:exported="false" />
 
         <service

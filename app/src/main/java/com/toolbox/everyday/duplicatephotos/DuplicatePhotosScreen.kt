@@ -2,12 +2,14 @@ package com.toolbox.everyday.duplicatephotos
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -67,9 +69,22 @@ fun DuplicatePhotosScreen() {
 
     var state by remember { mutableStateOf<ScanState>(if (hasPermission(context, permission)) ScanState.Idle else ScanState.NeedsPermission) }
     var selected by remember { mutableStateOf<Set<Uri>>(emptySet()) }
+    var partialAccess by remember { mutableStateOf(false) }
 
     val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        state = if (granted) ScanState.Idle else ScanState.NeedsPermission
+        if (granted) {
+            partialAccess = false
+            state = ScanState.Idle
+        } else {
+            // On Android 14+ "Select photos" grants READ_MEDIA_VISUAL_USER_SELECTED, not full access.
+            partialAccess = Build.VERSION.SDK_INT >= 34 &&
+                context.checkSelfPermission(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) == PackageManager.PERMISSION_GRANTED
+            state = ScanState.NeedsPermission
+        }
+    }
+
+    val settingsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (hasPermission(context, permission)) { partialAccess = false; state = ScanState.Idle }
     }
 
     fun startScan() {
@@ -107,8 +122,20 @@ fun DuplicatePhotosScreen() {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         when (val s = state) {
             ScanState.NeedsPermission -> {
-                Text("Find exact duplicate photos and free up space. Grant photo access to scan.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Button(onClick = { permLauncher.launch(permission) }, modifier = Modifier.fillMaxWidth()) { Text("Grant photo access") }
+                if (partialAccess) {
+                    Text("You allowed access to only some photos. Duplicate scanning needs access to all photos — open Settings ▸ Permissions ▸ Photos and choose “Allow all”.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Button(
+                        onClick = {
+                            settingsLauncher.launch(
+                                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")),
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Open settings") }
+                } else {
+                    Text("Find exact duplicate photos and free up space. Grant photo access to scan.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Button(onClick = { permLauncher.launch(permission) }, modifier = Modifier.fillMaxWidth()) { Text("Grant photo access") }
+                }
             }
             ScanState.Idle -> {
                 Text("Scans your photo library for images with identical content. Nothing is uploaded — analysis is entirely on-device.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -159,9 +186,10 @@ private fun ColumnScope.ResultsView(
                             Thumbnail(photo.uri)
                             Column(Modifier.weight(1f).padding(start = 10.dp)) {
                                 Text(photo.displayName, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
-                                Text(if (index == 0) "Newest — kept by default" else "Duplicate", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(if (index == 0) "Newest — always kept" else "Duplicate", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Checkbox(checked = photo.uri in selected, onCheckedChange = { onToggle(photo.uri) })
+                            // The newest copy's checkbox is locked so at least one copy always survives.
+                            Checkbox(checked = photo.uri in selected, enabled = index != 0, onCheckedChange = { onToggle(photo.uri) })
                         }
                     }
                 }

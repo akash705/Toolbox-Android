@@ -82,6 +82,7 @@ dependencies {
 
     implementation(libs.zxing.core)
     implementation(libs.mlkit.text.recognition)
+    implementation(libs.mlkit.document.scanner)
 
     implementation(libs.activity.compose)
     implementation(libs.core.ktx)

@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -64,59 +66,28 @@ fun VoiceRecorderScreen() {
     val context = LocalContext.current
     val dir = remember { File(context.filesDir, "recordings").apply { mkdirs() } }
 
-    var recording by remember { mutableStateOf(false) }
-    var elapsed by remember { mutableIntStateOf(0) }
-    var recorder by remember { mutableStateOf<MediaRecorder?>(null) }
-    var currentFile by remember { mutableStateOf<File?>(null) }
+    val recording by VoiceRecordState.recording.collectAsState()
+    val elapsed by VoiceRecordState.elapsedSec.collectAsState()
     var files by remember { mutableStateOf(listFiles(dir)) }
     var player by remember { mutableStateOf<MediaPlayer?>(null) }
 
-    fun startRecording() {
-        val file = File(dir, "rec_${System.currentTimeMillis()}.m4a")
-        val rec = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) MediaRecorder(context) else @Suppress("DEPRECATION") MediaRecorder()
-        rec.apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setOutputFile(file.absolutePath)
-            prepare()
-            start()
-        }
-        recorder = rec
-        currentFile = file
-        elapsed = 0
-        recording = true
-    }
-
-    fun stopRecording() {
-        runCatching { recorder?.stop() }
-        runCatching { recorder?.release() }
-        recorder = null
-        recording = false
-        files = listFiles(dir)
-    }
-
     val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) startRecording()
+        if (granted) VoiceRecordService.start(context)
     }
 
     fun onMicTap() {
         if (recording) {
-            stopRecording()
+            VoiceRecordService.stop(context)
         } else {
             val granted = context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-            if (granted) startRecording() else micPermission.launch(Manifest.permission.RECORD_AUDIO)
+            if (granted) VoiceRecordService.start(context) else micPermission.launch(Manifest.permission.RECORD_AUDIO)
         }
     }
 
-    LaunchedEffect(recording) {
-        while (recording) { delay(1000); elapsed += 1 }
-    }
+    // Refresh the recordings list whenever a recording finishes.
+    LaunchedEffect(recording) { if (!recording) files = listFiles(dir) }
     DisposableEffect(Unit) {
-        onDispose {
-            runCatching { recorder?.release() }
-            runCatching { player?.release() }
-        }
+        onDispose { runCatching { player?.release() } }
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -150,8 +121,11 @@ fun VoiceRecorderScreen() {
                     file = file,
                     onPlay = {
                         runCatching { player?.release() }
-                        player = MediaPlayer().apply {
-                            setDataSource(file.absolutePath); prepare(); start()
+                        player = runCatching {
+                            MediaPlayer().apply { setDataSource(file.absolutePath); prepare(); start() }
+                        }.getOrElse {
+                            Toast.makeText(context, "This recording is damaged and can't be played", Toast.LENGTH_SHORT).show()
+                            null
                         }
                     },
                     onShare = { shareFile(context, file) },
@@ -179,7 +153,10 @@ private fun RecordingRow(file: File, onPlay: () -> Unit, onShare: () -> Unit, on
 }
 
 private fun listFiles(dir: File): List<File> =
-    dir.listFiles { f -> f.extension == "m4a" }?.sortedByDescending { it.lastModified() } ?: emptyList()
+    dir.listFiles { f -> f.extension == "m4a" }
+        ?.onEach { if (it.length() == 0L) it.delete() } // purge orphaned/failed recordings
+        ?.filter { it.length() > 0L }
+        ?.sortedByDescending { it.lastModified() } ?: emptyList()
 
 private fun shareFile(context: Context, file: File) {
     val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)

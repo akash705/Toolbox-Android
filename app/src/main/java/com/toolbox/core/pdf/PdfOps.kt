@@ -61,6 +61,38 @@ object PdfOps {
     }
 
     /**
+     * Rebuild a PDF with its pages in the given output order. [order] holds 0-based source page
+     * indices in the desired sequence (a permutation; out-of-range entries are skipped).
+     */
+    fun reorder(context: Context, uri: Uri, order: List<Int>, out: File) {
+        val doc = PdfDocument()
+        openFd(context, uri)?.use { fd ->
+            PdfRenderer(fd).use { renderer ->
+                var outIndex = 0
+                for (srcIndex in order) {
+                    if (srcIndex !in 0 until renderer.pageCount) continue
+                    renderer.openPage(srcIndex).use { page ->
+                        val wPt = page.width
+                        val hPt = page.height
+                        val bmp = Bitmap.createBitmap(
+                            (wPt * RENDER_SCALE).toInt().coerceAtLeast(1),
+                            (hPt * RENDER_SCALE).toInt().coerceAtLeast(1),
+                            Bitmap.Config.ARGB_8888,
+                        )
+                        Canvas(bmp).drawColor(Color.WHITE)
+                        val m = Matrix().apply { setScale(RENDER_SCALE, RENDER_SCALE) }
+                        page.render(bmp, null, m, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                        writePage(doc, bmp, wPt, hPt, outIndex++)
+                        bmp.recycle()
+                    }
+                }
+            }
+        }
+        doc.writeTo(FileOutputStream(out))
+        doc.close()
+    }
+
+    /**
      * Stamp [signature] onto one page at a normalized rect (0..1 in page space), rebuilding the
      * whole PDF. Other pages are copied through the same raster path unchanged.
      */

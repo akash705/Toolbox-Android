@@ -90,10 +90,14 @@ import com.toolbox.everyday.stitcher.ScreenshotStitcherScreen
 import com.toolbox.everyday.docscanner.DocumentScannerScreen
 import com.toolbox.everyday.screenrecorder.ScreenRecorderScreen
 import com.toolbox.everyday.statussaver.StatusSaverScreen
+import com.toolbox.everyday.duplicatephotos.DuplicatePhotosScreen
+import com.toolbox.everyday.storageanalyzer.StorageAnalyzerScreen
 import com.toolbox.nav.ScreenshotStitcher
 import com.toolbox.nav.DocumentScanner
 import com.toolbox.nav.ScreenRecorder
 import com.toolbox.nav.StatusSaver
+import com.toolbox.nav.DuplicatePhotos
+import com.toolbox.nav.StorageAnalyzer
 import com.toolbox.conversion.unitcircle.UnitCircleScreen
 import com.toolbox.lighting.FlashlightScreen
 import com.toolbox.everyday.random.RandomScreen
@@ -399,6 +403,8 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null, defaultScreen
                     composable<DocumentScanner> { ToolScreen("Document Scanner", "document_scanner", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is DocumentScanner, accent = androidx.compose.ui.graphics.Color(0xFF039BE5)) { DocumentScannerScreen() } }
                     composable<ScreenRecorder> { ToolScreen("Screen Recorder", "screen_recorder", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ScreenRecorder, accent = androidx.compose.ui.graphics.Color(0xFFC62828)) { ScreenRecorderScreen() } }
                     composable<StatusSaver> { ToolScreen("Status Saver", "status_saver", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is StatusSaver, accent = androidx.compose.ui.graphics.Color(0xFF2E7D32)) { StatusSaverScreen() } }
+                    composable<DuplicatePhotos> { ToolScreen("Duplicate Photos", "duplicate_photos", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is DuplicatePhotos, accent = androidx.compose.ui.graphics.Color(0xFFF4511E)) { DuplicatePhotosScreen() } }
+                    composable<StorageAnalyzer> { ToolScreen("Storage Analyzer", "storage_analyzer", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is StorageAnalyzer, accent = androidx.compose.ui.graphics.Color(0xFF5E35B1)) { StorageAnalyzerScreen() } }
                 }
             }
         }
@@ -600,5 +606,7 @@ private fun toolDestination(toolId: String): Any? = when (toolId) {
     "document_scanner" -> DocumentScanner
     "screen_recorder" -> ScreenRecorder
     "status_saver" -> StatusSaver
+    "duplicate_photos" -> DuplicatePhotos
+    "storage_analyzer" -> StorageAnalyzer
     else -> null
 }

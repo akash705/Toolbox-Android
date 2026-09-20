@@ -1,15 +1,14 @@
 package com.toolbox.everyday.docscanner
 
-import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,16 +16,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,10 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
 import androidx.core.content.FileProvider
-import com.toolbox.core.pdf.PdfOps
+import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,91 +45,91 @@ import java.io.File
 fun DocumentScannerScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var pages by remember { mutableStateOf<List<Uri>>(emptyList()) }
-    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
     var working by remember { mutableStateOf(false) }
     var resultFile by remember { mutableStateOf<File?>(null) }
+    var error by remember { mutableStateOf<String?>(null) }
 
-    val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success) pendingCameraUri?.let { pages = pages + it }
-        pendingCameraUri = null
-        resultFile = null
-    }
-    val pickImages = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) {
-        pages = pages + it; resultFile = null
-    }
-    val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) launchCamera(context, { pendingCameraUri = it }, takePicture)
+    val scanner = remember {
+        val options = GmsDocumentScannerOptions.Builder()
+            .setGalleryImportAllowed(true)
+            .setPageLimit(30)
+            .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_PDF)
+            .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+            .build()
+        GmsDocumentScanning.getClient(options)
     }
 
-    fun onAddCamera() {
-        val granted = context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-        if (granted) launchCamera(context, { pendingCameraUri = it }, takePicture)
-        else cameraPermission.launch(Manifest.permission.CAMERA)
+    val scanLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { res ->
+        if (res.resultCode != Activity.RESULT_OK) return@rememberLauncherForActivityResult
+        val pdfUri = GmsDocumentScanningResult.fromActivityResultIntent(res.data)?.pdf?.uri
+        if (pdfUri == null) { error = "No document was captured."; return@rememberLauncherForActivityResult }
+        working = true; error = null; resultFile = null
+        scope.launch {
+            try {
+                val out = withContext(Dispatchers.IO) { copyToCache(context, pdfUri) }
+                resultFile = out
+            } catch (e: Exception) {
+                error = e.message ?: "Could not save the scan"
+            }
+            working = false
+        }
+    }
+
+    fun startScan() {
+        error = null
+        val activity = context.findActivity()
+        if (activity == null) { error = "Could not start the scanner."; return }
+        scanner.getStartScanIntent(activity)
+            .addOnSuccessListener { sender ->
+                scanLauncher.launch(IntentSenderRequest.Builder(sender).build())
+            }
+            .addOnFailureListener { e ->
+                error = "Scanner unavailable: ${e.message ?: "Google Play services required"}"
+            }
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { onAddCamera() }, modifier = Modifier.weight(1f)) { Text("Camera") }
-            OutlinedButton(onClick = { pickImages.launch(arrayOf("image/*")) }, modifier = Modifier.weight(1f)) { Text("Gallery") }
-        }
-
-        if (pages.isNotEmpty()) {
-            Text("${pages.size} page(s)", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                itemsIndexed(pages) { index, _ ->
-                    Box(
-                        modifier = Modifier.size(72.dp).clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("${index + 1}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-            OutlinedButton(onClick = { pages = emptyList(); resultFile = null }, modifier = Modifier.fillMaxWidth()) { Text("Clear") }
-        }
-
+        Text(
+            "Point the camera at a document. Edges are detected and perspective is corrected automatically — you can crop, rotate, and add more pages before exporting.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Button(
-            onClick = {
-                working = true
-                scope.launch {
-                    try {
-                        val outDir = File(context.cacheDir, "pdf_out").apply { mkdirs() }
-                        val out = File(outDir, "scan_${System.currentTimeMillis()}.pdf")
-                        withContext(Dispatchers.IO) { PdfOps.imagesToPdf(context, pages, out) }
-                        resultFile = out
-                    } finally { working = false }
-                }
-            },
-            enabled = pages.isNotEmpty() && !working,
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Export as PDF") }
+            onClick = { startScan() },
+            enabled = !working,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+        ) { Text("Scan document") }
 
         if (working) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                CircularProgressIndicator(Modifier.width(20.dp).height(20.dp)); Spacer(Modifier.width(8.dp)); Text("Building PDF…")
+                CircularProgressIndicator(Modifier.width(20.dp).height(20.dp))
+                Spacer(Modifier.width(8.dp)); Text("Saving PDF…")
             }
         }
+        error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         resultFile?.let { f ->
+            Text("Scan ready!", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
             Button(onClick = { sharePdf(context, f) }, modifier = Modifier.fillMaxWidth()) { Text("Share PDF") }
         }
     }
 }
 
-private fun launchCamera(
-    context: Context,
-    setUri: (Uri) -> Unit,
-    launcher: androidx.activity.result.ActivityResultLauncher<Uri>,
-) {
-    val dir = File(context.cacheDir, "scans").apply { mkdirs() }
-    val file = File(dir, "scan_${System.currentTimeMillis()}.jpg")
-    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-    setUri(uri)
-    launcher.launch(uri)
+private fun copyToCache(context: Context, uri: Uri): File {
+    val outDir = File(context.cacheDir, "pdf_out").apply { mkdirs() }
+    val out = File(outDir, "scan_${System.currentTimeMillis()}.pdf")
+    context.contentResolver.openInputStream(uri)?.use { input ->
+        out.outputStream().use { input.copyTo(it) }
+    } ?: throw IllegalStateException("Could not read the scanned document")
+    return out
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 private fun sharePdf(context: Context, file: File) {

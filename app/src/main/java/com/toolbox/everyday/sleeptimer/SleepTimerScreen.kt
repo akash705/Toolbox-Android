@@ -15,46 +15,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.toolbox.core.audio.NoiseEngine
-import kotlinx.coroutines.delay
 
 @Composable
 fun SleepTimerScreen() {
-    val engine = remember { NoiseEngine() }
+    val context = LocalContext.current
     var durationMin by remember { mutableIntStateOf(15) }
-    var running by remember { mutableStateOf(false) }
-    var remainingSec by remember { mutableIntStateOf(0) }
-
-    DisposableEffect(Unit) { onDispose { engine.stop() } }
-
-    LaunchedEffect(running) {
-        if (running) {
-            engine.start()
-            while (remainingSec > 0 && running) {
-                delay(1000)
-                remainingSec -= 1
-            }
-            if (remainingSec <= 0) {
-                engine.stop()
-                running = false
-            }
-        } else {
-            engine.stop()
-        }
-    }
+    val running by SleepTimerState.running.collectAsState()
+    val remainingSec by SleepTimerState.remainingSec.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -68,7 +47,7 @@ fun SleepTimerScreen() {
                 "%02d:%02d".format(remainingSec / 60, remainingSec % 60),
                 fontSize = 64.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace,
             )
-            OutlinedButton(onClick = { running = false }, shape = RoundedCornerShape(50)) { Text("Stop now") }
+            OutlinedButton(onClick = { SleepAudioService.stop(context) }, shape = RoundedCornerShape(50)) { Text("Stop now") }
         } else {
             Text("Play ambient sound for", style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -82,12 +61,12 @@ fun SleepTimerScreen() {
             }
             Spacer(Modifier.height(8.dp))
             Button(
-                onClick = { remainingSec = durationMin * 60; running = true },
+                onClick = { SleepAudioService.start(context, durationMin * 60) },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(50),
             ) { Text("Start") }
             Text(
-                "The sound plays while this screen is open and stops automatically when the timer ends.",
+                "The sound keeps playing while the screen is off or you switch apps, and stops automatically when the timer ends.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

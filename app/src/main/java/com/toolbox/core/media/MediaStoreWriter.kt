@@ -101,6 +101,67 @@ object MediaStoreWriter {
         return Result(uri = uri, displayPath = "Pictures/$subfolder/$displayName", sizeBytes = file.length())
     }
 
+    /**
+     * Copies a source content stream (e.g. a WhatsApp status video) into the public
+     * Movies/<subfolder>/ gallery location. API 29+ uses MediaStore RELATIVE_PATH + IS_PENDING;
+     * 26-28 falls back to a legacy file path (needs WRITE_EXTERNAL_STORAGE).
+     */
+    fun saveVideo(
+        context: Context,
+        source: Uri,
+        subfolder: String,
+        baseName: String,
+        mime: String,
+    ): Result {
+        val ext = when {
+            mime.endsWith("mp4") -> "mp4"
+            mime.contains("3gpp") -> "3gp"
+            else -> "mp4"
+        }
+        val displayName = "${baseName}_${System.currentTimeMillis()}.$ext"
+        val resolver = context.contentResolver
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val collection = MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+                put(MediaStore.MediaColumns.MIME_TYPE, if (mime.startsWith("video")) mime else "video/mp4")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_MOVIES}/$subfolder")
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            val uri = resolver.insert(collection, values) ?: error("MediaStore insert returned null")
+            var bytes = 0L
+            resolver.openOutputStream(uri)?.use { out ->
+                val counter = CountingOutputStream(out)
+                resolver.openInputStream(source)?.use { it.copyTo(counter) } ?: error("Could not read source")
+                counter.flush(); bytes = counter.totalBytes
+            } ?: error("Could not open output stream")
+            values.clear(); values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+            return Result(uri = uri, displayPath = "Movies/$subfolder/$displayName", sizeBytes = bytes)
+        }
+
+        val granted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        ) == PackageManager.PERMISSION_GRANTED
+        check(granted) { "WRITE_EXTERNAL_STORAGE not granted (required on API ${Build.VERSION.SDK_INT})" }
+        @Suppress("DEPRECATION")
+        val moviesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+        val targetDir = File(moviesDir, subfolder).apply { mkdirs() }
+        val file = File(targetDir, displayName)
+        FileOutputStream(file).use { out ->
+            resolver.openInputStream(source)?.use { it.copyTo(out) } ?: error("Could not read source")
+        }
+        @Suppress("DEPRECATION")
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DATA, file.absolutePath)
+            put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+            put(MediaStore.MediaColumns.MIME_TYPE, if (mime.startsWith("video")) mime else "video/mp4")
+        }
+        val uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
+        return Result(uri = uri, displayPath = "Movies/$subfolder/$displayName", sizeBytes = file.length())
+    }
+
     private class CountingOutputStream(private val delegate: java.io.OutputStream) : java.io.OutputStream() {
         var totalBytes: Long = 0
             private set

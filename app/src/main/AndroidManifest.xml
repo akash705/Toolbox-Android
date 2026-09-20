@@ -30,6 +30,18 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
 
+    <!-- Duplicate Photo Finder reads the image library (requested lazily when the tool opens). -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Pre-API-33 equivalent, also used by Storage Analyzer's API 26-29 fallback. -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Storage Analyzer enumerates the whole shared volume to report space use (API 30+).
+         Highly restricted: requires a Play Console All-files-access declaration (see
+         docs/play-console/permission-justifications.md). Requested lazily when the tool opens. -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+
     <!-- Camera, sensors, and NFC are optional features -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />

@@ -760,4 +760,20 @@ val allTools = listOf(
         description = "Save photos and videos from WhatsApp statuses you've viewed, before they disappear. Grant access to the statuses folder to begin.",
         searchKeywords = listOf("status", "saver", "whatsapp", "download", "save", "story"),
     ),
+    ToolDefinition(
+        id = "duplicate_photos",
+        name = "Duplicate Photos",
+        icon = Icons.Default.Photo,
+        category = ToolCategory.EverydayTools,
+        description = "Find and delete exact duplicate photos to free up space. All comparison happens on-device — nothing is uploaded.",
+        searchKeywords = listOf("duplicate", "photos", "dupes", "clean", "space", "gallery", "storage"),
+    ),
+    ToolDefinition(
+        id = "storage_analyzer",
+        name = "Storage Analyzer",
+        icon = Icons.Default.PieChart,
+        category = ToolCategory.EverydayTools,
+        description = "See what's using your storage — largest files, biggest folders, and a breakdown by file type. Delete space hogs with confirmation.",
+        searchKeywords = listOf("storage", "analyzer", "space", "cleaner", "files", "folders", "disk", "usage"),
+    ),
 )

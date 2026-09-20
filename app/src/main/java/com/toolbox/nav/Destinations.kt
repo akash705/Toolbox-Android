@@ -115,3 +115,7 @@ import kotlinx.serialization.Serializable
 @Serializable object DocumentScanner
 @Serializable object ScreenRecorder
 @Serializable object StatusSaver
+
+// Batch 7 Tools
+@Serializable object DuplicatePhotos
+@Serializable object StorageAnalyzer

@@ -1,13 +1,9 @@
 package com.toolbox.everyday.storageanalyzer
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.provider.Settings
+import android.provider.DocumentsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -37,9 +33,11 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,17 +47,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 private sealed interface UiState {
-    data object NeedsAccess : UiState
+    data object NeedsFolder : UiState
     data object Idle : UiState
     data class Scanning(val files: Int) : UiState
     data class Done(val report: StorageReport) : UiState
@@ -69,54 +65,49 @@ private sealed interface UiState {
 fun StorageAnalyzerScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val prefs = remember { context.getSharedPreferences("storage_analyzer", Context.MODE_PRIVATE) }
 
-    var state by remember { mutableStateOf<UiState>(if (hasAccess(context)) UiState.Idle else UiState.NeedsAccess) }
+    var treeUri by remember { mutableStateOf(loadPersistedTree(context, prefs)) }
+    var state by remember { mutableStateOf<UiState>(if (treeUri != null) UiState.Idle else UiState.NeedsFolder) }
     var tab by remember { mutableIntStateOf(0) }
     var confirmDelete by remember { mutableStateOf<FileEntry?>(null) }
 
-    val settingsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        if (hasAccess(context)) state = UiState.Idle
-    }
-    val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) state = UiState.Idle
-    }
-
-    fun requestAccess() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val intent = runCatching {
-                Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${context.packageName}"))
-            }.getOrNull() ?: Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-            runCatching { settingsLauncher.launch(intent) }
-                .onFailure { settingsLauncher.launch(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)) }
-        } else {
-            permLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
-        }
-    }
-
     fun startScan() {
+        val uri = treeUri ?: return
         state = UiState.Scanning(0)
         scope.launch {
             val report = withContext(Dispatchers.IO) {
-                val root = Environment.getExternalStorageDirectory()
-                StorageScanner.scan(root) { files -> state = UiState.Scanning(files) }
+                StorageScanner.scan(context, uri) { files -> state = UiState.Scanning(files) }
             }
             state = UiState.Done(report)
         }
     }
 
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) {
+            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            prefs.edit().putString("tree", uri.toString()).apply()
+            treeUri = uri
+            startScan()
+        }
+    }
+
+    // Auto-scan once when returning with an already-granted folder.
+    LaunchedEffect(Unit) { if (treeUri != null && state is UiState.Idle) startScan() }
+
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            "Pick a folder (e.g. Internal storage) and see what's using space inside it — largest files, biggest folders, and a breakdown by type. Nothing is uploaded; deletions are confirmed one by one.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        OutlinedButton(onClick = { picker.launch(null) }, modifier = Modifier.fillMaxWidth()) {
+            Text(if (treeUri == null) "Choose a folder to analyze" else "Change folder / rescan")
+        }
+
         when (val s = state) {
-            UiState.NeedsAccess -> {
-                Text(
-                    "See what's using your storage — largest files, biggest folders, and a breakdown by type. This needs all-files access; nothing is uploaded and nothing is deleted without your confirmation.",
-                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Button(onClick = { requestAccess() }, modifier = Modifier.fillMaxWidth()) { Text("Grant storage access") }
-            }
-            UiState.Idle -> {
-                Text("Ready to analyze your shared storage. Large libraries may take a minute.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Button(onClick = { startScan() }, modifier = Modifier.fillMaxWidth()) { Text("Analyze storage") }
-            }
+            UiState.NeedsFolder -> {}
+            UiState.Idle -> {}
             is UiState.Scanning -> Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(Modifier.size(22.dp)); Spacer(Modifier.width(12.dp))
                 Text("Scanning… ${s.files} files")
@@ -126,7 +117,6 @@ fun StorageAnalyzerScreen() {
                 tab = tab,
                 onTab = { tab = it },
                 onDeleteRequest = { confirmDelete = it },
-                onRescan = { startScan() },
             )
         }
     }
@@ -138,11 +128,22 @@ fun StorageAnalyzerScreen() {
             text = { Text("${entry.name}\n${formatSize(entry.bytes)}\n\nThis permanently deletes the file from your device.") },
             confirmButton = {
                 TextButton(onClick = {
-                    val ok = runCatching { File(entry.path).delete() }.getOrDefault(false)
+                    val target = entry
                     confirmDelete = null
+                    val ok = runCatching {
+                        DocumentsContract.deleteDocument(context.contentResolver, target.uri)
+                    }.getOrDefault(false)
                     if (ok && state is UiState.Done) {
                         val r = (state as UiState.Done).report
-                        state = UiState.Done(r.copy(largestFiles = r.largestFiles.filterNot { it.path == entry.path }))
+                        state = UiState.Done(
+                            r.copy(
+                                largestFiles = r.largestFiles.filterNot { it.uri == target.uri },
+                                totalBytes = (r.totalBytes - target.bytes).coerceAtLeast(0),
+                                fileCount = (r.fileCount - 1).coerceAtLeast(0),
+                            ),
+                        )
+                    } else if (!ok) {
+                        android.widget.Toast.makeText(context, "Couldn't delete this file", android.widget.Toast.LENGTH_SHORT).show()
                     }
                 }) { Text("Delete") }
             },
@@ -157,8 +158,11 @@ private fun ColumnScope.ReportView(
     tab: Int,
     onTab: (Int) -> Unit,
     onDeleteRequest: (FileEntry) -> Unit,
-    onRescan: () -> Unit,
 ) {
+    if (report.fileCount == 0) {
+        Text("No files found in that folder.", style = MaterialTheme.typography.titleMedium)
+        return
+    }
     Text("${formatSize(report.totalBytes)} across ${report.fileCount} files", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
     report.categories.forEach { cat ->
@@ -184,7 +188,7 @@ private fun ColumnScope.ReportView(
 
     LazyColumn(Modifier.fillMaxWidth().weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (tab == 0) {
-            items(report.largestFiles, key = { it.path }) { f ->
+            items(report.largestFiles, key = { it.uri.toString() }) { f ->
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest)) {
                     Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -200,7 +204,7 @@ private fun ColumnScope.ReportView(
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest)) {
                     Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(d.name.ifEmpty { "(root)" }, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
+                            Text(d.name.ifEmpty { "(folder)" }, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
                             Text(d.path, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                         }
                         Text(formatSize(d.bytes), style = MaterialTheme.typography.bodyMedium)
@@ -211,12 +215,12 @@ private fun ColumnScope.ReportView(
     }
 }
 
-private fun hasAccess(context: Context): Boolean =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        Environment.isExternalStorageManager()
-    } else {
-        context.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-    }
+private fun loadPersistedTree(context: Context, prefs: android.content.SharedPreferences): Uri? {
+    val saved = prefs.getString("tree", null)?.let(Uri::parse) ?: return null
+    val stillGranted = context.contentResolver.persistedUriPermissions.any { it.uri == saved && it.isReadPermission }
+    if (!stillGranted) { prefs.edit().remove("tree").apply(); return null }
+    return saved
+}
 
 private fun formatSize(bytes: Long): String = when {
     bytes >= 1_000_000_000 -> "%.2f GB".format(bytes / 1_000_000_000.0)

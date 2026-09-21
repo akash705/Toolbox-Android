@@ -96,37 +96,20 @@ substitute — state that in the declaration.
 
 ---
 
-## 5. `MANAGE_EXTERNAL_STORAGE` (Batch 7 — Storage Analyzer)  ⚠ HIGH-RISK
+## 5. Storage Analyzer — Storage Access Framework (NO declaration needed)
 
-**Android 11+ (API 30+).** On API 26–29 the tool falls back to
-`READ_EXTERNAL_STORAGE`.
+**History:** v1.6.0 shipped Storage Analyzer on `MANAGE_EXTERNAL_STORAGE` and
+Google Play **rejected** it (2026-09-21) under the All-Files-Access policy —
+"Not a core feature": a storage analyzer is one tool in a multi-tool utility app,
+not the app's core purpose, so All-Files-Access is not permitted. This is not
+appealable for this app.
 
-> ⚠ **Policy risk:** All-Files-Access is a highly restricted permission. Google
-> Play requires a separate **All files access** declaration in the Console and
-> reviews it manually; utility/analyzer apps are sometimes rejected. If review is
-> refused, the fallback is to ship Storage Analyzer as a **scoped SAF (folder
-> picker)** tool instead — that path needs no declaration. Keep that fallback
-> ready before submitting.
-
-**Play Console:** Under App content → **Permissions declaration**, declare the
-"All files access" permission. Core-functionality reason: **"File management"**
-(the app presents a file/storage manager and analyzer).
-
-**Justification (paste this):**
-
-> The Storage Analyzer tool shows the user what is consuming space on their
-> device — largest files, biggest folders, and breakdown by file type — so they
-> can find and delete space-hogging content. To size and categorize files across
-> the whole device (including large media, downloads, and app-exported files in
-> arbitrary folders) the tool must enumerate the shared storage volume, which
-> scoped/MediaStore access cannot fully do. All-Files-Access is used solely for
-> this on-device analysis; the app performs no automatic deletion, uploads
-> nothing, and reads file metadata (path, size, type, modified date) to build the
-> report. Every deletion is an explicit user action on a specific file.
-
-**Fallback if rejected:** Re-submit Storage Analyzer using
-`ACTION_OPEN_DOCUMENT_TREE` (SAF) — the user grants one folder subtree and the
-tool analyzes only that. No declaration required.
+**Resolution (v1.6.1):** Storage Analyzer was rebuilt on the **Storage Access
+Framework** (`ACTION_OPEN_DOCUMENT_TREE`). The user picks a folder (e.g. Internal
+storage) and the tool analyzes only that subtree via `DocumentsContract`;
+deletion uses `DocumentsContract.deleteDocument`. **No `MANAGE_EXTERNAL_STORAGE`,
+no runtime storage permission, and no Play Console declaration are required.**
+`MANAGE_EXTERNAL_STORAGE` has been removed from the manifest.
 
 ---
 

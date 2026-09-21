@@ -34,15 +34,13 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <!-- Android 14+ "Select photos" partial grant; the tool detects it and asks for full access. -->
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
-    <!-- Pre-API-33 equivalent, also used by Storage Analyzer's API 26-29 fallback. -->
+    <!-- Pre-API-33 equivalent used by Duplicate Photo Finder on API 26-32. -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
-    <!-- Storage Analyzer enumerates the whole shared volume to report space use (API 30+).
-         Highly restricted: requires a Play Console All-files-access declaration (see
-         docs/play-console/permission-justifications.md). Requested lazily when the tool opens. -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <!-- Storage Analyzer uses the Storage Access Framework (folder picker) only — no
+         MANAGE_EXTERNAL_STORAGE, no runtime storage permission, no Play declaration required. -->
 
     <!-- Camera, sensors, and NFC are optional features -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />

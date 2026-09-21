@@ -64,6 +64,7 @@ import kotlinx.serialization.Serializable
 
 // Phase 14 Tools
 @Serializable object WifiSignal
+@Serializable object BluetoothFinder
 
 // Phase 12 Tools
 @Serializable object DateCalculator

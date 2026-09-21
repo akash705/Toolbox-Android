@@ -55,8 +55,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.BluetoothSearching
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothDisabled
+import androidx.compose.material.icons.filled.KeyboardDoubleArrowUp
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -70,6 +73,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -90,6 +94,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp as lerpF
@@ -326,12 +331,15 @@ private fun BluetoothFinderContent() {
         onDispose { runCatching { scanner?.stopScan(callback) } }
     }
 
-    // Drop devices we haven't heard from in a while.
+    // Drop devices we haven't heard from in a while — but keep the one we're actively tracking so
+    // Find mode can show its last reading and a "signal lost" state instead of forgetting it.
     LaunchedEffect(Unit) {
         while (true) {
             delay(1000)
             val cutoff = System.currentTimeMillis() - 10_000
-            devices.keys.filter { (devices[it]?.lastSeen ?: 0) < cutoff }.forEach { devices.remove(it) }
+            devices.keys
+                .filter { it != selected && (devices[it]?.lastSeen ?: 0) < cutoff }
+                .forEach { devices.remove(it) }
         }
     }
 
@@ -498,15 +506,35 @@ private fun FindMode(device: BleDevice?, onBack: () -> Unit) {
     val context = LocalContext.current
     val ema = device?.rssiEma ?: -100f
     val band = bandFor(ema)
-    val t = warmth(ema)
+
+    // Tick a clock so we can tell how long ago the tracked device was last heard from.
+    var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            nowMs = System.currentTimeMillis()
+            delay(400)
+        }
+    }
+    val ageMs = if (device != null) nowMs - device.lastSeen else Long.MAX_VALUE
+    val live = device != null && ageMs < 3000L   // still receiving fresh advertisements
+    val lost = device != null && !live           // had it, but the signal dropped off
+    val present = device != null
+    val secondsAgo = (ageMs / 1000L).toInt()
+
+    // Drive the meter from the live signal; when the signal is lost, let everything settle down.
+    val t = if (live) warmth(ema) else 0f
     val tState = rememberUpdatedState(t)
     val emaState = rememberUpdatedState(ema)
-    val present = device != null && ema > -100f
 
     val cold = Color(0xFF2979FF)
     val warm = Color(0xFFFFA000)
     val hot = Color(0xFFFF1744)
-    val targetColor = if (t < 0.5f) lerp(cold, warm, t * 2f) else lerp(warm, hot, (t - 0.5f) * 2f)
+    val muted = Color(0xFF9E9E9E)
+    val targetColor = when {
+        !live -> muted
+        t < 0.5f -> lerp(cold, warm, t * 2f)
+        else -> lerp(warm, hot, (t - 0.5f) * 2f)
+    }
     val morph by animateColorAsState(targetColor, tween(500), label = "hotcold")
 
     // Pulse rings that beat faster the closer you are.
@@ -577,7 +605,7 @@ private fun FindMode(device: BleDevice?, onBack: () -> Unit) {
         }
     }
 
-    val found = present && ema > -55f
+    val found = live && ema > -55f
 
     PlayfulEntrance {
         Box(Modifier.fillMaxSize()) {
@@ -623,7 +651,10 @@ private fun FindMode(device: BleDevice?, onBack: () -> Unit) {
                         }
                         drawCircle(morph.copy(alpha = 0.16f), radius = maxR * 0.34f, center = center)
                     }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        modifier = Modifier.graphicsLayer { alpha = if (live) 1f else 0.45f },
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
                         Text(
                             text = if (found) "🎉" else "🎧",
                             fontSize = 46.sp,
@@ -643,28 +674,45 @@ private fun FindMode(device: BleDevice?, onBack: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
 
                 Text(
-                    text = if (present) band.label else "Lost the signal — keep moving",
+                    text = when {
+                        lost -> "📵 Signal lost"
+                        live -> band.label
+                        else -> "Searching…"
+                    },
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = morph,
+                    color = if (lost) muted else morph,
                 )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(10.dp))
 
-                val (trendText, trendColor) = when {
-                    !present -> "Searching…" to MaterialTheme.colorScheme.onSurfaceVariant
-                    trend > 0 -> "🔥 Warmer — you're getting closer!" to hot
-                    trend < 0 -> "❄️ Colder — try another direction" to cold
-                    else -> "Hold steady…" to MaterialTheme.colorScheme.onSurfaceVariant
-                }
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(trendColor.copy(alpha = 0.14f))
-                        .playfulBorder(trendColor, 50)
-                        .padding(horizontal = 18.dp, vertical = 10.dp),
-                ) {
-                    Text(trendText, color = trendColor, fontWeight = FontWeight.Bold)
+                if (lost) {
+                    Text(
+                        text = if (secondsAgo <= 1) {
+                            "Last seen just now · was ${ema.toInt()} dBm"
+                        } else {
+                            "Last seen ${secondsAgo}s ago · was ${ema.toInt()} dBm"
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(muted.copy(alpha = 0.14f))
+                            .playfulBorder(muted, 50)
+                            .padding(horizontal = 18.dp, vertical = 10.dp),
+                    ) {
+                        Text(
+                            "It may be out of range, powered off, or in its case",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                } else {
+                    MovementGuide(trend = trend, hot = hot, cold = cold)
                 }
             }
 
@@ -678,6 +726,61 @@ private fun FindMode(device: BleDevice?, onBack: () -> Unit) {
             }
             ConfettiBurst(active = found)
         }
+    }
+}
+
+/**
+ * Movement guidance for Find mode. BLE gives distance, not a bearing, so we can't point at the
+ * device — instead we tell the user whether their last few steps helped, which is what actually
+ * homes in on a lost item.
+ */
+@Composable
+private fun MovementGuide(trend: Int, hot: Color, cold: Color) {
+    val steadyColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val icon = when {
+        trend > 0 -> Icons.Default.KeyboardDoubleArrowUp
+        trend < 0 -> Icons.AutoMirrored.Filled.Undo
+        else -> Icons.AutoMirrored.Filled.DirectionsWalk
+    }
+    val text = when {
+        trend > 0 -> "Keep going this way!"
+        trend < 0 -> "Turn around — you're moving away"
+        else -> "Take a few steps to get a bearing"
+    }
+    val color = when {
+        trend > 0 -> hot
+        trend < 0 -> cold
+        else -> steadyColor
+    }
+    // Bob the arrow while you're on the right track.
+    val infinite = rememberInfiniteTransition(label = "guide")
+    val bob by infinite.animateFloat(
+        initialValue = 0f,
+        targetValue = if (trend > 0) -8f else 0f,
+        animationSpec = infiniteRepeatable(tween(500, easing = LinearEasing), RepeatMode.Reverse),
+        label = "bob",
+    )
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(color.copy(alpha = 0.14f))
+            .playfulBorder(color, 50)
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(30.dp).graphicsLayer { translationY = bob },
+        )
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text,
+            color = color,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleMedium,
+        )
     }
 }
 

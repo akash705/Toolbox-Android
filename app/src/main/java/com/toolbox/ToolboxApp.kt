@@ -109,6 +109,7 @@ import com.toolbox.lighting.screenflash.ScreenFlashScreen
 import com.toolbox.measurement.pitchtuner.PitchTunerScreen
 import com.toolbox.measurement.plumbbob.PlumbBobScreen
 import com.toolbox.measurement.wifisignal.WifiSignalScreen
+import com.toolbox.measurement.bluetoothfinder.BluetoothFinderScreen
 import com.toolbox.everyday.password.PasswordGeneratorScreen
 import com.toolbox.everyday.whitenoise.WhiteNoiseScreen
 import com.toolbox.everyday.heartrate.HeartRateScreen
@@ -146,6 +147,7 @@ import com.toolbox.nav.ScreenFlash
 import com.toolbox.nav.ScientificCalculator
 import com.toolbox.nav.MorseCode
 import com.toolbox.nav.WifiSignal
+import com.toolbox.nav.BluetoothFinder
 import com.toolbox.nav.WhiteNoise
 import com.toolbox.nav.Barometer
 import com.toolbox.nav.Humidity
@@ -368,6 +370,7 @@ fun ToolboxApp(themeMode: ThemeMode, launchToolId: String? = null, defaultScreen
                     composable<ScreenFlash> { ToolScreen("Screen Flash", "screen_flash", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is ScreenFlash) { ScreenFlashScreen() } }
                     composable<PlumbBob> { ToolScreen("Plumb Bob", "plumb_bob", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is PlumbBob) { PlumbBobScreen() } }
                     composable<WifiSignal> { ToolScreen("WiFi Signal", "wifi_signal", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is WifiSignal) { WifiSignalScreen() } }
+                    composable<BluetoothFinder> { ToolScreen("Bluetooth Finder", "bluetooth_finder", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is BluetoothFinder, accent = androidx.compose.ui.graphics.Color(0xFF00B0FF)) { BluetoothFinderScreen() } }
 
                     // Batch 2 Tools
                     composable<EmiCalculator> { ToolScreen("Loan/EMI Calculator", "emi_calculator", navController, this@SharedTransitionLayout, this@composable, isDefaultRoot = isDefaultTool && startDest is EmiCalculator) { EmiCalculatorScreen() } }
@@ -573,6 +576,7 @@ private fun toolDestination(toolId: String): Any? = when (toolId) {
     "screen_flash" -> ScreenFlash
     "plumb_bob" -> PlumbBob
     "wifi_signal" -> WifiSignal
+    "bluetooth_finder" -> BluetoothFinder
     "emi_calculator" -> EmiCalculator
     "device_info" -> DeviceInfo
     "network_info" -> NetworkInfo

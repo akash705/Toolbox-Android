@@ -15,7 +15,7 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Brush
-import androidx.compose.material.icons.filled.BluetoothSearching
+import androidx.compose.material.icons.automirrored.filled.BluetoothSearching
 import androidx.compose.material.icons.filled.ElectricalServices
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Hardware
@@ -452,7 +452,7 @@ val allTools = listOf(
     ToolDefinition(
         id = "bluetooth_finder",
         name = "Bluetooth Finder",
-        icon = Icons.Default.BluetoothSearching,
+        icon = Icons.AutoMirrored.Filled.BluetoothSearching,
         category = ToolCategory.MeasurementSensors,
         description = "Find lost Bluetooth devices like earbuds, trackers, and speakers by signal strength. Pick a nearby device and walk around — a playful radar gets warmer, faster, and buzzes as you close in.",
         searchKeywords = listOf("bluetooth", "ble", "finder", "find", "lost", "earbuds", "headphones", "tracker", "signal", "rssi", "proximity"),

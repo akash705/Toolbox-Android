@@ -11,12 +11,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.location.LocationManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -51,10 +53,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.BluetoothSearching
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothDisabled
-import androidx.compose.material.icons.filled.BluetoothSearching
+import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -131,6 +134,17 @@ private fun bandFor(ema: Float): Band = when {
     else -> Band("Far away", Color(0xFF5C6BC0))
 }
 
+/** On Android 8-11 the platform only returns BLE scan results while location services are on. */
+private fun isLocationEnabled(context: Context): Boolean {
+    val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return false
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        lm.isLocationEnabled
+    } else {
+        lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+            lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+}
+
 @Composable
 fun BluetoothFinderScreen() {
     PermissionGate(
@@ -145,7 +159,6 @@ fun BluetoothFinderScreen() {
 @SuppressLint("MissingPermission")
 @Composable
 private fun BluetoothFinderContent() {
-    val accent = LocalAccent.current
     val context = LocalContext.current
     val adapter = remember {
         (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
@@ -179,45 +192,52 @@ private fun BluetoothFinderContent() {
     ) { bluetoothOn = adapter.isEnabled }
 
     if (!bluetoothOn) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Icon(
-                Icons.Default.BluetoothDisabled,
-                contentDescription = null,
-                tint = accent,
-                modifier = Modifier.size(64.dp),
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "Bluetooth is off",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.ExtraBold,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Turn it on so we can hunt for your device.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(24.dp))
-            PlayfulButton(
-                text = "Turn on Bluetooth",
-                icon = Icons.Default.Bluetooth,
+        PromptState(
+            icon = Icons.Default.BluetoothDisabled,
+            title = "Bluetooth is off",
+            message = "Turn it on so we can hunt for your device.",
+            buttonText = "Turn on Bluetooth",
+            buttonIcon = Icons.Default.Bluetooth,
+            onClick = {
+                runCatching { enableLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)) }
+            },
+        )
+        return
+    }
+
+    // On Android 8-11 the platform only returns BLE scan results while location services are on.
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+        var locationOn by remember { mutableStateOf(isLocationEnabled(context)) }
+        DisposableEffect(Unit) {
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(c: Context?, intent: Intent?) {
+                    locationOn = isLocationEnabled(context)
+                }
+            }
+            context.registerReceiver(receiver, IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION))
+            onDispose { runCatching { context.unregisterReceiver(receiver) } }
+        }
+        if (!locationOn) {
+            PromptState(
+                icon = Icons.Default.LocationOff,
+                title = "Turn on location",
+                message = "On this Android version, scanning for Bluetooth devices needs location " +
+                    "services switched on. We don't use your location for anything else.",
+                buttonText = "Open location settings",
+                buttonIcon = null,
                 onClick = {
-                    runCatching { enableLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)) }
+                    runCatching { context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) }
                 },
             )
+            return
         }
-        return
     }
 
     // --- Live scanning ---
     val devices = remember { mutableStateMapOf<String, BleDevice>() }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     val mainHandler = remember { Handler(Looper.getMainLooper()) }
+    val scanError = remember { mutableStateOf<String?>(null) }
 
     val callback = remember {
         object : ScanCallback() {
@@ -232,6 +252,7 @@ private fun BluetoothFinderContent() {
                 val raw = result.rssi
                 val now = System.currentTimeMillis()
                 mainHandler.post {
+                    scanError.value = null
                     val prev = devices[addr]
                     val ema = if (prev == null) raw.toFloat() else prev.rssiEma * 0.65f + raw * 0.35f
                     devices[addr] = BleDevice(
@@ -247,6 +268,20 @@ private fun BluetoothFinderContent() {
             override fun onBatchScanResults(results: MutableList<ScanResult>) {
                 results.forEach { onScanResult(0, it) }
             }
+
+            override fun onScanFailed(errorCode: Int) {
+                // SCAN_FAILED_ALREADY_STARTED just means a scan is already running — not an error.
+                if (errorCode == SCAN_FAILED_ALREADY_STARTED) return
+                val message = when (errorCode) {
+                    SCAN_FAILED_SCANNING_TOO_FREQUENTLY ->
+                        "Android paused scanning for a moment — reopen the tool in a few seconds."
+                    SCAN_FAILED_FEATURE_UNSUPPORTED ->
+                        "This phone doesn't support Bluetooth LE scanning."
+                    else ->
+                        "Couldn't start scanning. Try toggling Bluetooth off and on."
+                }
+                mainHandler.post { scanError.value = message }
+            }
         }
     }
 
@@ -255,7 +290,12 @@ private fun BluetoothFinderContent() {
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
             .build()
-        runCatching { scanner?.startScan(null, settings, callback) }
+        if (scanner == null) {
+            scanError.value = "Bluetooth isn't ready. Try toggling it off and on."
+        } else {
+            scanError.value = null
+            runCatching { scanner.startScan(null, settings, callback) }
+        }
         onDispose { runCatching { scanner?.stopScan(callback) } }
     }
 
@@ -274,20 +314,28 @@ private fun BluetoothFinderContent() {
     if (current != null) {
         FindMode(device = devices[current], onBack = { selected = null })
     } else {
-        ScanList(devices = sorted, onSelect = { selected = it })
+        ScanList(devices = sorted, error = scanError.value, onSelect = { selected = it })
     }
 }
 
 @Composable
-private fun ScanList(devices: List<BleDevice>, onSelect: (String) -> Unit) {
+private fun ScanList(devices: List<BleDevice>, error: String?, onSelect: (String) -> Unit) {
     PlayfulEntrance {
         Column(Modifier.fillMaxSize()) {
             ToolIntro(
-                icon = Icons.Default.BluetoothSearching,
+                icon = Icons.AutoMirrored.Filled.BluetoothSearching,
                 title = "Bluetooth Finder",
                 subtitle = "Tap a device, then walk around — it gets warmer as you get closer.",
             )
-            RadarHero(deviceCount = devices.size)
+            RadarHero()
+            if (error != null) {
+                Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
             if (devices.isEmpty()) {
                 Box(
                     Modifier.fillMaxWidth().padding(24.dp),
@@ -313,7 +361,7 @@ private fun ScanList(devices: List<BleDevice>, onSelect: (String) -> Unit) {
 }
 
 @Composable
-private fun RadarHero(deviceCount: Int) {
+private fun RadarHero() {
     val accent = LocalAccent.current
     val transition = rememberInfiniteTransition(label = "radar")
     val sweep by transition.animateFloat(
@@ -355,7 +403,7 @@ private fun RadarHero(deviceCount: Int) {
             }
         }
         Icon(
-            Icons.Default.BluetoothSearching,
+            Icons.AutoMirrored.Filled.BluetoothSearching,
             contentDescription = null,
             tint = accent,
             modifier = Modifier.size(44.dp),
@@ -523,7 +571,7 @@ private fun FindMode(device: BleDevice?, onBack: () -> Unit) {
                             .clickable { onBack() },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                     Spacer(Modifier.width(8.dp))
                     Text(
@@ -639,6 +687,34 @@ private fun ConfettiBurst(active: Boolean) {
                 },
             )
         }
+    }
+}
+
+@Composable
+private fun PromptState(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    message: String,
+    buttonText: String,
+    buttonIcon: androidx.compose.ui.graphics.vector.ImageVector?,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(icon, contentDescription = null, tint = LocalAccent.current, modifier = Modifier.size(64.dp))
+        Spacer(Modifier.height(16.dp))
+        Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(24.dp))
+        PlayfulButton(text = buttonText, icon = buttonIcon, onClick = onClick)
     }
 }
 

@@ -97,7 +97,6 @@ import com.toolbox.core.permission.PermissionGate
 import com.toolbox.core.ui.LocalAccent
 import com.toolbox.core.ui.PlayfulButton
 import com.toolbox.core.ui.PlayfulEntrance
-import com.toolbox.core.ui.ToolIntro
 import com.toolbox.core.ui.playfulBorder
 import kotlinx.coroutines.delay
 import kotlin.math.PI
@@ -132,6 +131,31 @@ private fun bandFor(ema: Float): Band = when {
     ema > -75 -> Band("Getting closer", Color(0xFFFFA000))
     ema > -85 -> Band("Nearby", Color(0xFF42A5F5))
     else -> Band("Far away", Color(0xFF5C6BC0))
+}
+
+/**
+ * Bluetooth SIG company identifiers for makers a user is likely to recognise. Used to label a
+ * device whose real name Android never gives us (unpaired + no name in the advert) — e.g. Galaxy
+ * Buds show up as "Samsung device" rather than "Unknown device".
+ */
+private val companyNames: Map<Int, String> = mapOf(
+    0x004C to "Apple device",
+    0x0075 to "Samsung device",
+    0x00E0 to "Google device",
+    0x0006 to "Microsoft device",
+    0x012D to "Sony device",
+    0x009E to "Bose device",
+    0x0087 to "Garmin device",
+    0x000A to "Qualcomm device",
+    0x000F to "Broadcom device",
+    0x0059 to "Nordic device",
+)
+
+/** A friendly maker label from the advert's manufacturer data, or null if the company is unknown. */
+private fun manufacturerLabel(result: ScanResult): String? {
+    val data = result.scanRecord?.manufacturerSpecificData ?: return null
+    if (data.size() == 0) return null
+    return companyNames[data.keyAt(0)]
 }
 
 /** On Android 8-11 the platform only returns BLE scan results while location services are on. */
@@ -249,6 +273,7 @@ private fun BluetoothFinderContent() {
                 } catch (_: SecurityException) {
                     null
                 }
+                val maker = manufacturerLabel(result)
                 val raw = result.rssi
                 val now = System.currentTimeMillis()
                 mainHandler.post {
@@ -257,7 +282,9 @@ private fun BluetoothFinderContent() {
                     val ema = if (prev == null) raw.toFloat() else prev.rssiEma * 0.65f + raw * 0.35f
                     devices[addr] = BleDevice(
                         address = addr,
-                        name = bonded ?: advertised ?: prev?.name,
+                        // Prefer a real name (paired or advertised); keep any we resolved before;
+                        // otherwise fall back to a recognisable maker label.
+                        name = (bonded ?: advertised) ?: prev?.name ?: maker,
                         rssiEma = ema,
                         lastRaw = raw,
                         lastSeen = now,
@@ -322,11 +349,6 @@ private fun BluetoothFinderContent() {
 private fun ScanList(devices: List<BleDevice>, error: String?, onSelect: (String) -> Unit) {
     PlayfulEntrance {
         Column(Modifier.fillMaxSize()) {
-            ToolIntro(
-                icon = Icons.AutoMirrored.Filled.BluetoothSearching,
-                title = "Bluetooth Finder",
-                subtitle = "Tap a device, then walk around — it gets warmer as you get closer.",
-            )
             RadarHero()
             if (error != null) {
                 Text(
